@@ -1,0 +1,321 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Get Library Objects in SampleSheet",
+  "States": {
+    "Get Library Objects in SampleSheet": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": "{% $states.result.Payload %}",
+      "Arguments": {
+        "FunctionName": "",
+        "Payload": "{% $states.input %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "Group Library Objects by Subject"
+    },
+    "Group Library Objects by Subject": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": "{% $states.result.Payload %}",
+      "Arguments": {
+        "FunctionName": "",
+        "Payload": "{% $states.input %}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "For each subject (batched)"
+    },
+    "For each subject (batched)": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "For each subject",
+        "States": {
+          "For each subject": {
+            "Type": "Map",
+            "ItemProcessor": {
+              "ProcessorConfig": {
+                "Mode": "INLINE"
+              },
+              "StartAt": "Set Input vars",
+              "States": {
+                "Set Input vars": {
+                  "Type": "Pass",
+                  "Next": "Secondary Analysis Lists"
+                },
+                "Secondary Analysis Lists": {
+                  "Type": "Parallel",
+                  "Branches": [
+                    {
+                      "StartAt": "Get WGTS DNA Analysis Scaffolding",
+                      "States": {
+                        "Get WGTS DNA Analysis Scaffolding": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    },
+                    {
+                      "StartAt": "Get WGTS RNA Analysis Scaffolding",
+                      "States": {
+                        "Get WGTS RNA Analysis Scaffolding": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    },
+                    {
+                      "StartAt": "Get TSO500 ctDNA Analysis Scaffolding",
+                      "States": {
+                        "Get TSO500 ctDNA Analysis Scaffolding": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    }
+                  ],
+                  "Next": "Get Tertiary Analysis Bodies"
+                },
+                "Get Tertiary Analysis Bodies": {
+                  "Type": "Parallel",
+                  "Branches": [
+                    {
+                      "StartAt": "Get WGTS DNA - RNA Analysis Scaffolding",
+                      "States": {
+                        "Get WGTS DNA - RNA Analysis Scaffolding": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    },
+                    {
+                      "StartAt": "Get RNASum Workflow Draft Events",
+                      "States": {
+                        "Get RNASum Workflow Draft Events": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    },
+                    {
+                      "StartAt": "Get Sash Workflow Draft Events",
+                      "States": {
+                        "Get Sash Workflow Draft Events": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    },
+                    {
+                      "StartAt": "Get PierianDx Analysis Scaffolding",
+                      "States": {
+                        "Get PierianDx Analysis Scaffolding": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": "{% $states.result.Payload %}",
+                          "Arguments": {
+                            "FunctionName": "",
+                            "Payload": "{% $states.input %}"
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "End": true
+                        }
+                      }
+                    }
+                  ],
+                  "Next": "Put All Analysis Scaffolding Events For Subject"
+                },
+                "Put All Analysis Scaffolding Events For Subject": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+                  "Arguments": {
+                    "Entries": [
+                      {
+                        "Detail": {
+                          "Message": "Hello from Step Functions!",
+                          "TaskToken": "{% $states.context.Task.Token %}"
+                        },
+                        "DetailType": "MyDetailType",
+                        "EventBusName": "MyEventBusName",
+                        "Source": "MySource"
+                      }
+                    ]
+                  },
+                  "End": true
+                }
+              }
+            },
+            "End": true
+          }
+        }
+      },
+      "Items": "{%  %}",
+      "Label": "Foreachsubjectbatched",
+      "MaxConcurrency": 1000,
+      "ItemBatcher": {},
+      "End": true
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
