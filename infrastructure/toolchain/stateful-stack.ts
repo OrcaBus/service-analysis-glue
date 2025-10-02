@@ -1,25 +1,27 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import { DeploymentStackPipeline } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
-import { DeployStack } from '../stage/deployment-stack';
-import { getStackProps } from '../stage/config';
+import { REPO_NAME } from './constants';
+import { getStatefulStackProps } from '../stage/config';
+import { StatefulApplicationStack } from '../stage/stateful-application-stack';
 
 export class StatefulStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    new DeploymentStackPipeline(this, 'DeploymentPipeline', {
+    new DeploymentStackPipeline(this, 'StatefulAnalysisGlue', {
       githubBranch: 'main',
-      githubRepo: 'template-service-base',
-      stack: DeployStack,
-      stackName: 'DeployStack',
+      githubRepo: REPO_NAME,
+      stack: StatefulApplicationStack,
+      stackName: 'StatefulAnalysisGlue',
       stackConfig: {
-        beta: getStackProps('BETA'),
-        gamma: getStackProps('GAMMA'),
-        prod: getStackProps('PROD'),
+        beta: getStatefulStackProps('BETA'),
+        gamma: getStatefulStackProps('GAMMA'),
+        prod: getStatefulStackProps('PROD'),
       },
-      pipelineName: 'OrcaBus-StatefulMicroservice',
+      pipelineName: 'OrcaBus-StatefulAnalysisGlue',
       cdkSynthCmd: ['pnpm install --frozen-lockfile --ignore-scripts', 'pnpm cdk-stateful synth'],
+      enableSlackNotification: false,
     });
   }
 }

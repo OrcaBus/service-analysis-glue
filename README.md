@@ -2,23 +2,23 @@
 
 ## Overview
 
-Generate an appropriate suite of workflow drafts whenever new primary data is available.  
+Generate an appropriate suite of workflow drafts whenever new primary data is available.
 
-This is a large service, while only one external event triggers the application 
-many different events are generated and consumed within the application. 
+This is a large service, while only one external event triggers the application
+many different events are generated and consumed within the application.
 
-This service introduces the concept of analysis scaffolds and 'workflow drafts'.  
+This service introduces the concept of analysis scaffolds and 'workflow drafts'.
 
-Analysis Scaffolds are 'bare-minimum' requirements for an analysis to be generated. 
+Analysis Scaffolds are 'bare-minimum' requirements for an analysis to be generated.
 
 This often comprises just the library id (two for somatic analyses) and the analysis name.
 
-We also make the effort to prevent analyses crossing 'analysis-boundaries'.  
+We also make the effort to prevent analyses crossing 'analysis-boundaries'.
 
-This means, no tertiary analyses are run with secondary analyses.  
+This means, no tertiary analyses are run with secondary analyses.
 
 We also do not combine workflows just because they have the same trigger point, i.e
-oncoanalyser WGTS DNA+RNA is not run as part of the same analysis as RNASum.  
+oncoanalyser WGTS DNA+RNA is not run as part of the same analysis as RNASum.
 
 ## Events Overview
 
@@ -26,7 +26,7 @@ oncoanalyser WGTS DNA+RNA is not run as part of the same analysis as RNASum.
 
 ### Analysis Scaffold Events
 
-We generate eight different types of analysis scaffolds (umccrise not shown above).   
+We generate eight different types of analysis scaffolds (umccrise not shown above).
 
 #### WGTS DNA Secondary Analysis :construction:
 
@@ -35,7 +35,7 @@ We generate eight different types of analysis scaffolds (umccrise not shown abov
   "EventBusName": "OrcaBusMain",
   "EventDetailType": "AnalysisScaffoldCreated",
   // Application listens to all sources including itself
-  "Source": "umccr.analysisglue",  
+  "Source": "umccr.analysisglue",
   "Detail": {
     "analysisName": "wgts-dna-secondary-analysis",
     "analysisRunName": "<tumor_library_id>__<normal_library_id>",
@@ -53,16 +53,16 @@ We generate eight different types of analysis scaffolds (umccrise not shown abov
 
 ### Workflow Draft Events
 
-The analysis glue services for each analysis type will then generate workflow drafts. 
+The analysis glue services for each analysis type will then generate workflow drafts.
 
-For some workflows, such as Dragen WGTS DNA, this will mean everything can be generated 
+For some workflows, such as Dragen WGTS DNA, this will mean everything can be generated
 except for the fastq list row objects. Instead we can provide the RGID list for both
 tumor and normal libraries in the tags section and leave it up to the dragen-wgts-dna pipeline manager
 to generate the fastq list rows as they become available, and then also generate the READY event.
 
-Other services such as RNASum will not have any inputs generated at all.  
+Other services such as RNASum will not have any inputs generated at all.
 It is still up to the RNASum pipeline manager to update these inputs as they become available,
-by subscribing to the workflow manager events.  
+by subscribing to the workflow manager events.
 
 This might mean subscribing to the workflow manager events for:
    * dragen wgts rna workflow completions to update the dragenTranscriptomeUri and arribaUri inputs
@@ -82,7 +82,7 @@ The RNASum service will also need to subscribe to its own draft events to conver
   "Source": "orcabus.analysisglue",
   "DetailType": "WorkflowRunStateChange",
   "Detail": {
-    "portalRunId": "20250516abcdef01",
+    "portalRunId": "20250516abcdef01",  // pragma: allowlist secret
     "timestamp": "2025-05-15T07:25:56+00:00",
     "status": "DRAFT",
     "workflowName": "dragen-wgts-dna",
@@ -150,12 +150,12 @@ The RNASum service will also need to subscribe to its own draft events to conver
   "Source": "orcabus.analysisglue",
   "DetailType": "WorkflowRunStateChange",
   "Detail": {
-    "portalRunId": "20250516abcdef01",
+    "portalRunId": "20250516abcdef01",  // pragma: allowlist secret
     "timestamp": "2025-05-15T07:25:56+00:00",
     "status": "DRAFT",
-    "workflowName": "dragen-wgts-dna",
-    "workflowVersion": "4.4.1",
-    "workflowRunName": "umccr--automated--tumor-normal--4-4-1--20250516abcdef01",
+    "workflowName": "rnasum",
+    "workflowVersion": "1.0.0",
+    "workflowRunName": "umccr--automated--tumor-normal--1-0-0--20250516abcdef01",
     "linkedLibraries": [
       {
         "libraryId": "L2500001",
@@ -210,14 +210,14 @@ The RNASum service will also need to subscribe to its own draft events to conver
 
 </detail>
 
-## Step Functions 
+## Step Functions
 
 
 We have a lot of steps here. This is because we split out the analysis scaffold creation
-and workflow draft creation into two separate steps. 
+and workflow draft creation into two separate steps.
 
 This means that different entry points can use the workflow draft creation step functions
-to generate an array of analyses. 
+to generate an array of analyses.
 
 ### Analysis Scaffold Creation Step Function
 
