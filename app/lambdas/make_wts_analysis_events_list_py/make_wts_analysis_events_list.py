@@ -114,7 +114,7 @@ def add_oncoanalyser_wgts_rna_draft_event(
         libraries: List[Library],
 ):
     """
-    Add the oncoanalyser wgts dna draft event
+    Add the oncoanalyser wgts rna draft event
     :param libraries:
     :return:
     """
