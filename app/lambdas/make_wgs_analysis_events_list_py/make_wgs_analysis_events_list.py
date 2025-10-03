@@ -173,6 +173,21 @@ def handler(event, context):
         libraries_list
     ))
 
+    # Check for negative control
+    negative_control_libraries = list(filter(
+        lambda library_iter_: library_iter_['phenotype'].startswith('negative'),
+        libraries_list
+    ))
+
+    if len(negative_control_libraries) > 0:
+        # Negative control libraries should only go through dragen
+        for ntc_library in negative_control_libraries:
+            events_list.extend(
+                add_dragen_wgts_dna_draft_event(
+                    libraries=[ntc_library]
+                )
+            )
+
     # If there are no tumor libraries and no normal libraries for this
     # subject on this run, return an empty list
     if len(tumor_libraries) == 0 and len(normal_libraries) == 0:

@@ -142,6 +142,8 @@ def handler(event, context):
     :param context:
     :return:
     """
+    # Initialise events list
+    events_list = []
 
     # Get the library id list
     library_id_list = event.get("libraryIdList", [])
@@ -151,13 +153,27 @@ def handler(event, context):
         library_id_list
     )
 
+    # Check for negative control
+    negative_control_libraries = list(filter(
+        lambda library_iter_: library_iter_['phenotype'].startswith('negative'),
+        libraries_list
+    ))
+
+    if len(negative_control_libraries) > 0:
+        # Negative control libraries should only go through dragen
+        for ntc_library in negative_control_libraries:
+            events_list.extend(
+                generate_wts_draft_lists(
+                    libraries=[ntc_library]
+                )
+            )
+
     # We only need the one phenotype
     tumor_libraries = list(filter(
         lambda library_iter_: library_iter_['phenotype'] == 'tumor',
         libraries_list
     ))
 
-    events_list = []
     for library_iter in tumor_libraries:
         # Add the wgs rna draft event
         events_list.extend(

@@ -176,7 +176,8 @@
                       "subjectId": "{% $states.context.Map.Item.Value %}",
                       "instrumentRunId": "{% $instrumentRunIdMapIter %}"
                     },
-                    "MaxConcurrency": 1
+                    "MaxConcurrency": 1,
+                    "Output": {}
                   }
                 }
               },
@@ -189,7 +190,8 @@
                 "BatchInput": {
                   "instrumentRunId": "{% $instrumentRunId %}"
                 }
-              }
+              },
+              "Output": {}
             }
           }
         },
@@ -356,7 +358,8 @@
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
                       "instrumentRunId": "{% $instrumentRunIdMapIter %}"
-                    }
+                    },
+                    "Output": {}
                   }
                 }
               },
@@ -369,7 +372,8 @@
                   "instrumentRunId": "{% $instrumentRunId %}"
                 },
                 "MaxItemsPerBatch": 10
-              }
+              },
+              "Output": {}
             }
           }
         },
@@ -536,7 +540,8 @@
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
                       "instrumentRunId": "{% $instrumentRunIdMapIter %}"
-                    }
+                    },
+                    "Output": {}
                   }
                 }
               },
@@ -549,7 +554,8 @@
                   "instrumentRunId": "{% $instrumentRunId %}"
                 },
                 "MaxItemsPerBatch": 10
-              }
+              },
+              "Output": {}
             }
           }
         }
@@ -722,7 +728,8 @@
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
                       "instrumentRunId": "{% $instrumentRunIdMapIter %}"
-                    }
+                    },
+                    "Output": {}
                   }
                 }
               },
@@ -736,7 +743,8 @@
                 "MaxInputBytesPerBatch": 10
               },
               "MaxConcurrency": 1,
-              "Items": "{% $states.input.subjectIdList %}"
+              "Items": "{% $states.input.subjectIdList %}",
+              "Output": {}
             }
           }
         },
@@ -899,7 +907,8 @@
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
                       "instrumentRunId": "{% $instrumentRunIdMapIter %}"
-                    }
+                    },
+                    "Output": {}
                   }
                 }
               },
@@ -912,7 +921,8 @@
                 },
                 "MaxItemsPerBatch": 10
               },
-              "Items": "{% $states.input.subjectIdList %}"
+              "Items": "{% $states.input.subjectIdList %}",
+              "Output": {}
             }
           }
         }
