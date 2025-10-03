@@ -9,15 +9,15 @@ const app = new cdk.App();
 
 const deployMode = app.node.tryGetContext('deployMode');
 if (!deployMode) {
-  throw new Error("deployMode is required in context ('-c deployMode=stateless')");
+  throw new Error("deployMode is required in context (e.g. '-c deployMode=stateless')");
 }
 
 if (deployMode === 'stateless') {
-  new StatelessStack(app, 'OrcaBusStatelessServiceStack', {
+  new StatelessStack(app, 'StatelessAnalysisGlue', {
     env: TOOLCHAIN_ENVIRONMENT,
   });
 } else if (deployMode === 'stateful') {
-  new StatefulStack(app, 'OrcaBusStatefulServiceStack', {
+  new StatefulStack(app, 'StatefulAnalysisGlue', {
     env: TOOLCHAIN_ENVIRONMENT,
   });
 } else {

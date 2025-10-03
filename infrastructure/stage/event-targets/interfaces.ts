@@ -1,0 +1,26 @@
+import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
+import { Rule } from 'aws-cdk-lib/aws-events';
+import { EventBridgeRuleObject } from '../event-rules/interfaces';
+import { StepFunctionObject } from '../step-functions/interfaces';
+
+/**
+ * EventBridge Target Interfaces
+ */
+export type EventBridgeTargetName =
+  // Event Rules
+  'readSetAddedToAnalysisBuilderSfnTarget';
+
+export const eventBridgeTargetsNameList: EventBridgeTargetName[] = [
+  // Event Rules
+  'readSetAddedToAnalysisBuilderSfnTarget',
+];
+
+export interface AddSfnAsEventBridgeTargetProps {
+  stateMachineObj: StateMachine;
+  eventBridgeRuleObj: Rule;
+}
+
+export interface EventBridgeTargetsProps {
+  eventBridgeRuleObjects: EventBridgeRuleObject[];
+  stepFunctionObjects: StepFunctionObject[];
+}
