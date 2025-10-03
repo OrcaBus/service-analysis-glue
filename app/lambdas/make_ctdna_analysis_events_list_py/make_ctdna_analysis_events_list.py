@@ -84,7 +84,7 @@ def add_dragen_tso500_ctdna_draft_event(
         libraries: List[Library],
 ):
     """
-    Add the dragen wgts dna draft event
+    Add the dragen tso500 ctdna draft event
     :param libraries:
     :return:
     """
@@ -128,7 +128,7 @@ def handler(event, context):
 
     events_list = []
     for library_iter in tumor_libraries:
-        # Add the wgs dna draft event
+        # Add the tso500 ctdna draft event
         events_list.extend(
             generate_ctdna_draft_lists([library_iter])
         )

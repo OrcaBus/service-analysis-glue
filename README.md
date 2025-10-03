@@ -70,6 +70,7 @@ This might mean subscribing to the workflow manager events for:
 
 The RNASum service will also need to subscribe to its own draft events to convert them to 'READY'.
 
+
 #### Dragen WGTS DNA :construction:
 
 <detail>

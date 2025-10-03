@@ -83,7 +83,7 @@ def add_dragen_wgts_rna_draft_event(
         libraries: List[Library],
 ):
     """
-    Add the dragen wgts dna draft event
+    Add the dragen wgts rna draft event
     :param libraries:
     :return:
     """
@@ -159,7 +159,7 @@ def handler(event, context):
 
     events_list = []
     for library_iter in tumor_libraries:
-        # Add the wgs dna draft event
+        # Add the wgs rna draft event
         events_list.extend(
             generate_wts_draft_lists([library_iter])
         )

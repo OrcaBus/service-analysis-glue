@@ -400,8 +400,8 @@ def handler(event, context):
                             library_iter_['type'] == 'WTS' and (
                             # We only want to consider rna libraries that match the workflow of the tumor dna library
                             # If the tumor dna library is clinical, we only want clinical rna libraries
-                            library_iter_['workflow'] == tumor_dna_library_iter['workflow']
-                            if tumor_dna_library_iter['workflow'] == 'clinical' else True
+                            library_iter_['workflow'] == tumor_dna_library['workflow']
+                            if tumor_dna_library['workflow'] == 'clinical' else True
                         )
                     ),
                     all_subject_libraries
@@ -448,8 +448,8 @@ def handler(event, context):
                             # only want to consider tumor libraries that are clinical
                             (
                                 # For normal libraries
-                                library_iter_['workflow'] == tumor_dna_library['workflow']
-                                if tumor_dna_library['workflow'] == 'clinical' else True
+                                library_iter_['workflow'] == tumor_dna_library_iter['workflow']
+                                if tumor_dna_library_iter['workflow'] == 'clinical' else True
                             )
                     ),
                     all_subject_libraries

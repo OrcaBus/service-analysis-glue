@@ -131,7 +131,7 @@ def handler(event, context):
 
     events_list = []
     for library_iter in tumor_libraries:
-        # Add the wgs dna draft event
+        # Add the ctdna draft event
         events_list.extend(
             generate_ctdna_draft_lists([library_iter])
         )
