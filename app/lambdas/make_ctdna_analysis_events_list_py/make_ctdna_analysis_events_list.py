@@ -49,21 +49,29 @@ def add_workflow_draft_event_detail(
         workflow_name: str,
         workflow_version: str,
 ):
+    # Set the portal run id
     portal_run_id = create_portal_run_id()
 
+    # Workflow run name
     workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
         portal_run_id=portal_run_id
     )
 
-    workflow = next(filter(
-        lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
-        list_workflows(
-            workflow_name=workflow_name,
-            workflow_version=workflow_version
-        )
-    ))
+    try:
+        workflow = next(filter(
+            lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
+            list_workflows(
+                workflow_name=workflow_name,
+                workflow_version=workflow_version
+            )
+        ))
+    except StopIteration:
+        workflow = {
+            "name": workflow_name,
+            "version": workflow_version,
+        }
 
     return {
         "status": DRAFT_STATUS,
