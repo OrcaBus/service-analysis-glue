@@ -188,11 +188,11 @@ def handler(event, context):
     if len(negative_control_libraries) > 0:
         # Negative control libraries should only go through dragen
         for ntc_library in negative_control_libraries:
-            events_list.extend(
+            events_list.extend([
                 add_dragen_wgts_dna_draft_event(
                     libraries=[ntc_library]
                 )
-            )
+            ])
 
     # If there are no tumor libraries and no normal libraries for this
     # subject on this run, return an empty list
@@ -204,9 +204,11 @@ def handler(event, context):
     for normal_library_iter in normal_libraries:
         if normal_library_iter['workflow'] == 'BatchControl':
             # Batch control libraries should only go through dragen
-            add_dragen_wgts_dna_draft_event(
-                libraries=[normal_library_iter],
-            )
+            events_list.extend([
+                add_dragen_wgts_dna_draft_event(
+                    libraries=[normal_library_iter],
+                )
+            ])
             # Remove from normal libraries list
             normal_libraries.remove(normal_library_iter)
 

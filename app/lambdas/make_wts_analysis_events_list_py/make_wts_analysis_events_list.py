@@ -168,11 +168,11 @@ def handler(event, context):
     if len(negative_control_libraries) > 0:
         # Negative control libraries should only go through dragen
         for ntc_library in negative_control_libraries:
-            events_list.extend(
-                generate_wts_draft_lists(
+            events_list.extend([
+                add_dragen_wgts_rna_draft_event(
                     libraries=[ntc_library]
                 )
-            )
+            ])
 
     # We only need the one phenotype
     tumor_libraries = list(filter(
