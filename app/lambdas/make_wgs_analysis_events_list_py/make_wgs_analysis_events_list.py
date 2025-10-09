@@ -10,6 +10,7 @@ If there is just one normal, we find the latest tumor for that subject.
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
 # Standard imports
+from copy import copy
 from os import environ
 from typing import List, Dict, Any
 
@@ -41,6 +42,9 @@ WORKFLOW_VERSION_LIST = {
 
 # Draft status
 DRAFT_STATUS = "DRAFT"
+
+# Gen Airspace project id
+GEN_AIRSPACE_PROJECT_ID = 'GenI-Airspace'
 
 
 def library_to_base_library(library: Library) -> LibraryBase:
@@ -201,9 +205,22 @@ def handler(event, context):
             "eventDetailList": events_list
         }
 
-    for normal_library_iter in normal_libraries:
-        if normal_library_iter['workflow'] == 'BatchControl':
-            # Batch control libraries should only go through dragen
+    # Check for batch control libraries
+    # Or germline specific projects
+    for normal_library_iter in copy(normal_libraries):
+        if (
+                # Is this the batch control library
+                normal_library_iter['workflow'] == 'BatchControl' or
+                # Is this part of the gen airspace project
+                any(
+                    list(map(
+                        lambda project_iter_: project_iter_['projectId'] == GEN_AIRSPACE_PROJECT_ID,
+                        normal_library_iter['projectSet']
+                    ))
+                )
+        ):
+            # Batch control libraries should only go through dragen component
+            # Likewise, gen airspace libraries should only go through dragen component
             events_list.extend([
                 add_dragen_wgts_dna_draft_event(
                     libraries=[normal_library_iter],
@@ -359,20 +376,3 @@ def handler(event, context):
     return {
         "eventDetailList": events_list
     }
-
-
-if __name__ == "__main__":
-    import json
-    print(
-        json.dumps(
-            handler(
-                {
-                    "libraryIdList": [
-                        "L2401542",
-                        "L2401543"
-                    ]
-                },
-                None
-            ),
-            indent=4
-    ))
