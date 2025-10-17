@@ -119,7 +119,8 @@ def add_bclconvert_interop_qc_draft_event(
         workflow_name=WORKFLOW_NAME_LIST['BCLCONVERT_INTEROP_QC'],
         workflow_version=WORKFLOW_VERSION_LIST['BCLCONVERT_INTEROP_QC'],
         libraries=libraries,
-        instrument_run_id=instrument_run_id
+        instrument_run_id=instrument_run_id,
+        payload_version=PAYLOAD_VERSION_LIST['BCLCONVERT_INTEROP_QC'],
     )
 
 
@@ -142,7 +143,7 @@ def handler(event, context):
     """
 
     # Get the library id list
-    instrument_run_id = event.get("instrumentRunId", [])
+    instrument_run_id = event.get("instrumentRunId")
 
     # Get the libraries as library objects
     library_id_list = get_library_id_list_in_sequence(
