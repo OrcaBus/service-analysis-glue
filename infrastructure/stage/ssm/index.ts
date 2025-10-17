@@ -12,10 +12,6 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
    * */
 
   /**
-   * Define the workflow names
-   */
-
-  /**
    * Default workflow versions
    */
   // Default workflow versions
@@ -25,6 +21,22 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
     new ssm.StringParameter(scope, `versions-${key}`, {
       parameterName: path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
+        camelCaseToKebabCase(key)
+      ),
+      stringValue: value,
+    });
+  }
+
+  /**
+   * Default payload versions
+   */
+  // Default payload versions
+  for (const [key, value] of Object.entries(
+    props.ssmParameterValues.payloadVersionsByWorkflowName
+  )) {
+    new ssm.StringParameter(scope, `payload-versions-${key}`, {
+      parameterName: path.join(
+        props.ssmParameterPaths.payloadVersionsPrefix,
         camelCaseToKebabCase(key)
       ),
       stringValue: value,

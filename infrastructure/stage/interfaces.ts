@@ -80,6 +80,12 @@ export interface Workflow {
 }
 
 /**
+ * BCLConvert InterOp QC Workflow Versions
+ */
+export type BclconvertInteropQcWorkflowVersionType = '1.5.0--1.31';
+export type BclconvertInteropQcPayloadVersionType = '2025.05.29';
+
+/**
  * CTDNA Workflow Versions
  */
 export type DragenTso500CtdnaWorkflowVersionType =
@@ -114,7 +120,9 @@ export type OncoanalyserWgtsDnaRnaWorkflowVersionType = '2.0.0' | '2.1.0' | '2.2
 
 export type RnasumWorkflowVersionType = '2.0.0';
 
-export type WorkflowObjectType =
+export type WorkflowVersionObjectType =
+  // BCLConvert InterOp QC
+  | Record<'bclconvertInteropQc', BclconvertInteropQcWorkflowVersionType>
   // ctDNA
   | Record<'dragenTso500Ctdna', DragenTso500CtdnaWorkflowVersionType>
   | Record<'pieriandxTso500Ctdna', PierianDxTso500CtdnaWorkflowVersionType>
@@ -129,3 +137,7 @@ export type WorkflowObjectType =
   // DNA / RNA
   | Record<'oncoanalyserWgtsDnaRna', OncoanalyserWgtsDnaRnaWorkflowVersionType>
   | Record<'rnasum', RnasumWorkflowVersionType>;
+
+export type WorkflowPayloadVersionType =
+  // Payload Version Type
+  Record<'bclconvertInteropQcPayloadVersionType', BclconvertInteropQcPayloadVersionType>;

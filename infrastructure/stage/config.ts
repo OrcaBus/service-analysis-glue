@@ -4,6 +4,8 @@ import {
   NEW_WORKFLOW_MANAGER_IS_DEPLOYED,
   WORKFLOW_VERSIONS_BY_NAME,
   SSM_PARAMETER_PATH_WORKFLOW_VERSION_PREFIX,
+  SSM_PARAMETER_PATH_PAYLOAD_VERSION_PREFIX,
+  PAYLOAD_VERSIONS_BY_NAME,
 } from './constants';
 import { StatefulApplicationStackConfig, StatelessApplicationStackConfig } from './interfaces';
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
@@ -18,6 +20,7 @@ import { SsmParameterPaths, SsmParameterValues } from './ssm/interfaces';
 export const getSsmParameterValues = (stage: StageName): SsmParameterValues => {
   return {
     workflowVersionsByWorkflowName: WORKFLOW_VERSIONS_BY_NAME[stage],
+    payloadVersionsByWorkflowName: PAYLOAD_VERSIONS_BY_NAME[stage],
   };
 };
 
@@ -25,6 +28,7 @@ export const getSsmParameterPaths = (): SsmParameterPaths => {
   return {
     rootPrefix: SSM_PARAMETER_PATH_PREFIX,
     workflowVersionsPrefix: SSM_PARAMETER_PATH_WORKFLOW_VERSION_PREFIX,
+    payloadVersionsPrefix: SSM_PARAMETER_PATH_PAYLOAD_VERSION_PREFIX,
   };
 };
 

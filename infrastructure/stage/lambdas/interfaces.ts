@@ -10,6 +10,7 @@ export type LambdaName =
   | 'getLibrariesFromInstrumentRunIdAndSubjectId'
   | 'getSubjectsFromInstrumentRunId'
   // Event Detail Makers
+  | 'makeBclconvertInteropQcEvent'
   | 'makeCtdnaAnalysisEventsList'
   | 'makeWgsAnalysisEventsList'
   | 'makeWtsAnalysisEventsList'
@@ -22,6 +23,7 @@ export const lambdaNameList: LambdaName[] = [
   'getLibrariesFromInstrumentRunIdAndSubjectId',
   'getSubjectsFromInstrumentRunId',
   // Event Detail Makers
+  'makeBclconvertInteropQcEvent',
   'makeCtdnaAnalysisEventsList',
   'makeWgsAnalysisEventsList',
   'makeWtsAnalysisEventsList',
@@ -48,6 +50,10 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsSsmParameterAccess: true,
   },
   // Event Detail Makers
+  makeBclconvertInteropQcEvent: {
+    needsOrcabusApiTools: true,
+    needsSsmParameterAccess: true,
+  },
   makeCtdnaAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,

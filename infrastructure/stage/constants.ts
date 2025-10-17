@@ -1,4 +1,4 @@
-import { WorkflowObjectType } from './interfaces';
+import { WorkflowPayloadVersionType, WorkflowVersionObjectType } from './interfaces';
 import path from 'path';
 import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 export const APP_ROOT = path.join(__dirname, '../../app');
@@ -9,7 +9,7 @@ export const STEP_FUNCTIONS_DIR = path.join(APP_ROOT, 'step-functions-templates'
 export const STACK_PREFIX = 'orca-analysis-glue';
 
 /* Workflow constants */
-export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowObjectType> = {
+export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectType> = {
   BETA: {
     // ctDNA
     dragenTso500Ctdna: '2.6.1',
@@ -60,6 +60,18 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowObjectType> = 
   },
 };
 
+export const PAYLOAD_VERSIONS_BY_NAME: Record<StageName, WorkflowPayloadVersionType> = {
+  BETA: {
+    bclconvertInteropQcPayloadVersionType: '2025.05.29',
+  },
+  GAMMA: {
+    bclconvertInteropQcPayloadVersionType: '2025.05.29',
+  },
+  PROD: {
+    bclconvertInteropQcPayloadVersionType: '2025.05.29',
+  },
+};
+
 /* Event Constants */
 export const EVENT_BUS_NAME = 'OrcaBusMain';
 export const EVENT_SOURCE = 'orcabus.analysisglue';
@@ -67,7 +79,6 @@ export const WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE = 'WorkflowRunStateChange';
 export const WORKFLOW_RUN_UPDATE_DETAIL_TYPE = 'WorkflowRunUpdate';
 
 /* Event rule constants */
-export const DRAFT_STATUS = 'DRAFT';
 export const FASTQ_GLUE_EVENT_SOURCE = 'orcabus.fastqglue';
 export const FASTQ_GLUE_READ_SETS_ADDED_EVENT_DETAIL_TYPE = 'ReadSetsAdded';
 
@@ -84,4 +95,8 @@ export const SSM_PARAMETER_PATH_PREFIX = path.join('/orcabus/analysis-glue/');
 export const SSM_PARAMETER_PATH_WORKFLOW_VERSION_PREFIX = path.join(
   SSM_PARAMETER_PATH_PREFIX,
   'workflow-versions'
+);
+export const SSM_PARAMETER_PATH_PAYLOAD_VERSION_PREFIX = path.join(
+  SSM_PARAMETER_PATH_PREFIX,
+  'payload-versions'
 );

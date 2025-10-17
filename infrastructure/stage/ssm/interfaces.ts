@@ -1,12 +1,14 @@
-import { WorkflowObjectType } from '../interfaces';
+import { WorkflowPayloadVersionType, WorkflowVersionObjectType } from '../interfaces';
 
 export interface SsmParameterValues {
-  workflowVersionsByWorkflowName: WorkflowObjectType;
+  workflowVersionsByWorkflowName: WorkflowVersionObjectType;
+  payloadVersionsByWorkflowName: WorkflowPayloadVersionType;
 }
 
 export interface SsmParameterPaths {
   rootPrefix: string;
   workflowVersionsPrefix: string;
+  payloadVersionsPrefix: string;
 }
 
 export interface BuildSsmParameterProps {
