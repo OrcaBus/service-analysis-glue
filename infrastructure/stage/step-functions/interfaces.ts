@@ -56,6 +56,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     'getLibrariesFromInstrumentRunIdAndSubjectId',
     'getSubjectsFromInstrumentRunId',
     // Event Detail Makers
+    'makeBclconvertInteropQcEvent',
     'makeCtdnaAnalysisEventsList',
     'makeWgsAnalysisEventsList',
     'makeWtsAnalysisEventsList',

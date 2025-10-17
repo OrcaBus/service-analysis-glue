@@ -83,6 +83,25 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
     );
   }
 
+  // BCLConvert Interop QC
+  if (props.lambdaName === 'makeBclconvertInteropQcEvent') {
+    lambdaFunction.addEnvironment(
+      'BCLCONVERT_INTEROP_QC_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      path.join(
+        props.ssmParameterPaths.workflowVersionsPrefix,
+        camelCaseToKebabCase(<WorkflowNameType>'bclconvertInteropQc')
+      )
+    );
+
+    lambdaFunction.addEnvironment(
+      'BCLCONVERT_INTEROP_QC_PAYLOAD_VERSION_SSM_PARAMETER_NAME',
+      path.join(
+        props.ssmParameterPaths.payloadVersionsPrefix,
+        camelCaseToKebabCase(<WorkflowNameType>'bclconvertInteropQc')
+      )
+    );
+  }
+
   // ctDNA
   if (props.lambdaName === 'makeCtdnaAnalysisEventsList') {
     lambdaFunction.addEnvironment(
