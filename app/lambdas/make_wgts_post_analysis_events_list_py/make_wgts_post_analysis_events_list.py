@@ -152,6 +152,12 @@ def handler(event, context):
         library_id_list
     )
 
+    # Filter to just WGS and WTS libraries
+    libraries_list = list(filter(
+        lambda library_iter_: library_iter_['type'] in ['WGS', 'WTS'],
+        libraries_list
+    ))
+
     # Get the subject orcabus id
     subject_orcabus_id = libraries_list[0]['subject']['orcabusId']
 
