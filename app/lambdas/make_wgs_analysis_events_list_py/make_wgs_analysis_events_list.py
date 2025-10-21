@@ -44,7 +44,11 @@ WORKFLOW_VERSION_LIST = {
 DRAFT_STATUS = "DRAFT"
 
 # Gen Airspace project id
-GEN_AIRSPACE_PROJECT_ID = 'GenI-Airspace'
+GERMLINE_ONLY_WORKFLOW_NAMES = [
+    'BatchControl',
+    'germline only'
+]
+
 
 
 def library_to_base_library(library: Library) -> LibraryBase:
@@ -210,14 +214,7 @@ def handler(event, context):
     for normal_library_iter in copy(normal_libraries):
         if (
                 # Is this the batch control library
-                normal_library_iter['workflow'] == 'BatchControl' or
-                # Is this part of the gen airspace project
-                any(
-                    list(map(
-                        lambda project_iter_: project_iter_['projectId'] == GEN_AIRSPACE_PROJECT_ID,
-                        normal_library_iter['projectSet']
-                    ))
-                )
+                normal_library_iter['workflow'] in GERMLINE_ONLY_WORKFLOW_NAMES
         ):
             # Batch control libraries should only go through dragen component
             # Likewise, gen airspace libraries should only go through dragen component
