@@ -11,6 +11,8 @@ export const STACK_PREFIX = 'orca-analysis-glue';
 /* Workflow constants */
 export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectType> = {
   BETA: {
+    // BCLConvert InterOp QC
+    bclconvertInteropQc: '1.5.0--1.31',
     // ctDNA
     dragenTso500Ctdna: '2.6.1',
     pieriandxTso500Ctdna: '2.1',
@@ -27,6 +29,8 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectT
     rnasum: '2.0.0',
   },
   GAMMA: {
+    // BCLConvert InterOp QC
+    bclconvertInteropQc: '1.5.0--1.31',
     // ctDNA
     dragenTso500Ctdna: '2.6.0',
     pieriandxTso500Ctdna: '2.1',
@@ -43,6 +47,8 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectT
     rnasum: '2.0.0',
   },
   PROD: {
+    // BCLConvert InterOp QC
+    bclconvertInteropQc: '1.5.0--1.31',
     // ctDNA
     dragenTso500Ctdna: '2.6.0',
     pieriandxTso500Ctdna: '2.1',
@@ -62,13 +68,13 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectT
 
 export const PAYLOAD_VERSIONS_BY_NAME: Record<StageName, WorkflowPayloadVersionType> = {
   BETA: {
-    bclconvertInteropQcPayloadVersionType: '2025.05.29',
+    bclconvertInteropQc: '2025.05.29',
   },
   GAMMA: {
-    bclconvertInteropQcPayloadVersionType: '2025.05.29',
+    bclconvertInteropQc: '2025.05.29',
   },
   PROD: {
-    bclconvertInteropQcPayloadVersionType: '2025.05.29',
+    bclconvertInteropQc: '2025.05.29',
   },
 };
 

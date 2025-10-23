@@ -140,4 +140,4 @@ export type WorkflowVersionObjectType =
 
 export type WorkflowPayloadVersionType =
   // Payload Version Type
-  Record<'bclconvertInteropQcPayloadVersionType', BclconvertInteropQcPayloadVersionType>;
+  Record<'bclconvertInteropQc', BclconvertInteropQcPayloadVersionType>;
