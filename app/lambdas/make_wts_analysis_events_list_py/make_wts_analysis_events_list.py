@@ -159,6 +159,12 @@ def handler(event, context):
         library_id_list
     )
 
+    # Filter to WTS libraries only
+    libraries_list = list(filter(
+        lambda library_iter_: library_iter_['type'] == 'WTS',
+        libraries_list
+    ))
+
     # Check for negative control
     negative_control_libraries = list(filter(
         lambda library_iter_: library_iter_['phenotype'].startswith('negative'),
