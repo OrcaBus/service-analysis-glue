@@ -158,6 +158,12 @@ def handler(event, context):
         libraries_list
     ))
 
+    # If there are no libraries, return an empty list
+    if len(libraries_list) == 0:
+        return {
+            "eventDetailList": events_list
+        }
+
     # Get the subject orcabus id
     subject_orcabus_id = libraries_list[0]['subject']['orcabusId']
 
