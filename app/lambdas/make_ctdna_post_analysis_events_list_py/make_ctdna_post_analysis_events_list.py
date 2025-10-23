@@ -126,12 +126,12 @@ def handler(event, context):
         library_id_list
     )
 
-    # Get the subject orcabus id
-    subject_orcabus_id = libraries_list[0]['subject']['orcabusId']
-
-    # We only need the one phenotype
+    # We only need the ctdna tumor libraries
     tumor_libraries = list(filter(
-        lambda library_iter_: library_iter_['phenotype'] == 'tumor',
+        lambda library_iter_: (
+            library_iter_['phenotype'] == 'tumor' and
+            library_iter_['type'] == 'ctDNA'
+        ),
         libraries_list
     ))
 
