@@ -252,7 +252,10 @@ def handler(event, context):
     # We sort by orcabusId descending so that the latest library is first
     # This assumes that orcabusIds are assigned in increasing order over time
     all_subject_libraries = list(filter(
-        lambda library_iter_: library_iter_['subject']['orcabusId'] == subject_orcabus_id,
+        lambda library_iter_: (
+            library_iter_['subject']['orcabusId'] == subject_orcabus_id and
+            library_iter_['type'] == 'WGS'
+        ),
         sorted(
             get_all_libraries(),
             key=lambda library_iter__: library_iter__['orcabusId'],
