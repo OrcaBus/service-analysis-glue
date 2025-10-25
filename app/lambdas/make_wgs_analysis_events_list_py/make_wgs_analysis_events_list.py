@@ -45,10 +45,9 @@ DRAFT_STATUS = "DRAFT"
 
 # Gen Airspace project id
 GERMLINE_ONLY_WORKFLOW_NAMES = [
-    'BatchControl',
-    'germline only'
+    'control',
+    'germline'
 ]
-
 
 
 def library_to_base_library(library: Library) -> LibraryBase:
