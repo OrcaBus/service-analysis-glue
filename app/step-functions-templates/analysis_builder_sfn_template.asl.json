@@ -65,7 +65,7 @@
             },
             "Generate BCLConvert InterOp QC Draft (Legacy)": {
               "Type": "Task",
-              "Resource": "arn:aws:states:::events:putEvents.waitForTaskToken",
+              "Resource": "arn:aws:states:::events:putEvents",
               "Arguments": {
                 "Entries": "{% [\n  $states.input.eventDetail ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
               },
