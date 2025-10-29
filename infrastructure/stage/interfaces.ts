@@ -102,7 +102,7 @@ export type DragenWgtsDnaWorkflowVersionType = '4.4.4';
 
 export type OncoanalyserWgtsDnaWorkflowVersionType = '2.0.0' | '2.1.0' | '2.2.0';
 
-export type SashWorkflowVersionType = '0.6.1' | '0.6.2';
+export type SashWorkflowVersionType = '0.6.1' | '0.6.2' | '0.6.3';
 
 /**
  * RNA Workflow Versions
