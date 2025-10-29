@@ -20,7 +20,7 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectT
     dragenWgtsDna: '4.4.4',
     arribaWgtsRna: '2.5.0',
     oncoanalyserWgtsDna: '2.2.0',
-    sash: '0.6.2',
+    sash: '0.6.3',
     // RNA
     dragenWgtsRna: '4.4.4',
     oncoanalyserWgtsRna: '2.2.0',
@@ -38,7 +38,7 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectT
     dragenWgtsDna: '4.4.4',
     arribaWgtsRna: '2.5.0',
     oncoanalyserWgtsDna: '2.2.0',
-    sash: '0.6.1',
+    sash: '0.6.3',
     // RNA
     dragenWgtsRna: '4.4.4',
     oncoanalyserWgtsRna: '2.2.0',
@@ -56,7 +56,7 @@ export const WORKFLOW_VERSIONS_BY_NAME: Record<StageName, WorkflowVersionObjectT
     dragenWgtsDna: '4.4.4',
     arribaWgtsRna: '2.5.0',
     oncoanalyserWgtsDna: '2.2.0',
-    sash: '0.6.1',
+    sash: '0.6.3',
     // RNA
     dragenWgtsRna: '4.4.4',
     oncoanalyserWgtsRna: '2.2.0',
