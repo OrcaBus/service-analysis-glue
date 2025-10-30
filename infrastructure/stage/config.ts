@@ -2,7 +2,7 @@ import {
   EVENT_BUS_NAME,
   SSM_PARAMETER_PATH_PREFIX,
   NEW_WORKFLOW_MANAGER_IS_DEPLOYED,
-  WORKFLOW_VERSIONS_BY_NAME,
+  CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME,
   SSM_PARAMETER_PATH_WORKFLOW_VERSION_PREFIX,
   SSM_PARAMETER_PATH_PAYLOAD_VERSION_PREFIX,
   PAYLOAD_VERSIONS_BY_NAME,
@@ -19,7 +19,7 @@ import { SsmParameterPaths, SsmParameterValues } from './ssm/interfaces';
 
 export const getSsmParameterValues = (stage: StageName): SsmParameterValues => {
   return {
-    workflowVersionsByWorkflowName: WORKFLOW_VERSIONS_BY_NAME[stage],
+    workflowVersionsByWorkflowName: CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME[stage],
     payloadVersionsByWorkflowName: PAYLOAD_VERSIONS_BY_NAME[stage],
   };
 };

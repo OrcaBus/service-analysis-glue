@@ -3,10 +3,10 @@
 """
 Make BCLConvert InteropQC events list
 """
-
 # Standard imports
+import json
 from os import environ
-from typing import List, Dict, Any, TypedDict, cast
+from typing import List, Dict, Any, TypedDict, cast, NotRequired, Unpack, Literal
 
 # Layer imports
 from orcabus_api_tools.fastq import get_fastqs_in_library
@@ -25,20 +25,16 @@ from orcabus_api_tools.sequence import (
     get_library_id_list_in_sequence
 )
 
-# Globals
-WORKFLOW_NAME_LIST = {
-    "BCLCONVERT_INTEROP_QC": 'bclconvert-interop-qc',
-}
+# Type hints
+WorkflowName = Literal['BCLCONVERT_INTEROP_QC']
 
-WORKFLOW_VERSION_LIST = {
-    "BCLCONVERT_INTEROP_QC": get_ssm_value(environ['BCLCONVERT_INTEROP_QC_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-}
-
-PAYLOAD_VERSION_LIST = {
-    "BCLCONVERT_INTEROP_QC": get_ssm_value(environ['BCLCONVERT_INTEROP_QC_PAYLOAD_VERSION_SSM_PARAMETER_NAME']),
-}
-
-DRAFT_STATUS = "DRAFT"
+class Workflow(TypedDict):
+    name: str
+    version: str
+    codeVersion: NotRequired[str]
+    executionEngine: NotRequired[str]
+    executionEnginePipelineId: NotRequired[str]
+    validationState: NotRequired[str]
 
 
 class ReadSet(TypedDict):
@@ -48,6 +44,18 @@ class ReadSet(TypedDict):
 
 class EventLibrary(LibraryBase):
     readsets: List[ReadSet]
+
+
+# Globals
+WORKFLOW_OBJECT_DICT: Dict[WorkflowName, Workflow] = {
+    "BCLCONVERT_INTEROP_QC": json.loads(get_ssm_value(environ['BCLCONVERT_INTEROP_QC_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+}
+
+PAYLOAD_VERSION_DICT: Dict[WorkflowName, str] = {
+    "BCLCONVERT_INTEROP_QC": get_ssm_value(environ['BCLCONVERT_INTEROP_QC_PAYLOAD_VERSION_SSM_PARAMETER_NAME']),
+}
+
+DRAFT_STATUS = "DRAFT"
 
 
 def library_to_event_library(library: Library) -> EventLibrary:
@@ -73,13 +81,16 @@ def library_to_event_library(library: Library) -> EventLibrary:
 
 
 def add_workflow_draft_event_detail(
-        instrument_run_id: str,
         libraries: List[Library],
-        workflow_name: str,
-        workflow_version: str,
+        instrument_run_id: str,
         payload_version: str = None,
+        **kwargs: Unpack[Workflow]
 ):
-    # Set the portal run id
+    # Get the workflow name and version from kwargs
+    workflow_name = kwargs.pop('name')
+    workflow_version = kwargs.pop('version')
+
+    # Create the portal run id
     portal_run_id = create_portal_run_id()
 
     # Workflow run name
@@ -89,12 +100,15 @@ def add_workflow_draft_event_detail(
         portal_run_id=portal_run_id
     )
 
-    # Get the workflow
-    workflow = next(filter(
-        lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
+    # Get the workflow object
+    workflow = next(iter(
         list_workflows(
             workflow_name=workflow_name,
-            workflow_version=workflow_version
+            workflow_version=workflow_version,
+            code_version=kwargs.get("codeVersion", None),
+            execution_engine=kwargs.get("executionEngine", None),
+            execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
+            validation_state=kwargs.get("validationState", None),
         )
     ))
 
@@ -133,11 +147,10 @@ def add_bclconvert_interop_qc_draft_event(
     """
 
     return add_workflow_draft_event_detail(
-        workflow_name=WORKFLOW_NAME_LIST['BCLCONVERT_INTEROP_QC'],
-        workflow_version=WORKFLOW_VERSION_LIST['BCLCONVERT_INTEROP_QC'],
         libraries=libraries,
         instrument_run_id=instrument_run_id,
-        payload_version=PAYLOAD_VERSION_LIST['BCLCONVERT_INTEROP_QC'],
+        payload_version=PAYLOAD_VERSION_DICT['BCLCONVERT_INTEROP_QC'],
+        **WORKFLOW_OBJECT_DICT['BCLCONVERT_INTEROP_QC']
     )
 
 

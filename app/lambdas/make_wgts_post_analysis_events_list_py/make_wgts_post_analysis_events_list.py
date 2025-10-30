@@ -9,13 +9,13 @@ If there is just one normal, we find the latest tumor for that subject.
 
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
-
 # Standard imports
+import json
 from os import environ
-from typing import List, Dict, Any, TypedDict, cast
+from typing import List, Dict, Any, TypedDict, cast, NotRequired, Unpack, Literal
 
-from orcabus_api_tools.fastq import get_fastqs_in_library
 # Layer imports
+from orcabus_api_tools.fastq import get_fastqs_in_library
 from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
     get_all_libraries
@@ -24,28 +24,20 @@ from orcabus_api_tools.metadata.models import Library, LibraryBase
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
 from orcabus_api_tools.workflow import (
     create_portal_run_id,
-    create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id, list_workflows
+    create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id,
+    list_workflows
 )
 
-# Globals
-WORKFLOW_NAME_LIST = {
-    "ONCOANALYSER_WGTS_DNA_RNA": "oncoanalyser-wgts-dna-rna",
-    "RNASUM": "rnasum"
-}
+# Type hints
+WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
 
-WORKFLOW_VERSION_LIST = {
-    "ONCOANALYSER_WGTS_DNA_RNA": get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-    "RNASUM": get_ssm_value(environ['RNASUM_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-}
-
-# Draft status
-DRAFT_STATUS = "DRAFT"
-
-# EVENT TYPE
-EVENT_BUS_NAME = "OrcaBusMain"
-EVENT_DETAIL_TYPE = "WorkflowRunStateChange"
-EVENT_SOURCE = "orcabus.analysisglue"
-
+class Workflow(TypedDict):
+    name: str
+    version: str
+    codeVersion: NotRequired[str]
+    executionEngine: NotRequired[str]
+    executionEnginePipelineId: NotRequired[str]
+    validationState: NotRequired[str]
 
 class ReadSet(TypedDict):
     orcabusId: str
@@ -54,6 +46,15 @@ class ReadSet(TypedDict):
 
 class EventLibrary(LibraryBase):
     readsets: List[ReadSet]
+
+# Globals
+WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
+    "ONCOANALYSER_WGTS_DNA_RNA": json.loads(get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+    "RNASUM": json.loads(get_ssm_value(environ['RNASUM_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+}
+
+# Draft status
+DRAFT_STATUS = "DRAFT"
 
 
 def library_to_event_library(library: Library) -> EventLibrary:
@@ -81,21 +82,29 @@ def library_to_event_library(library: Library) -> EventLibrary:
 def add_workflow_draft_event(
         libraries: List[Library],
         workflow_name: str,
-        workflow_version: str,
+        **kwargs: Unpack[Workflow]
 ):
-    portal_run_id = create_portal_run_id()
+    # Get the workflow name and version from kwargs
+    workflow_name = kwargs.pop('name')
+    workflow_version = kwargs.pop('version')
 
+    # Create the portal run id and workflow run name
+    portal_run_id = create_portal_run_id()
     workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
         portal_run_id=portal_run_id
     )
 
-    workflow = next(filter(
-        lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
+    # Get the workflow object
+    workflow = next(iter(
         list_workflows(
             workflow_name=workflow_name,
-            workflow_version=workflow_version
+            workflow_version=workflow_version,
+            code_version=kwargs.get("codeVersion", None),
+            execution_engine=kwargs.get("executionEngine", None),
+            execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
+            validation_state=kwargs.get("validationState", None),
         )
     ))
 
@@ -120,9 +129,8 @@ def add_oncoanalyser_wgts_dna_rna_draft_event(
     :return:
     """
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['ONCOANALYSER_WGTS_DNA_RNA'],
-        workflow_version=WORKFLOW_VERSION_LIST['ONCOANALYSER_WGTS_DNA_RNA'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA'],
     )
 
 
@@ -135,9 +143,8 @@ def add_rnasum_draft_event(
     :return:
     """
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['RNASUM'],
-        workflow_version=WORKFLOW_VERSION_LIST['RNASUM'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['RNASUM'],
     )
 
 
