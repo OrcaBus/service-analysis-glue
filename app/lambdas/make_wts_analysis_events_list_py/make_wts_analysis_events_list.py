@@ -5,9 +5,10 @@ Make WTS analysis events list
 """
 
 # Standard imports
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TypedDict, cast
 from os import environ
 
+from orcabus_api_tools.fastq import get_fastqs_in_library
 # Layer imports
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
 from orcabus_api_tools.metadata import (
@@ -36,10 +37,34 @@ WORKFLOW_VERSION_LIST = {
 DRAFT_STATUS = "DRAFT"
 
 
-def library_to_base_library(library: Library) -> LibraryBase:
+class ReadSet(TypedDict):
+    orcabusId: str
+    rgid: str
+
+
+class EventLibrary(LibraryBase):
+    readsets: List[ReadSet]
+
+
+def library_to_event_library(library: Library) -> EventLibrary:
     return {
         "orcabusId": library['orcabusId'],
         "libraryId": library['libraryId'],
+        "readsets": list(map(
+            lambda fastq_id_iter_: cast(
+                ReadSet,
+                cast(object, {
+                    "orcabusId": fastq_id_iter_['id'],
+                    "rgid": ".".join([
+                        fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
+                        fastq_id_iter_['instrumentRunId']
+                    ]),
+                })
+            ),
+            get_fastqs_in_library(
+                library_id=library['libraryId']
+            )
+        )),
     }
 
 
@@ -56,19 +81,13 @@ def add_workflow_draft_event(
         portal_run_id=portal_run_id
     )
 
-    try:
-        workflow = next(filter(
-            lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
-            list_workflows(
-                workflow_name=workflow_name,
-                workflow_version=workflow_version
-            )
-        ))
-    except StopIteration:
-        workflow = {
-            "name": workflow_name,
-            "version": workflow_version,
-        }
+    workflow = next(filter(
+        lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
+        list_workflows(
+            workflow_name=workflow_name,
+            workflow_version=workflow_version
+        )
+    ))
 
     return {
         "status": DRAFT_STATUS,
@@ -76,10 +95,7 @@ def add_workflow_draft_event(
         "workflowRunName": workflow_run_name,
         "portalRunId": portal_run_id,
         "libraries": list(map(
-            lambda library_obj_iter_: {
-                "libraryId": library_obj_iter_['libraryId'],
-                "orcabusId": library_obj_iter_['orcabusId']
-            },
+            library_to_event_library,
             libraries
         ))
     }
