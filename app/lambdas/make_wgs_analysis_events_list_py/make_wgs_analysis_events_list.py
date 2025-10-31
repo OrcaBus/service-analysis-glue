@@ -10,11 +10,13 @@ If there is just one normal, we find the latest tumor for that subject.
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
 # Standard imports
+import json
 from copy import copy
 from os import environ
-from typing import List, Dict, Any
+from typing import List, Dict, Any, TypedDict, cast, Unpack, NotRequired, Literal
 
 # Layer imports
+from orcabus_api_tools.fastq import get_fastqs_in_library
 from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
     get_all_libraries
@@ -27,73 +29,106 @@ from orcabus_api_tools.workflow import (
     list_workflows
 )
 
-# Globals
-WORKFLOW_NAME_LIST = {
-    "DRAGEN_WGTS_DNA": "dragen-wgts-dna",
-    "ONCOANALYSER_WGTS_DNA": "oncoanalyser-wgts-dna",
-    "SASH": "sash"
-}
+# Type hints
+WorkflowName = Literal['DRAGEN_WGTS_DNA', 'ONCOANALYSER_WGTS_DNA', 'SASH']
 
-WORKFLOW_VERSION_LIST = {
-    "DRAGEN_WGTS_DNA": get_ssm_value(environ['DRAGEN_WGTS_DNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-    "ONCOANALYSER_WGTS_DNA": get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-    "SASH": get_ssm_value(environ['SASH_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
+
+class Workflow(TypedDict):
+    name: str
+    version: str
+    codeVersion: NotRequired[str]
+    executionEngine: NotRequired[str]
+    executionEnginePipelineId: NotRequired[str]
+    validationState: NotRequired[str]
+
+
+class ReadSet(TypedDict):
+    orcabusId: str
+    rgid: str
+
+
+class EventLibrary(LibraryBase):
+    readsets: List[ReadSet]
+
+
+# Globals
+WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
+    "DRAGEN_WGTS_DNA": json.loads(get_ssm_value(environ['DRAGEN_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+    "ONCOANALYSER_WGTS_DNA": json.loads(get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+    "SASH": json.loads(get_ssm_value(environ['SASH_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
 }
 
 # Draft status
 DRAFT_STATUS = "DRAFT"
 
-# Gen Airspace project id
+# Germline only workflow names
 GERMLINE_ONLY_WORKFLOW_NAMES = [
     'control',
-    'germline'
+    'germline',
 ]
 
 
-def library_to_base_library(library: Library) -> LibraryBase:
+def library_to_event_library(library: Library) -> EventLibrary:
     return {
         "orcabusId": library['orcabusId'],
         "libraryId": library['libraryId'],
+        "readsets": list(map(
+            lambda fastq_id_iter_: cast(
+                ReadSet,
+                cast(object, {
+                    "orcabusId": fastq_id_iter_['id'],
+                    "rgid": ".".join([
+                        fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
+                        fastq_id_iter_['instrumentRunId']
+                    ]),
+                })
+            ),
+            get_fastqs_in_library(
+                library_id=library['libraryId']
+            )
+        )),
     }
 
 
 def add_workflow_draft_event(
         libraries: List[Library],
-        workflow_name: str,
-        workflow_version: str,
+        **kwargs: Unpack[Workflow]
 ):
-    portal_run_id = create_portal_run_id()
+    # Get the workflow name and version from kwargs
+    workflow_name = kwargs.pop('name')
+    workflow_version = kwargs.pop('version')
 
+    # Create portal run id
+    portal_run_id = create_portal_run_id()
     workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
         portal_run_id=portal_run_id
     )
 
+    # Get the workflow object
     try:
-        workflow = next(filter(
-            lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
+        workflow = next(iter(
             list_workflows(
                 workflow_name=workflow_name,
-                workflow_version=workflow_version
+                workflow_version=workflow_version,
+                code_version=kwargs.get("codeVersion", None),
+                execution_engine=kwargs.get("executionEngine", None),
+                execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
+                validation_state=kwargs.get("validationState", None),
             )
         ))
     except StopIteration:
-        workflow = {
-            "name": workflow_name,
-            "version": workflow_version,
-        }
+        raise ValueError(f"Workflow {workflow_name} version {workflow_version} not found")
 
+    # Return the draft event
     return {
         "status": DRAFT_STATUS,
         "workflow": workflow,
         "workflowRunName": workflow_run_name,
         "portalRunId": portal_run_id,
         "libraries": list(map(
-            lambda library_obj_iter_: {
-                "libraryId": library_obj_iter_['libraryId'],
-                "orcabusId": library_obj_iter_['orcabusId']
-            },
+            library_to_event_library,
             libraries
         ))
     }
@@ -109,9 +144,8 @@ def add_dragen_wgts_dna_draft_event(
     """
 
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['DRAGEN_WGTS_DNA'],
-        workflow_version=WORKFLOW_VERSION_LIST['DRAGEN_WGTS_DNA'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_DNA']
     )
 
 
@@ -124,9 +158,8 @@ def add_oncoanalyser_wgts_dna_draft_event(
     :return:
     """
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['ONCOANALYSER_WGTS_DNA'],
-        workflow_version=WORKFLOW_VERSION_LIST['ONCOANALYSER_WGTS_DNA'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']
     )
 
 
@@ -139,9 +172,8 @@ def add_sash_wgts_dna_draft_event(
     :return:
     """
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['SASH'],
-        workflow_version=WORKFLOW_VERSION_LIST['SASH'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['SASH']
     )
 
 

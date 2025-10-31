@@ -5,10 +5,12 @@ Make WTS analysis events list
 """
 
 # Standard imports
-from typing import List, Dict, Any
+from typing import List, Dict, Any, NotRequired, TypedDict, Unpack, cast, Literal
 from os import environ
+import json
 
 # Layer imports
+from orcabus_api_tools.fastq import get_fastqs_in_library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
 from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
@@ -19,56 +21,93 @@ from orcabus_api_tools.workflow import (
     create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id, list_workflows
 )
 
-# Globals
-WORKFLOW_NAME_LIST = {
-    "DRAGEN_WGTS_RNA": "dragen-wgts-rna",
-    "ARRIBA_WGTS_RNA": "arriba-wgts-rna",
-    "ONCOANALYSER_WGTS_RNA": "oncoanalyser-wgts-rna",
-}
+# Typehints
+WorkflowName = Literal['DRAGEN_WGTS_RNA', 'ARRIBA_WGTS_RNA', 'ONCOANALYSER_WGTS_RNA']
 
-WORKFLOW_VERSION_LIST = {
-    "DRAGEN_WGTS_RNA": get_ssm_value(environ['DRAGEN_WGTS_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-    "ARRIBA_WGTS_RNA": get_ssm_value(environ['ARRIBA_WGTS_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
-    "ONCOANALYSER_WGTS_RNA": get_ssm_value(environ['ONCOANALYSER_WGTS_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME']),
+
+class Workflow(TypedDict):
+    name: str
+    version: str
+    codeVersion: NotRequired[str]
+    executionEngine: NotRequired[str]
+    executionEnginePipelineId: NotRequired[str]
+    validationState: NotRequired[str]
+
+
+class ReadSet(TypedDict):
+    orcabusId: str
+    rgid: str
+
+
+class EventLibrary(LibraryBase):
+    readsets: List[ReadSet]
+
+
+# Globals
+WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
+    "DRAGEN_WGTS_RNA": json.loads(get_ssm_value(environ['DRAGEN_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+    "ARRIBA_WGTS_RNA": json.loads(get_ssm_value(environ['ARRIBA_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+    "ONCOANALYSER_WGTS_RNA": json.loads(get_ssm_value(environ['ONCOANALYSER_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
 }
 
 # Draft status
 DRAFT_STATUS = "DRAFT"
 
 
-def library_to_base_library(library: Library) -> LibraryBase:
+def library_to_event_library(library: Library) -> EventLibrary:
     return {
         "orcabusId": library['orcabusId'],
         "libraryId": library['libraryId'],
+        "readsets": list(map(
+            lambda fastq_id_iter_: cast(
+                ReadSet,
+                cast(object, {
+                    "orcabusId": fastq_id_iter_['id'],
+                    "rgid": ".".join([
+                        fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
+                        fastq_id_iter_['instrumentRunId']
+                    ]),
+                })
+            ),
+            get_fastqs_in_library(
+                library_id=library['libraryId']
+            )
+        )),
     }
 
 
 def add_workflow_draft_event(
         libraries: List[Library],
-        workflow_name: str,
-        workflow_version: str,
+        **kwargs: Unpack[Workflow]
 ):
+    # Get the workflow name and version from kwargs
+    workflow_name = kwargs.pop('name')
+    workflow_version = kwargs.pop('version')
+
+    # Create the portal run id
     portal_run_id = create_portal_run_id()
 
+    # Create the workflow run name
     workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
         portal_run_id=portal_run_id
     )
 
+    # Get the workflow object
     try:
-        workflow = next(filter(
-            lambda workflow_iter_: workflow_iter_.get("name") == workflow_name,
+        workflow = next(iter(
             list_workflows(
                 workflow_name=workflow_name,
-                workflow_version=workflow_version
+                workflow_version=workflow_version,
+                code_version=kwargs.get("codeVersion", None),
+                execution_engine=kwargs.get("executionEngine", None),
+                execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
+                validation_state=kwargs.get("validationState", None),
             )
         ))
     except StopIteration:
-        workflow = {
-            "name": workflow_name,
-            "version": workflow_version,
-        }
+        raise ValueError(f"Workflow {workflow_name} version {workflow_version} not found")
 
     return {
         "status": DRAFT_STATUS,
@@ -76,10 +115,7 @@ def add_workflow_draft_event(
         "workflowRunName": workflow_run_name,
         "portalRunId": portal_run_id,
         "libraries": list(map(
-            lambda library_obj_iter_: {
-                "libraryId": library_obj_iter_['libraryId'],
-                "orcabusId": library_obj_iter_['orcabusId']
-            },
+            library_to_event_library,
             libraries
         ))
     }
@@ -95,9 +131,8 @@ def add_dragen_wgts_rna_draft_event(
     """
 
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['DRAGEN_WGTS_RNA'],
-        workflow_version=WORKFLOW_VERSION_LIST['DRAGEN_WGTS_RNA'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_RNA'],
     )
 
 
@@ -110,9 +145,8 @@ def add_arriba_wgts_rna_draft_event(
     :return:
     """
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['ARRIBA_WGTS_RNA'],
-        workflow_version=WORKFLOW_VERSION_LIST['ARRIBA_WGTS_RNA'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['ARRIBA_WGTS_RNA'],
     )
 
 
@@ -125,9 +159,8 @@ def add_oncoanalyser_wgts_rna_draft_event(
     :return:
     """
     return add_workflow_draft_event(
-        workflow_name=WORKFLOW_NAME_LIST['ONCOANALYSER_WGTS_RNA'],
-        workflow_version=WORKFLOW_VERSION_LIST['ONCOANALYSER_WGTS_RNA'],
-        libraries=libraries
+        libraries=libraries,
+        **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_RNA'],
     )
 
 

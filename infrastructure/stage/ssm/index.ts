@@ -23,7 +23,7 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(key)
       ),
-      stringValue: value,
+      stringValue: JSON.stringify(value),
     });
   }
 

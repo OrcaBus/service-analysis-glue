@@ -86,7 +86,7 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   // BCLConvert Interop QC
   if (props.lambdaName === 'makeBclconvertInteropQcEvent') {
     lambdaFunction.addEnvironment(
-      'BCLCONVERT_INTEROP_QC_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'BCLCONVERT_INTEROP_QC_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'bclconvertInteropQc')
@@ -105,7 +105,7 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   // ctDNA
   if (props.lambdaName === 'makeCtdnaAnalysisEventsList') {
     lambdaFunction.addEnvironment(
-      'DRAGEN_TSO500_CTDNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'DRAGEN_TSO500_CTDNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'dragenTso500Ctdna')
@@ -115,7 +115,7 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
 
   if (props.lambdaName === 'makeCtdnaPostAnalysisEventsList') {
     lambdaFunction.addEnvironment(
-      'PIERIANDX_TSO500_CTDNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'PIERIANDX_TSO500_CTDNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'pieriandxTso500Ctdna')
@@ -126,21 +126,21 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   // DNA
   if (props.lambdaName === 'makeWgsAnalysisEventsList') {
     lambdaFunction.addEnvironment(
-      'DRAGEN_WGTS_DNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'DRAGEN_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'dragenWgtsDna')
       )
     );
     lambdaFunction.addEnvironment(
-      'ONCOANALYSER_WGTS_DNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'ONCOANALYSER_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'oncoanalyserWgtsDna')
       )
     );
     lambdaFunction.addEnvironment(
-      'SASH_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'SASH_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'sash')
@@ -151,21 +151,21 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   // RNA
   if (props.lambdaName === 'makeWtsAnalysisEventsList') {
     lambdaFunction.addEnvironment(
-      'DRAGEN_WGTS_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'DRAGEN_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'dragenWgtsRna')
       )
     );
     lambdaFunction.addEnvironment(
-      'ARRIBA_WGTS_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'ARRIBA_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'arribaWgtsRna')
       )
     );
     lambdaFunction.addEnvironment(
-      'ONCOANALYSER_WGTS_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'ONCOANALYSER_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'oncoanalyserWgtsRna')
@@ -176,14 +176,14 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   // DNA/RNA
   if (props.lambdaName === 'makeWgtsPostAnalysisEventsList') {
     lambdaFunction.addEnvironment(
-      'ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'oncoanalyserWgtsDnaRna')
       )
     );
     lambdaFunction.addEnvironment(
-      'RNASUM_WORKFLOW_VERSION_SSM_PARAMETER_NAME',
+      'RNASUM_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
         props.ssmParameterPaths.workflowVersionsPrefix,
         camelCaseToKebabCase(<WorkflowNameType>'rnasum')
