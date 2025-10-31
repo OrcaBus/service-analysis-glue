@@ -97,16 +97,19 @@ def add_workflow_draft_event(
     )
 
     # Get the workflow object
-    workflow = next(iter(
-        list_workflows(
-            workflow_name=workflow_name,
-            workflow_version=workflow_version,
-            code_version=kwargs.get("codeVersion", None),
-            execution_engine=kwargs.get("executionEngine", None),
-            execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
-            validation_state=kwargs.get("validationState", None),
-        )
-    ))
+    try:
+        workflow = next(iter(
+            list_workflows(
+                workflow_name=workflow_name,
+                workflow_version=workflow_version,
+                code_version=kwargs.get("codeVersion", None),
+                execution_engine=kwargs.get("executionEngine", None),
+                execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
+                validation_state=kwargs.get("validationState", None),
+            )
+        ))
+    except StopIteration:
+        raise ValueError(f"Workflow {workflow_name} version {workflow_version} not found")
 
     return {
         "status": DRAFT_STATUS,
