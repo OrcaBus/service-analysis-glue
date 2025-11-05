@@ -138,14 +138,27 @@ export type PierianDxTso500CtdnaWorkflowObjectType = Workflow & {
 /**
  * DNA Workflow Versions
  */
-export type DragenWgtsDnaWorkflowObjectType = Workflow & {
-  name: 'dragen-wgts-dna';
-  version: '4.4.4';
-  codeVersion: 'e365e71';
-  executionEngine: 'ICA';
-  executionEnginePipelineId: '76a85933-4656-4188-bd0a-9ac006809dc6';
-  validationState: 'VALIDATED';
-};
+export type DragenWgtsDnaWorkflowObjectType = Workflow &
+  (
+    | {
+        // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251015010222
+        name: 'dragen-wgts-dna';
+        version: '4.4.4';
+        codeVersion: 'e365e71';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '76a85933-4656-4188-bd0a-9ac006809dc6';
+        validationState: 'VALIDATED';
+      }
+    // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.6__20251030232217
+    | {
+        name: 'dragen-wgts-dna';
+        version: '4.4.6';
+        codeVersion: 'e48db54';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '34c40b33-a71d-443a-a415-3d7ef157b545';
+        validationState: 'VALIDATED';
+      }
+  );
 
 export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow & {
   name: 'oncoanalyser-wgts-dna';
