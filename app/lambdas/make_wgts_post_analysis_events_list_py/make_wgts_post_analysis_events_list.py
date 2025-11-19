@@ -532,17 +532,32 @@ def handler(event, context):
             "eventDetailList": events_list
         }
 
-    # If we reach here, we have both WTS and WGS libraries on this run
-    # First confirm we have just one normal WGS library
+    # If we reach here, we have both WTS and WGS tumor libraries on this run
+    # Check if there are multiple normals
     if len(normal_dna_libraries) > 1:
         return {
             "eventDetailList": events_list
         }
-
     # Now iterate over the tumor wgs libraries
     for tumor_dna_library_iter in tumor_dna_libraries:
-        # Get the normal dna library
-        normal_dna_library = normal_dna_libraries[0]
+        # Grab the latest normal WGS library for this subject and workflow
+        try:
+            normal_dna_library = next(filter(
+                lambda library_iter_: (
+                        library_iter_['phenotype'] == 'normal' and
+                        library_iter_['type'] == 'WGS' and
+                        # For normal libraries that are clinical, we
+                        # only want to consider tumor libraries that are clinical
+                        (
+                            # For normal libraries
+                            library_iter_['workflow'] == tumor_dna_library_iter['workflow']
+                            if tumor_dna_library_iter['workflow'] == 'clinical' else True
+                        )
+                ),
+                all_subject_libraries
+            ))
+        except StopIteration:
+            continue
 
         # Get the tumor rna libraries
         for tumor_rna_library_iter in tumor_rna_libraries:
