@@ -24,7 +24,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
       case 'readSetAddedToAnalysisBuilderSfnTarget': {
         buildReadSetsAddedToAnalysisBuilderSfnTarget(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
-            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqGlueFastqReadSetAdded'
+            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqGlueFastqSetCreated'
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
             (sfnObject) => sfnObject.stateMachineName === 'analysisBuilder'
