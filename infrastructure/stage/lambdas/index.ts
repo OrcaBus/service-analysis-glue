@@ -13,8 +13,8 @@ import {
   LambdaObject,
   lambdaRequirementsMap,
 } from './interfaces';
-import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
-import { LAMBDA_DIR } from '../constants';
+import { getPythonUvDockerImage, PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
+import { LAMBDA_DIR, LAYERS_DIR } from '../constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
@@ -24,6 +24,33 @@ import * as cdk from 'aws-cdk-lib';
 import * as path from 'path';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { WorkflowNameType } from '../interfaces';
+import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
+
+export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
+  /**
+   Build the analysis tools layer, common functions used throughout the lambdas
+   */
+  return new PythonLayerVersion(scope, 'analysis-lambda-layer', {
+    entry: path.join(LAYERS_DIR, 'analysis_tool_kit'),
+    compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+    compatibleArchitectures: [lambda.Architecture.ARM_64],
+    bundling: {
+      image: getPythonUvDockerImage(),
+      commandHooks: {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        beforeBundling(inputDir: string, outputDir: string): string[] {
+          return [];
+        },
+        afterBundling(inputDir: string, outputDir: string): string[] {
+          return [
+            `pip install ${inputDir} --target ${outputDir}`,
+            `find ${outputDir} -name 'pandas' -exec rm -rf {}/tests/ \\;`,
+          ];
+        },
+      },
+    },
+  });
+}
 
 function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
@@ -81,6 +108,11 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
       ],
       true
     );
+  }
+
+  if (lambdaRequirements.needsAnalysisToolsLayer) {
+    /* Add the analysis tools layer */
+    lambdaFunction.addLayers(props.analysisToolsLayer);
   }
 
   // BCLConvert Interop QC

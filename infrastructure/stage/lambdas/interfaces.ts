@@ -4,6 +4,7 @@ Get the list of libraries
 
 import { PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
 import { SsmParameterPaths } from '../ssm/interfaces';
+import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 
 export type LambdaName =
   // Metadata gatherers
@@ -36,6 +37,7 @@ export const lambdaNameList: LambdaName[] = [
 export interface LambdaRequirements {
   needsOrcabusApiTools?: boolean;
   needsSsmParameterAccess?: boolean;
+  needsAnalysisToolsLayer?: boolean;
 }
 
 // Lambda requirements mapping
@@ -53,31 +55,40 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
   makeBclconvertInteropQcEvent: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
+    needsAnalysisToolsLayer: true,
   },
   makeCtdnaAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
+    needsAnalysisToolsLayer: true,
   },
   makeWgsAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
+    needsAnalysisToolsLayer: true,
   },
   makeWtsAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
+    needsAnalysisToolsLayer: true,
   },
   // Post Event Detail Makers
   makeCtdnaPostAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
+    needsAnalysisToolsLayer: true,
   },
   makeWgtsPostAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
+    needsAnalysisToolsLayer: true,
   },
 };
 
 export interface BuildAllLambdasProps {
+  /* Custom layers */
+  analysisToolsLayer: PythonLayerVersion;
+  /* SSM Parameters */
   ssmParameterPaths: SsmParameterPaths;
 }
 

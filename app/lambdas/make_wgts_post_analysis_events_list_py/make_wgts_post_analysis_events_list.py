@@ -12,40 +12,20 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, TypedDict, cast, NotRequired, Unpack, Literal
+from typing import List, Dict, Any, Literal
 
 # Layer imports
-from orcabus_api_tools.fastq import get_fastqs_in_library
 from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
     get_all_libraries
 )
-from orcabus_api_tools.metadata.models import Library, LibraryBase
+from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from orcabus_api_tools.workflow import (
-    create_portal_run_id,
-    create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id,
-    list_workflows
-)
+from analysis_tool_kit import add_workflow_draft_event_detail, Workflow
+
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
-
-class Workflow(TypedDict):
-    name: str
-    version: str
-    codeVersion: NotRequired[str]
-    executionEngine: NotRequired[str]
-    executionEnginePipelineId: NotRequired[str]
-    validationState: NotRequired[str]
-
-class ReadSet(TypedDict):
-    orcabusId: str
-    rgid: str
-
-
-class EventLibrary(LibraryBase):
-    readsets: List[ReadSet]
 
 # Globals
 WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
@@ -57,71 +37,6 @@ WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
 DRAFT_STATUS = "DRAFT"
 
 
-def library_to_event_library(library: Library) -> EventLibrary:
-    return {
-        "orcabusId": library['orcabusId'],
-        "libraryId": library['libraryId'],
-        "readsets": list(map(
-            lambda fastq_id_iter_: cast(
-                ReadSet,
-                cast(object, {
-                    "orcabusId": fastq_id_iter_['id'],
-                    "rgid": ".".join([
-                        fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
-                        fastq_id_iter_['instrumentRunId']
-                    ]),
-                })
-            ),
-            get_fastqs_in_library(
-                library_id=library['libraryId']
-            )
-        )),
-    }
-
-
-def add_workflow_draft_event(
-        libraries: List[Library],
-        **kwargs: Unpack[Workflow]
-):
-    # Get the workflow name and version from kwargs
-    workflow_name = kwargs.pop('name')
-    workflow_version = kwargs.pop('version')
-
-    # Create the portal run id and workflow run name
-    portal_run_id = create_portal_run_id()
-    workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
-        workflow_name=workflow_name,
-        workflow_version=workflow_version,
-        portal_run_id=portal_run_id
-    )
-
-    # Get the workflow object
-    try:
-        workflow = next(iter(
-            list_workflows(
-                workflow_name=workflow_name,
-                workflow_version=workflow_version,
-                code_version=kwargs.get("codeVersion", None),
-                execution_engine=kwargs.get("executionEngine", None),
-                execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
-                validation_state=kwargs.get("validationState", None),
-            )
-        ))
-    except StopIteration:
-        raise ValueError(f"Workflow {workflow_name} version {workflow_version} not found")
-
-    return {
-        "status": DRAFT_STATUS,
-        "workflow": workflow,
-        "workflowRunName": workflow_run_name,
-        "portalRunId": portal_run_id,
-        "libraries": list(map(
-            library_to_event_library,
-            libraries
-        ))
-    }
-
-
 def add_oncoanalyser_wgts_dna_rna_draft_event(
         libraries: List[Library],
 ):
@@ -130,7 +45,7 @@ def add_oncoanalyser_wgts_dna_rna_draft_event(
     :param libraries:
     :return:
     """
-    return add_workflow_draft_event(
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA'],
     )
@@ -144,13 +59,13 @@ def add_rnasum_draft_event(
     :param libraries:
     :return:
     """
-    return add_workflow_draft_event(
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['RNASUM'],
     )
 
 
-def generate_wgts_draft_lists(
+def generate_wgts_post_processing_draft_lists(
         libraries: List[Library],
 ) -> List[Dict[str, Any]]:
     return [
@@ -333,7 +248,7 @@ def handler(event, context):
 
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
         return {
@@ -394,7 +309,7 @@ def handler(event, context):
 
                 # Add the wgs dna draft event
                 events_list.extend(
-                    generate_wgts_draft_lists(library_list)
+                    generate_wgts_post_processing_draft_lists(library_list)
                 )
 
             return {
@@ -460,7 +375,7 @@ def handler(event, context):
 
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
             return {
@@ -525,7 +440,7 @@ def handler(event, context):
             library_list = [tumor_dna_library_iter, normal_dna_library, tumor_rna_library]
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
         return {
@@ -572,7 +487,7 @@ def handler(event, context):
             library_list = [tumor_dna_library_iter, normal_dna_library, tumor_rna_library_iter]
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
     return {

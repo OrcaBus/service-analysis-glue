@@ -1,0 +1,28 @@
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "analysis_tool_kit"
+version = "0.0.1"
+description = "Analysis Tool Lambda Layers"
+license = "GPL-3.0-or-later"
+authors = [
+    "Alexis Lucattini"
+]
+homepage = "https://github.com/OrcaBus/service-analysis-glue"
+repository = "https://github.com/OrcaBus/service-analysis-glue"
+
+[tool.poetry.dependencies]
+python = "^3.12, <3.13"
+verboselogs = "^1.7"
+
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+# For typehinting only, not required at runtime
+mypy-boto3-ssm = "^1.34"
+mypy-boto3-secretsmanager = "^1.34"
+mypy-boto3-stepfunctions = "^1.34"

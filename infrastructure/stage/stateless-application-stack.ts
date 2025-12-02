@@ -5,7 +5,7 @@ import { buildAllStepFunctions } from './step-functions';
 import { StatelessApplicationStackConfig } from './interfaces';
 import { buildAllEventRules } from './event-rules';
 import { buildAllEventBridgeTargets } from './event-targets';
-import { buildAllLambdas } from './lambdas';
+import { buildAllLambdas, buildAnalysisToolsLayer } from './lambdas';
 
 export type StatelessApplicationStackProps = cdk.StackProps & StatelessApplicationStackConfig;
 
@@ -23,8 +23,13 @@ export class StatelessApplicationStack extends cdk.Stack {
       props.eventBusName
     );
 
+    // Build the analysis lambda layer
+    // Build analysis Tools Layer
+    const analysisToolsLayer = buildAnalysisToolsLayer(this);
+
     // Build the lambdas
     const lambdas = buildAllLambdas(this, {
+      analysisToolsLayer: analysisToolsLayer,
       ssmParameterPaths: props.ssmParameterPaths,
     });
 

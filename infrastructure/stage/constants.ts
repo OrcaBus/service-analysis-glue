@@ -4,6 +4,7 @@ import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accoun
 
 export const APP_ROOT = path.join(__dirname, '../../app');
 export const LAMBDA_DIR = path.join(APP_ROOT, 'lambdas');
+export const LAYERS_DIR = path.join(APP_ROOT, 'layers');
 export const STEP_FUNCTIONS_DIR = path.join(APP_ROOT, 'step-functions-templates');
 
 /* Stack constants */
