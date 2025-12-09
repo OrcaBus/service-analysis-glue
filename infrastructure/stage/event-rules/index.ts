@@ -11,7 +11,7 @@ import * as events from 'aws-cdk-lib/aws-events';
 import { Construct } from 'constructs';
 import {
   FASTQ_GLUE_EVENT_SOURCE,
-  FASTQ_GLUE_READ_SETS_ADDED_EVENT_DETAIL_TYPE,
+  FASTQ_GLUE_FASTQ_SET_CREATED_EVENT_DETAIL_TYPE,
   STACK_PREFIX,
 } from '../constants';
 
@@ -19,9 +19,9 @@ import {
 https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-create-pattern-operators.html
 */
 
-function buildReadSetsAddedEventPattern(): EventPattern {
+function buildFastqSetCreatedEventPattern(): EventPattern {
   return {
-    detailType: [FASTQ_GLUE_READ_SETS_ADDED_EVENT_DETAIL_TYPE],
+    detailType: [FASTQ_GLUE_FASTQ_SET_CREATED_EVENT_DETAIL_TYPE],
     source: [FASTQ_GLUE_EVENT_SOURCE],
     detail: {
       instrumentRunId: [{ exists: true }],
@@ -37,10 +37,10 @@ function buildEventRule(scope: Construct, props: EventBridgeRuleProps): Rule {
   });
 }
 
-function buildReadSetsAddedRule(scope: Construct, props: BuildReadSetRuleProps): Rule {
+function buildFastqSetsCreatedRule(scope: Construct, props: BuildReadSetRuleProps): Rule {
   return buildEventRule(scope, {
     ruleName: props.ruleName,
-    eventPattern: buildReadSetsAddedEventPattern(),
+    eventPattern: buildFastqSetCreatedEventPattern(),
     eventBus: props.eventBus,
   });
 }
@@ -54,10 +54,10 @@ export function buildAllEventRules(
   // Iterate over the eventBridgeNameList and create the event rules
   for (const ruleName of eventBridgeRuleNameList) {
     switch (ruleName) {
-      case 'fastqGlueFastqReadSetAdded': {
+      case 'fastqGlueFastqSetCreated': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
-          ruleObject: buildReadSetsAddedRule(scope, {
+          ruleObject: buildFastqSetsCreatedRule(scope, {
             ruleName: ruleName,
             eventBus: props.eventBus,
           }),
