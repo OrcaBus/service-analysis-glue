@@ -4,11 +4,11 @@ import { EventPattern, IEventBus, Rule } from 'aws-cdk-lib/aws-events';
  * EventBridge Rules Interfaces
  */
 export type EventBridgeRuleName =
-  // Post-fastq read sets added
+  // Post-fastq sets created
   'fastqGlueFastqSetCreated';
 
 export const eventBridgeRuleNameList: EventBridgeRuleName[] = [
-  // Post-fastq read sets added
+  // Post-fastq sets created
   'fastqGlueFastqSetCreated',
 ];
 
