@@ -43,31 +43,13 @@
                   "JitterStrategy": "FULL"
                 }
               ],
-              "Next": "New workflow manager is deployed (BCLConvert InterOp QC)"
-            },
-            "New workflow manager is deployed (BCLConvert InterOp QC)": {
-              "Type": "Choice",
-              "Choices": [
-                {
-                  "Next": "Generate BCLConvert InterOp QC Draft",
-                  "Condition": "{% ${__new_workflow_manager_is_deployed__} %}"
-                }
-              ],
-              "Default": "Generate BCLConvert InterOp QC Draft (Legacy)"
+              "Next": "Generate BCLConvert InterOp QC Draft"
             },
             "Generate BCLConvert InterOp QC Draft": {
               "Type": "Task",
               "Resource": "arn:aws:states:::events:putEvents",
               "Arguments": {
                 "Entries": "{% [\n  $states.input.eventDetail ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
-              },
-              "End": true
-            },
-            "Generate BCLConvert InterOp QC Draft (Legacy)": {
-              "Type": "Task",
-              "Resource": "arn:aws:states:::events:putEvents",
-              "Arguments": {
-                "Entries": "{% [\n  $states.input.eventDetail ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
               },
               "End": true
             }
@@ -212,31 +194,13 @@
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "New workflow manager deployed (WGS)",
+                            "StartAt": "Generate WGS Drafts",
                             "States": {
-                              "New workflow manager deployed (WGS)": {
-                                "Type": "Choice",
-                                "Choices": [
-                                  {
-                                    "Next": "Generate WGS Drafts",
-                                    "Condition": "{% ${__new_workflow_manager_is_deployed__} %}"
-                                  }
-                                ],
-                                "Default": "Generate WGS Drafts (Legacy)"
-                              },
                               "Generate WGS Drafts": {
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
                                   "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
-                                },
-                                "End": true
-                              },
-                              "Generate WGS Drafts (Legacy)": {
-                                "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
-                                "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
                                 },
                                 "End": true
                               }
@@ -395,31 +359,13 @@
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "New workflow manager deployed (WTS)",
+                            "StartAt": "Generate WTS Drafts",
                             "States": {
-                              "New workflow manager deployed (WTS)": {
-                                "Type": "Choice",
-                                "Choices": [
-                                  {
-                                    "Next": "Generate WTS Drafts",
-                                    "Condition": "{% ${__new_workflow_manager_is_deployed__} %}"
-                                  }
-                                ],
-                                "Default": "Generate WTS Drafts (Legacy)"
-                              },
                               "Generate WTS Drafts": {
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
                                   "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
-                                },
-                                "End": true
-                              },
-                              "Generate WTS Drafts (Legacy)": {
-                                "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
-                                "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
                                 },
                                 "End": true
                               }
@@ -577,31 +523,13 @@
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "New workflow manager deployed (ctDNA)",
+                            "StartAt": "Generate ctDNA Draft Events",
                             "States": {
-                              "New workflow manager deployed (ctDNA)": {
-                                "Type": "Choice",
-                                "Choices": [
-                                  {
-                                    "Next": "Generate ctDNA Draft Events",
-                                    "Condition": "{% ${__new_workflow_manager_is_deployed__} %}"
-                                  }
-                                ],
-                                "Default": "Generate ctDNA Draft Events (legacy)"
-                              },
                               "Generate ctDNA Draft Events": {
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
                                   "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
-                                },
-                                "End": true
-                              },
-                              "Generate ctDNA Draft Events (legacy)": {
-                                "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
-                                "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
                                 },
                                 "End": true
                               }
@@ -766,31 +694,13 @@
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "New workflow manager deployed (WGTS) (post)",
+                            "StartAt": "Generate WGTS Draft Event",
                             "States": {
-                              "New workflow manager deployed (WGTS) (post)": {
-                                "Type": "Choice",
-                                "Choices": [
-                                  {
-                                    "Next": "Generate WGTS Draft Event",
-                                    "Condition": "{% ${__new_workflow_manager_is_deployed__} %}"
-                                  }
-                                ],
-                                "Default": "Generate WGTS Draft Event (Legacy)"
-                              },
                               "Generate WGTS Draft Event": {
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
                                   "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
-                                },
-                                "End": true
-                              },
-                              "Generate WGTS Draft Event (Legacy)": {
-                                "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
-                                "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
                                 },
                                 "End": true
                               }
@@ -946,31 +856,13 @@
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "New workflow manager deployed (ctDNA) (post)",
+                            "StartAt": "Generate ctDNA Draft Event (post)",
                             "States": {
-                              "New workflow manager deployed (ctDNA) (post)": {
-                                "Type": "Choice",
-                                "Choices": [
-                                  {
-                                    "Next": "Generate ctDNA Draft Event (post)",
-                                    "Condition": "{% ${__new_workflow_manager_is_deployed__} %}"
-                                  }
-                                ],
-                                "Default": "Generate ctDNA Draft Event (legacy) (post)"
-                              },
                               "Generate ctDNA Draft Event (post)": {
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
                                   "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
-                                },
-                                "End": true
-                              },
-                              "Generate ctDNA Draft Event (legacy) (post)": {
-                                "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
-                                "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_state_change_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": (\n        $v ~> \n        /* Renamed libraries to linkedLibraries using the transform method */\n        | $ | {\"linkedLibraries\": libraries}, [\"libraries\"] | ~>\n        /* Renamed workflowName and workflowVersion using the transform method */\n        | $ | {\"workflowName\": workflow.name, \"workflowVersion\": workflow.version}, [\"workflow\"] | ~>\n        /* Add timestamp */\n        | $ | {\"timestamp\": $now()} |\n      )\n    }\n  })\n] %}"
                                 },
                                 "End": true
                               }

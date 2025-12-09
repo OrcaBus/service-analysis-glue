@@ -1,7 +1,6 @@
 import {
   EVENT_BUS_NAME,
   SSM_PARAMETER_PATH_PREFIX,
-  NEW_WORKFLOW_MANAGER_IS_DEPLOYED,
   CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME,
   SSM_PARAMETER_PATH_WORKFLOW_VERSION_PREFIX,
   SSM_PARAMETER_PATH_PAYLOAD_VERSION_PREFIX,
@@ -42,15 +41,12 @@ export const getStatefulStackProps = (stage: StageName): StatefulApplicationStac
   };
 };
 
-export const getStatelessStackProps = (stage: StageName): StatelessApplicationStackConfig => {
+export const getStatelessStackProps = (): StatelessApplicationStackConfig => {
   return {
     // SSM Parameter Paths
     ssmParameterPaths: getSsmParameterPaths(),
 
     // Event Bus Object
     eventBusName: EVENT_BUS_NAME,
-
-    // Is new workflow manager deployed
-    isNewWorkflowManagerDeployed: NEW_WORKFLOW_MANAGER_IS_DEPLOYED[stage],
   };
 };
