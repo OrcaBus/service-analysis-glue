@@ -8,6 +8,7 @@ Make WTS analysis events list
 from typing import List, Dict, Any, Literal
 from os import environ
 import json
+import logging
 
 # Layer imports
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
@@ -15,7 +16,7 @@ from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
 )
 from orcabus_api_tools.metadata.models import Library
-from analysis_tool_kit import Workflow, add_workflow_draft_event_detail
+from analysis_tool_kit import Workflow, add_workflow_draft_event_detail, get_existing_workflow_runs
 
 # Typehints
 WorkflowName = Literal['DRAGEN_WGTS_RNA', 'ARRIBA_WGTS_RNA', 'ONCOANALYSER_WGTS_RNA']
@@ -30,6 +31,10 @@ WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
 # Draft status
 DRAFT_STATUS = "DRAFT"
 
+# Set logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def add_dragen_wgts_rna_draft_event(
         libraries: List[Library],
@@ -39,6 +44,20 @@ def add_dragen_wgts_rna_draft_event(
     :param libraries:
     :return:
     """
+
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_RNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_RNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing DRAGEN WGTS RNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
 
     return add_workflow_draft_event_detail(
         libraries=libraries,
@@ -54,6 +73,20 @@ def add_arriba_wgts_rna_draft_event(
     :param libraries:
     :return:
     """
+
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['ARRIBA_WGTS_RNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['ARRIBA_WGTS_RNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing ARRIBA WGTS RNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
     return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ARRIBA_WGTS_RNA'],
@@ -68,6 +101,19 @@ def add_oncoanalyser_wgts_rna_draft_event(
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_RNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_RNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing ONCOANALYSER WGTS RNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
     return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_RNA'],

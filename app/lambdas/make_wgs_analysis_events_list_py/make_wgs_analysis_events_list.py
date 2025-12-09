@@ -14,6 +14,7 @@ import json
 from copy import copy
 from os import environ
 from typing import List, Dict, Any, Literal
+import logging
 
 # Layer imports
 from orcabus_api_tools.metadata import (
@@ -22,7 +23,7 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from analysis_tool_kit import add_workflow_draft_event_detail, Workflow
+from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs
 
 # Type hints
 WorkflowName = Literal['DRAGEN_WGTS_DNA', 'ONCOANALYSER_WGTS_DNA', 'SASH']
@@ -44,6 +45,10 @@ GERMLINE_ONLY_WORKFLOW_NAMES = [
     'germline',
 ]
 
+# Set logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def add_dragen_wgts_dna_draft_event(
         libraries: List[Library],
@@ -53,6 +58,18 @@ def add_dragen_wgts_dna_draft_event(
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_DNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_DNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing DRAGEN WGTS DNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
 
     return add_workflow_draft_event_detail(
         libraries=libraries,
@@ -68,6 +85,19 @@ def add_oncoanalyser_wgts_dna_draft_event(
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing ONCOANALYSER WGTS DNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
     return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']
@@ -82,6 +112,19 @@ def add_sash_wgts_dna_draft_event(
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['SASH']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['SASH']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing SASH workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
     return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['SASH']

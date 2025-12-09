@@ -38,8 +38,8 @@
     "typescript-eslint": "^8.48.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-lambda-python-alpha": "2.219.0-alpha.0",
-    "@orcabus/platform-cdk-constructs": "0.0.98",
+    "@aws-cdk/aws-lambda-python-alpha": "2.231.0-alpha.0",
+    "@orcabus/platform-cdk-constructs": "0.0.99",
     "aws-cdk-lib": "^2.231.0",
     "constructs": "^10.4.3"
   }

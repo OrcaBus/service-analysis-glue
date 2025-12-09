@@ -2,9 +2,7 @@
 Build out the lambda functions
 
 We have the following environment variables to set (per function)
-
-
- */
+*/
 
 import {
   BuildAllLambdasProps,

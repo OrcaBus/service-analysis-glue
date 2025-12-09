@@ -13,6 +13,7 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 import json
 from os import environ
 from typing import List, Dict, Any, Literal
+import logging
 
 # Layer imports
 from orcabus_api_tools.metadata import (
@@ -21,8 +22,7 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from analysis_tool_kit import add_workflow_draft_event_detail, Workflow
-
+from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
@@ -36,6 +36,10 @@ WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
 # Draft status
 DRAFT_STATUS = "DRAFT"
 
+# Set logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 
 def add_oncoanalyser_wgts_dna_rna_draft_event(
         libraries: List[Library],
@@ -45,6 +49,19 @@ def add_oncoanalyser_wgts_dna_rna_draft_event(
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing ONCOANALYSER WGTS DNA RNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
     return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA'],
@@ -59,6 +76,20 @@ def add_rnasum_draft_event(
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['RNASUM']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['RNASUM']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing RNASUM workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
+
     return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['RNASUM'],

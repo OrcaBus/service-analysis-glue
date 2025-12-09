@@ -203,7 +203,7 @@
                           ],
                           "Next": "For each Draft event (WGS)",
                           "Output": {
-                            "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                           }
                         },
                         "For each Draft event (WGS)": {
@@ -365,7 +365,7 @@
                           "Type": "Task",
                           "Resource": "arn:aws:states:::lambda:invoke",
                           "Output": {
-                            "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                           },
                           "Arguments": {
                             "FunctionName": "${__make_wts_analysis_events_list_lambda_function_arn__}",
@@ -547,7 +547,7 @@
                           "Type": "Task",
                           "Resource": "arn:aws:states:::lambda:invoke",
                           "Output": {
-                            "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                           },
                           "Arguments": {
                             "FunctionName": "${__make_ctdna_analysis_events_list_lambda_function_arn__}",
@@ -736,7 +736,7 @@
                           "Type": "Task",
                           "Resource": "arn:aws:states:::lambda:invoke",
                           "Output": {
-                            "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                           },
                           "Arguments": {
                             "FunctionName": "${__make_wgts_post_analysis_events_list_lambda_function_arn__}",
@@ -916,7 +916,7 @@
                           "Type": "Task",
                           "Resource": "arn:aws:states:::lambda:invoke",
                           "Output": {
-                            "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                           },
                           "Arguments": {
                             "FunctionName": "${__make_ctdna_post_analysis_events_list_lambda_function_arn__}",
