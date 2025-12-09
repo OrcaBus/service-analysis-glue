@@ -13,42 +13,20 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 import json
 from copy import copy
 from os import environ
-from typing import List, Dict, Any, TypedDict, cast, Unpack, NotRequired, Literal
+from typing import List, Dict, Any, Literal, Optional, Union
+import logging
 
 # Layer imports
-from orcabus_api_tools.fastq import get_fastqs_in_library
 from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
     get_all_libraries
 )
-from orcabus_api_tools.metadata.models import Library, LibraryBase
+from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from orcabus_api_tools.workflow import (
-    create_portal_run_id,
-    create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id,
-    list_workflows
-)
+from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs, EventLibrary
 
 # Type hints
 WorkflowName = Literal['DRAGEN_WGTS_DNA', 'ONCOANALYSER_WGTS_DNA', 'SASH']
-
-
-class Workflow(TypedDict):
-    name: str
-    version: str
-    codeVersion: NotRequired[str]
-    executionEngine: NotRequired[str]
-    executionEnginePipelineId: NotRequired[str]
-    validationState: NotRequired[str]
-
-
-class ReadSet(TypedDict):
-    orcabusId: str
-    rgid: str
-
-
-class EventLibrary(LibraryBase):
-    readsets: List[ReadSet]
 
 
 # Globals
@@ -67,83 +45,33 @@ GERMLINE_ONLY_WORKFLOW_NAMES = [
     'germline',
 ]
 
-
-def library_to_event_library(library: Library) -> EventLibrary:
-    return {
-        "orcabusId": library['orcabusId'],
-        "libraryId": library['libraryId'],
-        "readsets": list(map(
-            lambda fastq_id_iter_: cast(
-                ReadSet,
-                cast(object, {
-                    "orcabusId": fastq_id_iter_['id'],
-                    "rgid": ".".join([
-                        fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
-                        fastq_id_iter_['instrumentRunId']
-                    ]),
-                })
-            ),
-            get_fastqs_in_library(
-                library_id=library['libraryId']
-            )
-        )),
-    }
-
-
-def add_workflow_draft_event(
-        libraries: List[Library],
-        **kwargs: Unpack[Workflow]
-):
-    # Get the workflow name and version from kwargs
-    workflow_name = kwargs.pop('name')
-    workflow_version = kwargs.pop('version')
-
-    # Create portal run id
-    portal_run_id = create_portal_run_id()
-    workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
-        workflow_name=workflow_name,
-        workflow_version=workflow_version,
-        portal_run_id=portal_run_id
-    )
-
-    # Get the workflow object
-    try:
-        workflow = next(iter(
-            list_workflows(
-                workflow_name=workflow_name,
-                workflow_version=workflow_version,
-                code_version=kwargs.get("codeVersion", None),
-                execution_engine=kwargs.get("executionEngine", None),
-                execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
-                validation_state=kwargs.get("validationState", None),
-            )
-        ))
-    except StopIteration:
-        raise ValueError(f"Workflow {workflow_name} version {workflow_version} not found")
-
-    # Return the draft event
-    return {
-        "status": DRAFT_STATUS,
-        "workflow": workflow,
-        "workflowRunName": workflow_run_name,
-        "portalRunId": portal_run_id,
-        "libraries": list(map(
-            library_to_event_library,
-            libraries
-        ))
-    }
+# Set logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def add_dragen_wgts_dna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the dragen wgts dna draft event
     :param libraries:
     :return:
     """
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_DNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_DNA']['version'],
+        libraries=libraries
+    )
 
-    return add_workflow_draft_event(
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing DRAGEN WGTS DNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['DRAGEN_WGTS_DNA']
     )
@@ -151,13 +79,26 @@ def add_dragen_wgts_dna_draft_event(
 
 def add_oncoanalyser_wgts_dna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the oncoanalyser wgts dna draft event
     :param libraries:
     :return:
     """
-    return add_workflow_draft_event(
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing ONCOANALYSER WGTS DNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA']
     )
@@ -165,13 +106,26 @@ def add_oncoanalyser_wgts_dna_draft_event(
 
 def add_sash_wgts_dna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the sash wgts dna draft event
     :param libraries:
     :return:
     """
-    return add_workflow_draft_event(
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['SASH']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['SASH']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing SASH workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['SASH']
     )
@@ -179,7 +133,12 @@ def add_sash_wgts_dna_draft_event(
 
 def generate_wgs_draft_lists(
         libraries: List[Library],
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
+    """
+    Generate the WGS draft lists
+    :param libraries:
+    :return:
+    """
     return [
         add_dragen_wgts_dna_draft_event(libraries),
         add_oncoanalyser_wgts_dna_draft_event(libraries),
@@ -213,7 +172,10 @@ def handler(event, context):
 
     if len(libraries_list) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Get the subject orcabus id
@@ -248,7 +210,10 @@ def handler(event, context):
     # subject on this run, return an empty list
     if len(tumor_libraries) == 0 and len(normal_libraries) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Check for batch control libraries
@@ -272,7 +237,10 @@ def handler(event, context):
     # subject on this run, return an empty list
     if len(tumor_libraries) == 0 and len(normal_libraries) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # We have at least one tumor or one normal library for this subject on this run
@@ -310,7 +278,10 @@ def handler(event, context):
     )
     ):
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Let's go through the simple use cases first
@@ -346,7 +317,10 @@ def handler(event, context):
             )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # No tumor libraries, just normals on this run
@@ -390,7 +364,10 @@ def handler(event, context):
         )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # If we reach here, we have at least one tumor and one normal on this run
@@ -416,5 +393,8 @@ def handler(event, context):
         )
 
     return {
-        "eventDetailList": events_list
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            events_list
+        ))
     }

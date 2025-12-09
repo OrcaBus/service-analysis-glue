@@ -9,43 +9,28 @@ If there is just one normal, we find the latest tumor for that subject.
 
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
+
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, TypedDict, cast, NotRequired, Unpack, Literal
+from typing import List, Dict, Any, Literal, Optional, Union
+import logging
 
 # Layer imports
-from orcabus_api_tools.fastq import get_fastqs_in_library
 from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
     get_all_libraries
 )
-from orcabus_api_tools.metadata.models import Library, LibraryBase
+from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from orcabus_api_tools.workflow import (
-    create_portal_run_id,
-    create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id,
-    list_workflows
+from analysis_tool_kit import (
+    add_workflow_draft_event_detail,
+    get_existing_workflow_runs,
+    Workflow, EventLibrary,
 )
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
-
-class Workflow(TypedDict):
-    name: str
-    version: str
-    codeVersion: NotRequired[str]
-    executionEngine: NotRequired[str]
-    executionEnginePipelineId: NotRequired[str]
-    validationState: NotRequired[str]
-
-class ReadSet(TypedDict):
-    orcabusId: str
-    rgid: str
-
-
-class EventLibrary(LibraryBase):
-    readsets: List[ReadSet]
 
 # Globals
 WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
@@ -56,81 +41,33 @@ WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
 # Draft status
 DRAFT_STATUS = "DRAFT"
 
-
-def library_to_event_library(library: Library) -> EventLibrary:
-    return {
-        "orcabusId": library['orcabusId'],
-        "libraryId": library['libraryId'],
-        "readsets": list(map(
-            lambda fastq_id_iter_: cast(
-                ReadSet,
-                cast(object, {
-                    "orcabusId": fastq_id_iter_['id'],
-                    "rgid": ".".join([
-                        fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
-                        fastq_id_iter_['instrumentRunId']
-                    ]),
-                })
-            ),
-            get_fastqs_in_library(
-                library_id=library['libraryId']
-            )
-        )),
-    }
-
-
-def add_workflow_draft_event(
-        libraries: List[Library],
-        **kwargs: Unpack[Workflow]
-):
-    # Get the workflow name and version from kwargs
-    workflow_name = kwargs.pop('name')
-    workflow_version = kwargs.pop('version')
-
-    # Create the portal run id and workflow run name
-    portal_run_id = create_portal_run_id()
-    workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
-        workflow_name=workflow_name,
-        workflow_version=workflow_version,
-        portal_run_id=portal_run_id
-    )
-
-    # Get the workflow object
-    try:
-        workflow = next(iter(
-            list_workflows(
-                workflow_name=workflow_name,
-                workflow_version=workflow_version,
-                code_version=kwargs.get("codeVersion", None),
-                execution_engine=kwargs.get("executionEngine", None),
-                execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
-                validation_state=kwargs.get("validationState", None),
-            )
-        ))
-    except StopIteration:
-        raise ValueError(f"Workflow {workflow_name} version {workflow_version} not found")
-
-    return {
-        "status": DRAFT_STATUS,
-        "workflow": workflow,
-        "workflowRunName": workflow_run_name,
-        "portalRunId": portal_run_id,
-        "libraries": list(map(
-            library_to_event_library,
-            libraries
-        ))
-    }
+# Set logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def add_oncoanalyser_wgts_dna_rna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the oncoanalyser wgts dna draft event
     :param libraries:
     :return:
     """
-    return add_workflow_draft_event(
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing ONCOANALYSER WGTS DNA RNA workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['ONCOANALYSER_WGTS_DNA_RNA'],
     )
@@ -138,21 +75,35 @@ def add_oncoanalyser_wgts_dna_rna_draft_event(
 
 def add_rnasum_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the rnasum draft event
     :param libraries:
     :return:
     """
-    return add_workflow_draft_event(
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECTS_DICT['RNASUM']['name'],
+        workflow_version=WORKFLOW_OBJECTS_DICT['RNASUM']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing RNASUM workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
+        return None
+
+
+    return add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECTS_DICT['RNASUM'],
     )
 
 
-def generate_wgts_draft_lists(
+def generate_wgts_post_processing_draft_lists(
         libraries: List[Library],
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     return [
         add_oncoanalyser_wgts_dna_rna_draft_event(libraries),
         add_rnasum_draft_event(libraries),
@@ -224,16 +175,21 @@ def handler(event, context):
     # subject on this run, return an empty list
     if len(tumor_dna_libraries) == 0 and len(normal_dna_libraries) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Check if there are not any tumor WTS libraries for this subject
     if len(tumor_rna_libraries) == 0:
         # If there are no tumor WGS libraries for this subject on this run
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
-
 
     # We have at least one dna tumor, one dna normal library or one rna tumor library for this subject on this run
     # We now need to check against all runs to see if there are other libraries for this subject
@@ -281,7 +237,10 @@ def handler(event, context):
             )
     ):
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
 
@@ -333,11 +292,14 @@ def handler(event, context):
 
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # No WTS libraries on this run
@@ -394,11 +356,14 @@ def handler(event, context):
 
                 # Add the wgs dna draft event
                 events_list.extend(
-                    generate_wgts_draft_lists(library_list)
+                    generate_wgts_post_processing_draft_lists(library_list)
                 )
 
             return {
-                "eventDetailList": events_list
+                "eventDetailList": list(filter(
+                    lambda event_iter_: event_iter_ is not None,
+                    events_list
+                ))
             }
 
         # No tumor libraries, just normals on this run
@@ -407,7 +372,10 @@ def handler(event, context):
             # If so, we cannot proceed
             if len(normal_dna_libraries) > 1:
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Now we have exactly one normal library on this run
@@ -432,7 +400,10 @@ def handler(event, context):
             except StopIteration:
                 # No tumor library for this subject / workflow
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Now iterate through all wts libraries for this subject
@@ -452,7 +423,10 @@ def handler(event, context):
             except StopIteration:
                 # No tumor rna library for this workflow type, skip it
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Get library list
@@ -460,11 +434,14 @@ def handler(event, context):
 
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
             return {
-                "eventDetailList": events_list
+                "eventDetailList": list(filter(
+                    lambda event_iter_: event_iter_ is not None,
+                    events_list
+                ))
             }
 
         # If we reach here, we have at least one dna tumor and one dna normal on this run
@@ -474,7 +451,10 @@ def handler(event, context):
         # If so, we cannot proceed
         if len(normal_dna_libraries) > 1:
             return {
-                "eventDetailList": events_list
+                "eventDetailList": list(filter(
+                    lambda event_iter_: event_iter_ is not None,
+                    events_list
+                ))
             }
 
         # Now we have exactly one normal library on this run
@@ -518,25 +498,34 @@ def handler(event, context):
             except StopIteration:
                 # No tumor rna library for this workflow type, skip it
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Get library list
             library_list = [tumor_dna_library_iter, normal_dna_library, tumor_rna_library]
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # If we reach here, we have both WTS and WGS tumor libraries on this run
     # Check if there are multiple normals
     if len(normal_dna_libraries) > 1:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
     # Now iterate over the tumor wgs libraries
     for tumor_dna_library_iter in tumor_dna_libraries:
@@ -572,9 +561,12 @@ def handler(event, context):
             library_list = [tumor_dna_library_iter, normal_dna_library, tumor_rna_library_iter]
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(library_list)
             )
 
     return {
-        "eventDetailList": events_list
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            events_list
+        ))
     }
