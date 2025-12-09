@@ -5,7 +5,7 @@ Make WTS analysis events list
 """
 
 # Standard imports
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Union, Optional
 from os import environ
 import json
 import logging
@@ -16,7 +16,7 @@ from orcabus_api_tools.metadata import (
     get_libraries_list_from_library_id_list,
 )
 from orcabus_api_tools.metadata.models import Library
-from analysis_tool_kit import Workflow, add_workflow_draft_event_detail, get_existing_workflow_runs
+from analysis_tool_kit import Workflow, add_workflow_draft_event_detail, get_existing_workflow_runs, EventLibrary
 
 # Typehints
 WorkflowName = Literal['DRAGEN_WGTS_RNA', 'ARRIBA_WGTS_RNA', 'ONCOANALYSER_WGTS_RNA']
@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 
 def add_dragen_wgts_rna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the dragen wgts rna draft event
     :param libraries:
@@ -67,7 +67,7 @@ def add_dragen_wgts_rna_draft_event(
 
 def add_arriba_wgts_rna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the sash wgts dna draft event
     :param libraries:
@@ -95,7 +95,7 @@ def add_arriba_wgts_rna_draft_event(
 
 def add_oncoanalyser_wgts_rna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the oncoanalyser wgts rna draft event
     :param libraries:
@@ -122,7 +122,7 @@ def add_oncoanalyser_wgts_rna_draft_event(
 
 def generate_wts_draft_lists(
         libraries: List[Library],
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     return [
         add_dragen_wgts_rna_draft_event(libraries),
         add_arriba_wgts_rna_draft_event(libraries),
@@ -182,5 +182,8 @@ def handler(event, context):
         )
 
     return {
-        "eventDetailList": events_list
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            events_list
+        ))
     }

@@ -12,7 +12,7 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Union, Optional
 import logging
 
 # Layer imports
@@ -21,7 +21,7 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from orcabus_api_tools.workflow.models import Workflow
+from orcabus_api_tools.workflow.models import Workflow, EventLibrary
 from analysis_tool_kit import (
     get_existing_workflow_runs,
     add_workflow_draft_event_detail
@@ -45,7 +45,7 @@ DRAFT_STATUS = "DRAFT"
 
 def add_pieriandx_tso500_ctdna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the pieriandx tso500 ctdna draft event
     :param libraries:
@@ -78,7 +78,7 @@ def add_pieriandx_tso500_ctdna_draft_event(
 
 def generate_ctdna_post_processing_draft_lists(
         libraries: List[Library],
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     """
     Generate the ctdna post processing draft lists
     :param libraries:
@@ -121,7 +121,9 @@ def handler(event, context):
             generate_ctdna_post_processing_draft_lists([library_iter])
         )
 
-
     return {
-        "eventDetailList": events_list
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            events_list
+        ))
     }

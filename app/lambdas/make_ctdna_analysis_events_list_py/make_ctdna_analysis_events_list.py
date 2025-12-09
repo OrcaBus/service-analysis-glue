@@ -47,7 +47,7 @@ logger = logging.getLogger(__name__)
 
 def add_dragen_tso500_ctdna_draft_event(
         libraries: List[Library],
-) -> Optional[Dict[str, str | Workflow | list[EventLibrary]]]:
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the dragen tso500 ctdna draft event
     :param libraries:
@@ -80,7 +80,7 @@ def add_dragen_tso500_ctdna_draft_event(
 
 def generate_ctdna_draft_lists(
         libraries: List[Library],
-) -> List[Union[Dict[str, Any], None]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     return [
         add_dragen_tso500_ctdna_draft_event(libraries),
     ]
@@ -123,19 +123,3 @@ def handler(event, context):
             events_list
         ))
     }
-
-
-# if __name__ == "__main__":
-#     import json
-#     print(
-#         json.dumps(
-#             handler(
-#                 {
-#                     "libraryIdList": [
-#                         "L2401527"
-#                     ]
-#                 },
-#                 None
-#             ),
-#             indent=4
-#     ))

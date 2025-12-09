@@ -13,7 +13,7 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 import json
 from copy import copy
 from os import environ
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional, Union
 import logging
 
 # Layer imports
@@ -23,7 +23,7 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs
+from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs, EventLibrary
 
 # Type hints
 WorkflowName = Literal['DRAGEN_WGTS_DNA', 'ONCOANALYSER_WGTS_DNA', 'SASH']
@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 
 def add_dragen_wgts_dna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the dragen wgts dna draft event
     :param libraries:
@@ -79,7 +79,7 @@ def add_dragen_wgts_dna_draft_event(
 
 def add_oncoanalyser_wgts_dna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the oncoanalyser wgts dna draft event
     :param libraries:
@@ -106,7 +106,7 @@ def add_oncoanalyser_wgts_dna_draft_event(
 
 def add_sash_wgts_dna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the sash wgts dna draft event
     :param libraries:
@@ -133,7 +133,7 @@ def add_sash_wgts_dna_draft_event(
 
 def generate_wgs_draft_lists(
         libraries: List[Library],
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     """
     Generate the WGS draft lists
     :param libraries:
@@ -172,7 +172,10 @@ def handler(event, context):
 
     if len(libraries_list) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Get the subject orcabus id
@@ -207,7 +210,10 @@ def handler(event, context):
     # subject on this run, return an empty list
     if len(tumor_libraries) == 0 and len(normal_libraries) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Check for batch control libraries
@@ -231,7 +237,10 @@ def handler(event, context):
     # subject on this run, return an empty list
     if len(tumor_libraries) == 0 and len(normal_libraries) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # We have at least one tumor or one normal library for this subject on this run
@@ -269,7 +278,10 @@ def handler(event, context):
     )
     ):
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Let's go through the simple use cases first
@@ -305,7 +317,10 @@ def handler(event, context):
             )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # No tumor libraries, just normals on this run
@@ -349,7 +364,10 @@ def handler(event, context):
         )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # If we reach here, we have at least one tumor and one normal on this run
@@ -375,5 +393,8 @@ def handler(event, context):
         )
 
     return {
-        "eventDetailList": events_list
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            events_list
+        ))
     }

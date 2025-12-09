@@ -26,7 +26,7 @@ import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
 
 export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
   /**
-   Build the analysis tools layer, common functions used throughout the lambdas
+   Builds the analysis tools layer, which provides common functions used throughout the lambdas
    */
   return new PythonLayerVersion(scope, 'analysis-lambda-layer', {
     entry: path.join(LAYERS_DIR, 'analysis_tool_kit'),

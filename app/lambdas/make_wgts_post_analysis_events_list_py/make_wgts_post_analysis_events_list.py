@@ -9,10 +9,11 @@ If there is just one normal, we find the latest tumor for that subject.
 
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
+
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional, Union
 import logging
 
 # Layer imports
@@ -22,7 +23,11 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs
+from analysis_tool_kit import (
+    add_workflow_draft_event_detail,
+    get_existing_workflow_runs,
+    Workflow, EventLibrary,
+)
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
@@ -43,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 def add_oncoanalyser_wgts_dna_rna_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the oncoanalyser wgts dna draft event
     :param libraries:
@@ -70,7 +75,7 @@ def add_oncoanalyser_wgts_dna_rna_draft_event(
 
 def add_rnasum_draft_event(
         libraries: List[Library],
-):
+) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
     """
     Add the rnasum draft event
     :param libraries:
@@ -98,7 +103,7 @@ def add_rnasum_draft_event(
 
 def generate_wgts_post_processing_draft_lists(
         libraries: List[Library],
-) -> List[Dict[str, Any]]:
+) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     return [
         add_oncoanalyser_wgts_dna_rna_draft_event(libraries),
         add_rnasum_draft_event(libraries),
@@ -170,16 +175,21 @@ def handler(event, context):
     # subject on this run, return an empty list
     if len(tumor_dna_libraries) == 0 and len(normal_dna_libraries) == 0:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # Check if there are not any tumor WTS libraries for this subject
     if len(tumor_rna_libraries) == 0:
         # If there are no tumor WGS libraries for this subject on this run
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
-
 
     # We have at least one dna tumor, one dna normal library or one rna tumor library for this subject on this run
     # We now need to check against all runs to see if there are other libraries for this subject
@@ -227,7 +237,10 @@ def handler(event, context):
             )
     ):
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
 
@@ -283,7 +296,10 @@ def handler(event, context):
             )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # No WTS libraries on this run
@@ -344,7 +360,10 @@ def handler(event, context):
                 )
 
             return {
-                "eventDetailList": events_list
+                "eventDetailList": list(filter(
+                    lambda event_iter_: event_iter_ is not None,
+                    events_list
+                ))
             }
 
         # No tumor libraries, just normals on this run
@@ -353,7 +372,10 @@ def handler(event, context):
             # If so, we cannot proceed
             if len(normal_dna_libraries) > 1:
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Now we have exactly one normal library on this run
@@ -378,7 +400,10 @@ def handler(event, context):
             except StopIteration:
                 # No tumor library for this subject / workflow
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Now iterate through all wts libraries for this subject
@@ -398,7 +423,10 @@ def handler(event, context):
             except StopIteration:
                 # No tumor rna library for this workflow type, skip it
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Get library list
@@ -410,7 +438,10 @@ def handler(event, context):
             )
 
             return {
-                "eventDetailList": events_list
+                "eventDetailList": list(filter(
+                    lambda event_iter_: event_iter_ is not None,
+                    events_list
+                ))
             }
 
         # If we reach here, we have at least one dna tumor and one dna normal on this run
@@ -420,7 +451,10 @@ def handler(event, context):
         # If so, we cannot proceed
         if len(normal_dna_libraries) > 1:
             return {
-                "eventDetailList": events_list
+                "eventDetailList": list(filter(
+                    lambda event_iter_: event_iter_ is not None,
+                    events_list
+                ))
             }
 
         # Now we have exactly one normal library on this run
@@ -464,7 +498,10 @@ def handler(event, context):
             except StopIteration:
                 # No tumor rna library for this workflow type, skip it
                 return {
-                    "eventDetailList": events_list
+                    "eventDetailList": list(filter(
+                        lambda event_iter_: event_iter_ is not None,
+                        events_list
+                    ))
                 }
 
             # Get library list
@@ -475,14 +512,20 @@ def handler(event, context):
             )
 
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
 
     # If we reach here, we have both WTS and WGS tumor libraries on this run
     # Check if there are multiple normals
     if len(normal_dna_libraries) > 1:
         return {
-            "eventDetailList": events_list
+            "eventDetailList": list(filter(
+                lambda event_iter_: event_iter_ is not None,
+                events_list
+            ))
         }
     # Now iterate over the tumor wgs libraries
     for tumor_dna_library_iter in tumor_dna_libraries:
@@ -522,5 +565,8 @@ def handler(event, context):
             )
 
     return {
-        "eventDetailList": events_list
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            events_list
+        ))
     }

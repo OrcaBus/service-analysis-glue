@@ -23,7 +23,6 @@ export class StatelessApplicationStack extends cdk.Stack {
       props.eventBusName
     );
 
-    // Build the analysis lambda layer
     // Build analysis Tools Layer
     const analysisToolsLayer = buildAnalysisToolsLayer(this);
 
