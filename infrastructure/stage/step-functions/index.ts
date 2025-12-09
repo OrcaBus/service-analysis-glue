@@ -57,8 +57,6 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     definitionSubstitutions['__workflow_run_update_detail_type__'] =
       `${WORKFLOW_RUN_UPDATE_DETAIL_TYPE}`;
     definitionSubstitutions['__stack_source__'] = EVENT_SOURCE;
-    definitionSubstitutions['__new_workflow_manager_is_deployed__'] =
-      props.isNewWorkflowManagerDeployed.toString();
   }
 
   return definitionSubstitutions;
@@ -205,7 +203,6 @@ export function buildAllStepFunctions(
         lambdaObjects: props.lambdaObjects,
         eventBus: props.eventBus,
         ssmParameterPaths: props.ssmParameterPaths,
-        isNewWorkflowManagerDeployed: props.isNewWorkflowManagerDeployed,
       })
     );
   }

@@ -32,7 +32,6 @@ export interface BuildStepFunctionProps extends StepFunctionInput {
   lambdaObjects: LambdaObject[];
   eventBus: IEventBus;
   ssmParameterPaths: SsmParameterPaths;
-  isNewWorkflowManagerDeployed: boolean;
 }
 
 export interface StepFunctionObject extends StepFunctionInput {

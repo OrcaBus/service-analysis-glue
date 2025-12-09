@@ -316,14 +316,7 @@ export const WORKFLOW_RUN_UPDATE_DETAIL_TYPE = 'WorkflowRunUpdate';
 
 /* Event rule constants */
 export const FASTQ_GLUE_EVENT_SOURCE = 'orcabus.fastqglue';
-export const FASTQ_GLUE_READ_SETS_ADDED_EVENT_DETAIL_TYPE = 'ReadSetsAdded';
-
-/* Future proofing */
-export const NEW_WORKFLOW_MANAGER_IS_DEPLOYED: Record<StageName, boolean> = {
-  BETA: true,
-  GAMMA: true,
-  PROD: true,
-};
+export const FASTQ_GLUE_FASTQ_SET_CREATED_EVENT_DETAIL_TYPE = 'FastqListRowsAdded';
 
 /* SSM Parameter Paths */
 export const SSM_PARAMETER_PATH_PREFIX = path.join('/orcabus/analysis-glue/');
