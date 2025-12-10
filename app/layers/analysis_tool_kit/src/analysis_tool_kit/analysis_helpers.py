@@ -57,6 +57,25 @@ def library_to_event_library(library: Library) -> EventLibrary:
     }
 
 
+def get_libraries_with_readsets(libraries: List[Library]) -> List[Library]:
+    """
+    Get the libraries that have readsets
+    :param libraries:
+    :return:
+    """
+    # Get all libraries with readsets
+    libraries_with_readsets = list(map(
+        library_to_event_library,
+        libraries
+    ))
+
+    # Drop libraries without readsets
+    return list(filter(
+        lambda library_iter_: len(library_iter_['readsets']) > 0,
+        libraries_with_readsets
+    ))
+
+
 def get_existing_workflow_runs(
     workflow_name: str,
     workflow_version: str,
@@ -135,8 +154,5 @@ def add_workflow_draft_event_detail(
         "workflow": workflow,
         "workflowRunName": workflow_run_name,
         "portalRunId": portal_run_id,
-        "libraries": list(map(
-            library_to_event_library,
-            libraries
-        ))
+        "libraries": get_libraries_with_readsets(libraries)
     }

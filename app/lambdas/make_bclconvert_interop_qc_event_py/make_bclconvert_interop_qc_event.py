@@ -106,18 +106,3 @@ def handler(event, context):
             libraries_list
         )
     }
-
-# if __name__ == "__main__":
-#     import json
-#     print(
-#         json.dumps(
-#             handler(
-#                 {
-#                     "libraryIdList": [
-#                         "L2401527"
-#                     ]
-#                 },
-#                 None
-#             ),
-#             indent=4
-#     ))
