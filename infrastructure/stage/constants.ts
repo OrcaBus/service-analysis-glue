@@ -39,12 +39,11 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     },
     // DNA
     dragenWgtsDna: {
-      // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251102002321
       name: 'dragen-wgts-dna',
-      version: '4.4.4',
-      codeVersion: '677f34a',
+      version: '4.4.6',
+      codeVersion: '5ca7ec6',
       executionEngine: 'ICA',
-      executionEnginePipelineId: 'd43ef483-fdef-4dc3-8dac-85165c7f4d2e',
+      executionEnginePipelineId: '054ed1cc-4e29-46c0-afa0-8d2cf637a043',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
@@ -75,9 +74,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     dragenWgtsRna: {
       name: 'dragen-wgts-rna',
       version: '4.4.4',
-      codeVersion: '09d012e',
+      codeVersion: '1ec3da8',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '079d5aa9-664c-472d-9baf-1e6a6c542401',
+      executionEnginePipelineId: '1f15f496-9f76-4bc5-98f7-e1e00ce8a407',
       validationState: 'VALIDATED',
     },
     oncoanalyserWgtsRna: {
@@ -133,12 +132,11 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     },
     // DNA
     dragenWgtsDna: {
-      // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251102002321
       name: 'dragen-wgts-dna',
       version: '4.4.4',
-      codeVersion: '677f34a',
+      codeVersion: '724101a',
       executionEngine: 'ICA',
-      executionEnginePipelineId: 'd43ef483-fdef-4dc3-8dac-85165c7f4d2e',
+      executionEnginePipelineId: '812c4ee5-b0bd-4c55-b4c2-cafe70ecfc8e',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
@@ -169,9 +167,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     dragenWgtsRna: {
       name: 'dragen-wgts-rna',
       version: '4.4.4',
-      codeVersion: '09d012e',
+      codeVersion: '1ec3da8',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '079d5aa9-664c-472d-9baf-1e6a6c542401',
+      executionEnginePipelineId: '1f15f496-9f76-4bc5-98f7-e1e00ce8a407',
       validationState: 'VALIDATED',
     },
     oncoanalyserWgtsRna: {
@@ -227,12 +225,11 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     },
     // DNA
     dragenWgtsDna: {
-      // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.4__20251102002321
       name: 'dragen-wgts-dna',
       version: '4.4.4',
-      codeVersion: '677f34a',
+      codeVersion: '724101a',
       executionEngine: 'ICA',
-      executionEnginePipelineId: 'd43ef483-fdef-4dc3-8dac-85165c7f4d2e',
+      executionEnginePipelineId: '812c4ee5-b0bd-4c55-b4c2-cafe70ecfc8e',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
@@ -263,9 +260,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     dragenWgtsRna: {
       name: 'dragen-wgts-rna',
       version: '4.4.4',
-      codeVersion: '09d012e',
+      codeVersion: '1ec3da8',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '079d5aa9-664c-472d-9baf-1e6a6c542401',
+      executionEnginePipelineId: '1f15f496-9f76-4bc5-98f7-e1e00ce8a407',
       validationState: 'VALIDATED',
     },
     oncoanalyserWgtsRna: {
