@@ -33,7 +33,7 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     },
     pieriandxTso500Ctdna: {
       name: 'pieriandx-tso500-ctdna',
-      version: '2.1.0',
+      version: '2.6.0',
       executionEngine: 'Unknown',
       executionEnginePipelineId: 'Unknown',
     },
@@ -126,7 +126,7 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     },
     pieriandxTso500Ctdna: {
       name: 'pieriandx-tso500-ctdna',
-      version: '2.1.0',
+      version: '2.6.0',
       executionEngine: 'Unknown',
       executionEnginePipelineId: 'Unknown',
     },
@@ -219,7 +219,7 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     },
     pieriandxTso500Ctdna: {
       name: 'pieriandx-tso500-ctdna',
-      version: '2.1.0',
+      version: '2.6.0',
       executionEngine: 'Unknown',
       executionEnginePipelineId: 'Unknown',
     },

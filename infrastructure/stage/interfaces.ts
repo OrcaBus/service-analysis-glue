@@ -124,13 +124,22 @@ export type DragenTso500CtdnaWorkflowObjectType = Workflow &
       }
   );
 
-export type PierianDxTso500CtdnaWorkflowObjectType = Workflow & {
-  name: 'pieriandx-tso500-ctdna';
-  version: '2.1.0';
-  executionEngine: 'Unknown';
-  executionEnginePipelineId: 'Unknown';
-};
-// '2.6' Coming Soon
+export type PierianDxTso500CtdnaWorkflowObjectType = Workflow & // 2.1.0 -- DEPRECATED
+  (
+    | {
+        name: 'pieriandx-tso500-ctdna';
+        version: '2.1.0';
+        executionEngine: 'Unknown';
+        executionEnginePipelineId: 'Unknown';
+      }
+    // 2.6.0 -- CURRENT
+    | {
+        name: 'pieriandx-tso500-ctdna';
+        version: '2.6.0';
+        executionEngine: 'Unknown';
+        executionEnginePipelineId: 'Unknown';
+      }
+  );
 
 /**
  * DNA Workflow Versions
