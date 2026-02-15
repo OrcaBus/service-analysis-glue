@@ -193,7 +193,10 @@ def handler(event, context):
 
     # Check for negative control
     negative_control_libraries = list(filter(
-        lambda library_iter_: library_iter_['phenotype'].startswith('negative'),
+        lambda library_iter_: (
+                library_iter_['phenotype'] is not None and
+                library_iter_['phenotype'].startswith('negative')
+        ),
         libraries_list
     ))
 
