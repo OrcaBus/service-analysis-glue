@@ -30,7 +30,7 @@ export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
    */
   return new PythonLayerVersion(scope, 'analysis-lambda-layer', {
     entry: path.join(LAYERS_DIR, 'analysis_tool_kit'),
-    compatibleRuntimes: [lambda.Runtime.PYTHON_3_12],
+    compatibleRuntimes: [lambda.Runtime.PYTHON_3_14],
     compatibleArchitectures: [lambda.Architecture.ARM_64],
     bundling: {
       image: getPythonUvDockerImage(),
@@ -64,7 +64,7 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
     entry: path.join(LAMBDA_DIR, lambdaNameToSnakeCase + '_py'),
-    runtime: lambda.Runtime.PYTHON_3_12,
+    runtime: lambda.Runtime.PYTHON_3_14,
     architecture: lambda.Architecture.ARM_64,
     index: lambdaNameToSnakeCase + '.py',
     handler: 'handler',
@@ -72,15 +72,10 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiTools,
   });
 
-  // AwsSolutions-L1 - We'll migrate to PYTHON_3_13 ASAP, soz
   // AwsSolutions-IAM4 - We need to add this for the lambda to work
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
     [
-      {
-        id: 'AwsSolutions-L1',
-        reason: 'Will migrate to PYTHON_3_13 ASAP, soz',
-      },
       {
         id: 'AwsSolutions-IAM4',
         reason: 'We use the basic execution role for lambda functions',
