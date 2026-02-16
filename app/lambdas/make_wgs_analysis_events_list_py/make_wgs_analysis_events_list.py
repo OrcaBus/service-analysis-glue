@@ -170,6 +170,14 @@ def handler(event, context):
         libraries_list
     ))
 
+    # Filter to libraries with a valid phenotype
+    libraries_list = list(filter(
+        lambda library_iter_: (
+                library_iter_['phenotype'] is not None
+        ),
+        libraries_list
+    ))
+
     if len(libraries_list) == 0:
         return {
             "eventDetailList": list(filter(
@@ -193,7 +201,9 @@ def handler(event, context):
 
     # Check for negative control
     negative_control_libraries = list(filter(
-        lambda library_iter_: library_iter_['phenotype'].startswith('negative'),
+        lambda library_iter_: (
+                library_iter_['phenotype'].startswith('negative')
+        ),
         libraries_list
     ))
 
