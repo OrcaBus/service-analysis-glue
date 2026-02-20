@@ -9,11 +9,12 @@ If there is just one normal, we find the latest tumor for that subject.
 
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
+
 # Standard imports
 import json
 from copy import copy
 from os import environ
-from typing import List, Dict, Any, Literal, Optional, Union
+from typing import List, Dict, Literal, Optional, Union
 import logging
 
 # Layer imports
@@ -23,7 +24,15 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
-from analysis_tool_kit import add_workflow_draft_event_detail, Workflow, get_existing_workflow_runs, EventLibrary
+
+from analysis_tool_kit import (
+    Workflow,
+    EventLibrary,
+    get_existing_workflow_runs,
+    add_workflow_draft_event_detail,
+)
+from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
+
 
 # Type hints
 WorkflowName = Literal['DRAGEN_WGTS_DNA', 'ONCOANALYSER_WGTS_DNA', 'SASH']
@@ -263,7 +272,8 @@ def handler(event, context):
     all_subject_libraries = list(filter(
         lambda library_iter_: (
             library_iter_['subject']['orcabusId'] == subject_orcabus_id and
-            library_iter_['type'] == 'WGS'
+            library_iter_['type'] == 'WGS' and
+            get_libraries_with_readsets([library_iter_])
         ),
         sorted(
             get_all_libraries(),
@@ -281,11 +291,11 @@ def handler(event, context):
                         all_subject_libraries
                     ))) == 0
             ) or (
-            len(list(filter(
-                lambda library_iter_: library_iter_['phenotype'] == 'normal',
-                all_subject_libraries
-            ))) == 0
-    )
+                    len(list(filter(
+                        lambda library_iter_: library_iter_['phenotype'] == 'normal',
+                        all_subject_libraries
+                    ))) == 0
+            )
     ):
         return {
             "eventDetailList": list(filter(
