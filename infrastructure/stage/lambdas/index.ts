@@ -70,6 +70,7 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
     handler: 'handler',
     timeout: Duration.seconds(300),
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiTools,
+    memorySize: 1024,
   });
 
   // AwsSolutions-IAM4 - We need to add this for the lambda to work
