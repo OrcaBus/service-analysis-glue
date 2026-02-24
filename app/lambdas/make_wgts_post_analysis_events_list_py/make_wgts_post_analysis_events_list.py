@@ -23,11 +23,13 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
+
 from analysis_tool_kit import (
     add_workflow_draft_event_detail,
     get_existing_workflow_runs,
     Workflow, EventLibrary,
 )
+from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
@@ -167,7 +169,8 @@ def handler(event, context):
     ))
 
     # We want to remove these from consideration
-    for normal_library_iter in normal_dna_libraries:
+    # Use a copy since we're iterating and removing from the same list
+    for normal_library_iter in copy(normal_dna_libraries):
         if normal_library_iter['workflow'] == 'BatchControl':
             normal_dna_libraries.remove(normal_library_iter)
 
@@ -199,7 +202,12 @@ def handler(event, context):
     # We sort by orcabusId descending so that the latest library is first
     # This assumes that orcabusIds are assigned in increasing order over time
     all_subject_libraries = list(filter(
-        lambda library_iter_: library_iter_['subject']['orcabusId'] == subject_orcabus_id,
+        lambda library_iter_: (
+            library_iter_['subject']['orcabusId'] == subject_orcabus_id and
+            library_iter_['type'] in ['WGS', 'WTS'] and
+            library_iter_['phenotype'] in ['tumor', 'normal'] and
+            get_libraries_with_readsets([library_iter_])
+        ),
         sorted(
             get_all_libraries(),
             key=lambda library_iter__: library_iter__['orcabusId'],
