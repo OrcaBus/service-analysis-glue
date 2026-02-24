@@ -2,38 +2,38 @@
 
 [[package]]
 name = "mypy-boto3-secretsmanager"
-version = "1.41.0"
-description = "Type annotations for boto3 SecretsManager 1.41.0 service generated with mypy-boto3-builder 8.12.0"
+version = "1.42.8"
+description = "Type annotations for boto3 SecretsManager 1.42.8 service generated with mypy-boto3-builder 8.12.0"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mypy_boto3_secretsmanager-1.41.0-py3-none-any.whl", hash = "sha256:5fc73568d6d4eb24e73416320f594776695ab4c4ab788b734ccec74d810c22bf"},
-    {file = "mypy_boto3_secretsmanager-1.41.0.tar.gz", hash = "sha256:d8ca3c3e4c7dfd88b85cf0f956562734e8f3608aaf9f98e9669dc298c0624d5f"},
+    {file = "mypy_boto3_secretsmanager-1.42.8-py3-none-any.whl", hash = "sha256:50c891a88e725a8dba7444018e47590ea63d8e938abe2b1c0b25e5413f39d51d"},
+    {file = "mypy_boto3_secretsmanager-1.42.8.tar.gz", hash = "sha256:5ab42f35ce932765ebb1684146f478a87cc4b83bef950fd1aa0e268b88d59c81"},
 ]
 
 [[package]]
 name = "mypy-boto3-ssm"
-version = "1.41.0"
-description = "Type annotations for boto3 SSM 1.41.0 service generated with mypy-boto3-builder 8.12.0"
+version = "1.42.54"
+description = "Type annotations for boto3 SSM 1.42.54 service generated with mypy-boto3-builder 8.12.0"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mypy_boto3_ssm-1.41.0-py3-none-any.whl", hash = "sha256:8ee2be4af796dbb7884fc01b22db5b242e0ab93f2330b86745d3a0b69271dc84"},
-    {file = "mypy_boto3_ssm-1.41.0.tar.gz", hash = "sha256:959745aa4e77f2ac5a19bf0c755e8fd9fe8ea4ce7e8b771e0965a21342a29d3d"},
+    {file = "mypy_boto3_ssm-1.42.54-py3-none-any.whl", hash = "sha256:dfd70aa5f60be70437b53482fa6e183bafe922598a50fc6c51f6ad3bd70d8c04"},
+    {file = "mypy_boto3_ssm-1.42.54.tar.gz", hash = "sha256:f4bc19a08635757808b66ef94a5b52c3729da998587745962626e60606a1be2c"},
 ]
 
 [[package]]
 name = "mypy-boto3-stepfunctions"
-version = "1.41.0"
-description = "Type annotations for boto3 SFN 1.41.0 service generated with mypy-boto3-builder 8.12.0"
+version = "1.42.3"
+description = "Type annotations for boto3 SFN 1.42.3 service generated with mypy-boto3-builder 8.12.0"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "mypy_boto3_stepfunctions-1.41.0-py3-none-any.whl", hash = "sha256:706e1d38c0cff489a9b97d39ecf964f951600e8a0fafb9a88efc49064d855ec9"},
-    {file = "mypy_boto3_stepfunctions-1.41.0.tar.gz", hash = "sha256:8fc7f87f2c5766dd5cecf4790789b9a202f82a463f132507784a6b2df260688a"},
+    {file = "mypy_boto3_stepfunctions-1.42.3-py3-none-any.whl", hash = "sha256:1509c58b38389b05d0664e042e66508ea7cb170948cd92c33abe531e933f3c63"},
+    {file = "mypy_boto3_stepfunctions-1.42.3.tar.gz", hash = "sha256:bf38f9db42e144e86c7807dff127554defe1548a10ba25824f69cc74554fa5b5"},
 ]
 
 [[package]]
@@ -50,5 +50,5 @@ files = [
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.12, <3.13"
-content-hash = "5c84e2a0cdd6bc78cc9d6b4bb7de0dd7b33d4796977dbf0e4087b9c47b06a4ee"
+python-versions = "^3.14, <3.15"
+content-hash = "61f75ae2cf47fef0750d2ee47230067c01e13c83114de215b27d1b77ba0971aa"

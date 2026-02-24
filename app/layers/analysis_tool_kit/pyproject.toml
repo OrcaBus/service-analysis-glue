@@ -14,7 +14,7 @@ homepage = "https://github.com/OrcaBus/service-analysis-glue"
 repository = "https://github.com/OrcaBus/service-analysis-glue"
 
 [tool.poetry.dependencies]
-python = "^3.12, <3.13"
+python = "^3.14, <3.15"
 verboselogs = "^1.7"
 
 
