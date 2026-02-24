@@ -13,7 +13,7 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, Literal, Optional, Union
+from typing import List, Dict, Literal, Optional, Union
 import logging
 
 # Layer imports
