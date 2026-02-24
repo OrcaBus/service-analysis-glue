@@ -1,7 +1,5 @@
 /*
 Build out the lambda functions
-
-We have the following environment variables to set (per function)
 */
 
 import {
@@ -68,9 +66,9 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
     architecture: lambda.Architecture.ARM_64,
     index: lambdaNameToSnakeCase + '.py',
     handler: 'handler',
-    timeout: Duration.seconds(300),
+    timeout: lambdaRequirements.needsLongerTimeout ? Duration.seconds(300) : Duration.seconds(60),
     includeOrcabusApiToolsLayer: lambdaRequirements.needsOrcabusApiTools,
-    memorySize: 1024,
+    memorySize: lambdaRequirements.needsMoreMemory ? 2048 : 512,
   });
 
   // AwsSolutions-IAM4 - We need to add this for the lambda to work
