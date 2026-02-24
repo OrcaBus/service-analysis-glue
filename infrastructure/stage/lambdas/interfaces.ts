@@ -38,6 +38,8 @@ export interface LambdaRequirements {
   needsOrcabusApiTools?: boolean;
   needsSsmParameterAccess?: boolean;
   needsAnalysisToolsLayer?: boolean;
+  needsLongerTimeout?: boolean;
+  needsMoreMemory?: boolean;
 }
 
 // Lambda requirements mapping
@@ -56,6 +58,8 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
     needsAnalysisToolsLayer: true,
+    needsLongerTimeout: true,
+    needsMoreMemory: true,
   },
   makeCtdnaAnalysisEventsList: {
     needsOrcabusApiTools: true,
@@ -66,6 +70,8 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
     needsAnalysisToolsLayer: true,
+    needsLongerTimeout: true,
+    needsMoreMemory: true,
   },
   makeWtsAnalysisEventsList: {
     needsOrcabusApiTools: true,
@@ -82,6 +88,8 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
     needsAnalysisToolsLayer: true,
+    needsLongerTimeout: true,
+    needsMoreMemory: true,
   },
 };
 
