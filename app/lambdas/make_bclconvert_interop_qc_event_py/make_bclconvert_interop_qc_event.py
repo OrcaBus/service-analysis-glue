@@ -18,6 +18,7 @@ from orcabus_api_tools.sequence import (
     get_sequence_object_from_instrument_run_id,
     get_library_id_list_in_sequence
 )
+from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
 from analysis_tool_kit import add_workflow_draft_event_detail, Workflow
 
 # Type hints
@@ -47,6 +48,12 @@ def add_bclconvert_interop_qc_draft_event(
     default_draft_event_detail = add_workflow_draft_event_detail(
         libraries=libraries,
         **WORKFLOW_OBJECT_DICT['BCLCONVERT_INTEROP_QC']
+    )
+
+    # Fix 'libraries' by filtering to only those readsets in the current instrument run id
+    default_draft_event_detail['libraries'] = get_libraries_with_readsets(
+        libraries,
+        instrument_run_id=instrument_run_id,
     )
 
     # Add payload data details
