@@ -7,7 +7,7 @@ Helper functions for analysis workflows
 # Standard imports
 from functools import reduce
 from operator import concat
-from typing import List, Any, cast, Unpack, Literal
+from typing import List, Any, cast, Unpack, Literal, Optional
 
 # Layer imports
 from orcabus_api_tools.metadata.models import Library
@@ -17,7 +17,8 @@ from orcabus_api_tools.workflow import (
     list_workflows, get_workflow_runs_from_metadata
 )
 from orcabus_api_tools.workflow.models import WorkflowRunDetail
-from orcabus_api_tools.fastq import get_fastqs_in_library
+from orcabus_api_tools.fastq import get_fastqs_in_library, get_fastqs_in_instrument_run_id, \
+    get_fastqs_in_libraries_and_instrument_run_id
 
 # Local imports
 from .globals import DRAFT_STATUS
@@ -31,7 +32,17 @@ def flatten(list_of_lists: List[List[Any]]) -> List[Any]:
     return list(reduce(concat, list_of_lists, []))
 
 
-def get_readsets_in_library(library_id: str) -> List[ReadSet]:
+def get_readsets_in_library(library_id: str, instrument_run_id: Optional[str] = None) -> List[ReadSet]:
+    if instrument_run_id is None:
+        fastq_obj_list = get_fastqs_in_library(
+            library_id=library_id
+        )
+    else:
+        fastq_obj_list = get_fastqs_in_libraries_and_instrument_run_id(
+            instrument_run_id=instrument_run_id,
+            library_id_list=[library_id]
+        )
+
     return list(map(
         lambda fastq_id_iter_: cast(
             ReadSet,
@@ -43,33 +54,40 @@ def get_readsets_in_library(library_id: str) -> List[ReadSet]:
                 ]),
             })
         ),
-        get_fastqs_in_library(
-            library_id=library_id
-        )
+        fastq_obj_list
     ))
 
 
-def library_to_event_library(library: Library) -> EventLibrary:
+def library_to_event_library(library: Library, instrument_run_id: Optional[str] = None) -> EventLibrary:
     return {
         "orcabusId": library['orcabusId'],
         "libraryId": library['libraryId'],
-        "readsets": get_readsets_in_library(library['libraryId']),
+        "readsets": get_readsets_in_library(
+            library['libraryId'],
+            instrument_run_id=instrument_run_id
+        ),
     }
 
 
-def get_libraries_with_readsets(libraries: List[Library]) -> List[Library]:
+def get_libraries_with_readsets(libraries: List[Library], instrument_run_id: Optional[str] = None) -> List[EventLibrary]:
     """
     Get the libraries that have readsets
     :param libraries:
+    :param instrument_run_id:
     :return:
     """
     # Get all libraries with readsets
     libraries_with_readsets = list(map(
-        library_to_event_library,
+        lambda library_obj_iter_: (
+            library_to_event_library(
+                library_obj_iter_,
+                instrument_run_id=instrument_run_id
+            )
+        ),
         libraries
     ))
 
-    # Drop libraries without readsets
+    # Drop and return libraries without readsets
     return list(filter(
         lambda library_iter_: len(library_iter_['readsets']) > 0,
         libraries_with_readsets
