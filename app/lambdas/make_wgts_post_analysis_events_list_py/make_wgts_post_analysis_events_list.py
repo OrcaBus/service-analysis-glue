@@ -15,6 +15,7 @@ import json
 from os import environ
 from typing import List, Dict, Literal, Optional, Union
 import logging
+from copy import deepcopy
 
 # Layer imports
 from orcabus_api_tools.metadata import (
@@ -170,7 +171,7 @@ def handler(event, context):
 
     # We want to remove these from consideration
     # Use a copy since we're iterating and removing from the same list
-    for normal_library_iter in copy(normal_dna_libraries):
+    for normal_library_iter in deepcopy(normal_dna_libraries):
         if normal_library_iter['workflow'] == 'BatchControl':
             normal_dna_libraries.remove(normal_library_iter)
 
