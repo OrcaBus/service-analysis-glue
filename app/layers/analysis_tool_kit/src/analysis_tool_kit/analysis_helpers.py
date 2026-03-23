@@ -14,11 +14,14 @@ from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.workflow import (
     create_portal_run_id,
     create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id,
-    list_workflows, get_workflow_runs_from_metadata
+    list_workflows,
+    get_workflow_runs_from_metadata,
 )
 from orcabus_api_tools.workflow.models import WorkflowRunDetail
-from orcabus_api_tools.fastq import get_fastqs_in_library, get_fastqs_in_instrument_run_id, \
-    get_fastqs_in_libraries_and_instrument_run_id
+from orcabus_api_tools.fastq import (
+    get_fastqs_in_library,
+    get_fastqs_in_libraries_and_instrument_run_id,
+)
 
 # Local imports
 from .globals import DRAFT_STATUS
