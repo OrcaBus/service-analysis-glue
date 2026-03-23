@@ -5,3 +5,4 @@ Globals used by the analysis helpers
 """
 
 DRAFT_STATUS = "DRAFT"
+DEPRECATED_STATUS = "DEPRECATED"

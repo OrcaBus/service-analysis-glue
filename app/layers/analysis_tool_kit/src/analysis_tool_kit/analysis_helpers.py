@@ -24,7 +24,7 @@ from orcabus_api_tools.fastq import (
 )
 
 # Local imports
-from .globals import DRAFT_STATUS
+from .globals import DRAFT_STATUS, DEPRECATED_STATUS
 from .models import ReadSet, EventLibrary, Workflow
 
 # Type hints
@@ -109,7 +109,7 @@ def get_existing_workflow_runs(
     :param libraries:
     :return:
     """
-    return get_workflow_runs_from_metadata(
+    workflow_runs = get_workflow_runs_from_metadata(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
         library_id_list=list(map(
@@ -127,6 +127,12 @@ def get_existing_workflow_runs(
             )
         ))
     )
+
+    # Remove workflows with DEPRECATED status
+    return list(filter(
+        lambda workflow_run_iter_: not workflow_run_iter_['currentState']['status'] == DEPRECATED_STATUS,
+        workflow_runs
+    ))
 
 
 def add_workflow_draft_event_detail(
