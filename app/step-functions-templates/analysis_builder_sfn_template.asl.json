@@ -57,7 +57,7 @@
                     "Type": "Task",
                     "Resource": "arn:aws:states:::events:putEvents",
                     "Arguments": {
-                      "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                      "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                     },
                     "End": true
                   }
@@ -213,7 +213,7 @@
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                 },
                                 "End": true
                               }
@@ -378,7 +378,7 @@
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                 },
                                 "End": true
                               }
@@ -542,7 +542,7 @@
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                 },
                                 "End": true
                               }
@@ -713,7 +713,7 @@
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                 },
                                 "End": true
                               }
@@ -875,7 +875,7 @@
                                 "Type": "Task",
                                 "Resource": "arn:aws:states:::events:putEvents",
                                 "Arguments": {
-                                  "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                 },
                                 "End": true
                               }
