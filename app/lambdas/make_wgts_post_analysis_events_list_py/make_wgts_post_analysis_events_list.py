@@ -177,17 +177,16 @@ def handler(event, context):
 
     # If there are no tumor libraries and no normal libraries for this
     # subject on this run, return an empty list
-    if len(tumor_dna_libraries) == 0 and len(normal_dna_libraries) == 0:
-        return {
-            "eventDetailList": list(filter(
-                lambda event_iter_: event_iter_ is not None,
-                events_list
-            ))
-        }
-
-    # Check if there are not any tumor WTS libraries for this subject
-    if len(tumor_rna_libraries) == 0:
-        # If there are no tumor WGS libraries for this subject on this run
+    if (
+            # No DNA libraries
+            (
+                len(tumor_dna_libraries) == 0 and len(normal_dna_libraries) == 0
+            ) and
+            # No RNA libraries
+            (
+                len(tumor_rna_libraries) == 0
+            )
+    ):
         return {
             "eventDetailList": list(filter(
                 lambda event_iter_: event_iter_ is not None,
