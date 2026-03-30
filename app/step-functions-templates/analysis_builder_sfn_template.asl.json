@@ -20,7 +20,7 @@
               "Type": "Task",
               "Resource": "arn:aws:states:::lambda:invoke",
               "Output": {
-                "eventDetail": "{% $states.result.Payload.eventDetail %}"
+                "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
               },
               "Arguments": {
                 "FunctionName": "${__make_bclconvert_interop_qc_event_lambda_function_arn__}",
@@ -43,15 +43,28 @@
                   "JitterStrategy": "FULL"
                 }
               ],
-              "Next": "Generate BCLConvert InterOp QC Draft"
+              "Next": "For each draft event (interop qc)"
             },
-            "Generate BCLConvert InterOp QC Draft": {
-              "Type": "Task",
-              "Resource": "arn:aws:states:::events:putEvents",
-              "Arguments": {
-                "Entries": "{% [\n  $states.input.eventDetail ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+            "For each draft event (interop qc)": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Generate BCLConvert InterOp QC Draft",
+                "States": {
+                  "Generate BCLConvert InterOp QC Draft": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::events:putEvents",
+                    "Arguments": {
+                      "Entries": "{% [\n  $states.input ~> $map(function($v){\n    {\n      \"EventBusName\": \"${__event_bus_name__}\",\n      \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n      \"Source\": \"${__stack_source__}\",\n      \"Detail\": $v\n    }\n  })\n] %}"
+                    },
+                    "End": true
+                  }
+                }
               },
-              "End": true
+              "End": true,
+              "Items": "{% $states.input.eventDetailList %}"
             }
           }
         },

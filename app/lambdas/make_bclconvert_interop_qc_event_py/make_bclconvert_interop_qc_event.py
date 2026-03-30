@@ -6,7 +6,8 @@ Make BCLConvert InteropQC events list
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional
+import logging
 
 # Layer imports
 from orcabus_api_tools.metadata import (
@@ -18,8 +19,14 @@ from orcabus_api_tools.sequence import (
     get_sequence_object_from_instrument_run_id,
     get_library_id_list_in_sequence
 )
-from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
-from analysis_tool_kit import add_workflow_draft_event_detail, Workflow
+from analysis_tool_kit.analysis_helpers import (
+    get_libraries_with_readsets,
+    get_existing_workflow_runs,
+)
+from analysis_tool_kit import (
+    add_workflow_draft_event_detail,
+    Workflow,
+)
 
 # Type hints
 WorkflowName = Literal['BCLCONVERT_INTEROP_QC']
@@ -33,6 +40,10 @@ WORKFLOW_OBJECT_DICT: Dict[WorkflowName, Workflow] = {
 PAYLOAD_VERSION_DICT: Dict[WorkflowName, str] = {
     "BCLCONVERT_INTEROP_QC": get_ssm_value(environ['BCLCONVERT_INTEROP_QC_PAYLOAD_VERSION_SSM_PARAMETER_NAME']),
 }
+
+# Set logger
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def add_bclconvert_interop_qc_draft_event(
@@ -78,7 +89,28 @@ def add_bclconvert_interop_qc_draft_event(
 def generate_bclconvert_interop_qc_draft(
         instrument_run_id: str,
         libraries: List[Library],
-) -> Dict[str, Any]:
+) -> Optional[Dict[str, Any]]:
+
+    # Check that we have not had any other runs for this library and these readsets
+    if len(libraries) < 1:
+        raise ValueError(
+            "BCLConvert InterOp QC event requires at least one library"
+        )
+
+    # Check for existing runs
+    existing_workflow_runs = get_existing_workflow_runs(
+        workflow_name=WORKFLOW_OBJECT_DICT['BCLCONVERT_INTEROP_QC']['name'],
+        workflow_version=WORKFLOW_OBJECT_DICT['BCLCONVERT_INTEROP_QC']['version'],
+        libraries=libraries
+    )
+
+    if len(existing_workflow_runs) > 0:
+        logger.warning(
+            "Existing BCLConvert InterOp QC workflow runs found for this run %s" % instrument_run_id
+        )
+        return None
+
+
     return add_bclconvert_interop_qc_draft_event(
         instrument_run_id=instrument_run_id,
         libraries=libraries
@@ -108,8 +140,13 @@ def handler(event, context):
     )
 
     return {
-        "eventDetail": generate_bclconvert_interop_qc_draft(
-            instrument_run_id,
-            libraries_list
-        )
+        "eventDetailList": list(filter(
+            lambda event_iter_: event_iter_ is not None,
+            [
+                generate_bclconvert_interop_qc_draft(
+                    instrument_run_id,
+                    libraries_list
+                )
+            ]
+        ))
     }
