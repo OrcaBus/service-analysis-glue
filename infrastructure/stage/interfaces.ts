@@ -85,17 +85,29 @@ export interface Workflow {
 /**
  * BCLConvert InterOp QC Workflow Versions
  */
-export type BclconvertInteropQcWorkflowObjectType = Workflow & {
-  // https://github.com/umccr/cwl-ica/releases/tag/bclconvert-interop-qc%2F1.5.0--1.31__20251015013928
-  name: 'bclconvert-interop-qc';
-  version: '1.5.0--1.31';
-  codeVersion: 'ea35fcd';
-  executionEngine: 'ICA';
-  executionEnginePipelineId: 'ebbcd07d-a030-4841-b2ad-ac985c776f36';
-  validationState: 'VALIDATED';
-};
+export type BclconvertInteropQcWorkflowObjectType = Workflow &
+  (
+    | {
+        // https://github.com/umccr/cwl-ica/releases/tag/bclconvert-interop-qc%2F1.5.0--1.31__20251015013928
+        name: 'bclconvert-interop-qc';
+        version: '1.5.0--1.31';
+        codeVersion: 'ea35fcd';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: 'ebbcd07d-a030-4841-b2ad-ac985c776f36';
+        validationState: 'VALIDATED';
+      }
+    | {
+        // https://github.com/umccr/cwl-ica/releases/tag/bclconvert-interop-qc%2F1.9.0--1.33__20260401225123
+        name: 'bclconvert-interop-qc';
+        version: '1.9.0--1.33';
+        codeVersion: '56670e1';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7';
+        validationState: 'VALIDATED';
+      }
+  );
 
-export type BclconvertInteropQcPayloadVersionType = '2025.05.29';
+export type BclconvertInteropQcPayloadVersionType = '2025.05.29' | '2026.04.01';
 
 /**
  * CTDNA Workflow Versions

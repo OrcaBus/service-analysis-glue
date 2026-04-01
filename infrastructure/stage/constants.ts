@@ -16,10 +16,10 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     // BCLConvert InterOp QC
     bclconvertInteropQc: {
       name: 'bclconvert-interop-qc',
-      version: '1.5.0--1.31',
-      codeVersion: 'ea35fcd',
+      version: '1.9.0--1.33',
+      codeVersion: '56670e1',
       executionEngine: 'ICA',
-      executionEnginePipelineId: 'ebbcd07d-a030-4841-b2ad-ac985c776f36',
+      executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7',
       validationState: 'VALIDATED',
     },
     // ctDNA
@@ -109,10 +109,10 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     // BCLConvert InterOp QC
     bclconvertInteropQc: {
       name: 'bclconvert-interop-qc',
-      version: '1.5.0--1.31',
-      codeVersion: 'ea35fcd',
+      version: '1.9.0--1.33',
+      codeVersion: '56670e1',
       executionEngine: 'ICA',
-      executionEnginePipelineId: 'ebbcd07d-a030-4841-b2ad-ac985c776f36',
+      executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7',
       validationState: 'VALIDATED',
     },
     // ctDNA
@@ -202,10 +202,10 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     // BCLConvert InterOp QC
     bclconvertInteropQc: {
       name: 'bclconvert-interop-qc',
-      version: '1.5.0--1.31',
-      codeVersion: 'ea35fcd',
+      version: '1.9.0--1.33',
+      codeVersion: '56670e1',
       executionEngine: 'ICA',
-      executionEnginePipelineId: 'ebbcd07d-a030-4841-b2ad-ac985c776f36',
+      executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7',
       validationState: 'VALIDATED',
     },
     // ctDNA
@@ -295,13 +295,13 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
 
 export const PAYLOAD_VERSIONS_BY_NAME: Record<StageName, WorkflowPayloadVersionType> = {
   BETA: {
-    bclconvertInteropQc: '2025.05.29',
+    bclconvertInteropQc: '2026.04.01',
   },
   GAMMA: {
-    bclconvertInteropQc: '2025.05.29',
+    bclconvertInteropQc: '2026.04.01',
   },
   PROD: {
-    bclconvertInteropQc: '2025.05.29',
+    bclconvertInteropQc: '2026.04.01',
   },
 };
 
