@@ -35,6 +35,13 @@ DRAFT_STATUS = "DRAFT"
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Only tumor libraries with a workflow value
+# should go through the wgts rna pipeline
+WGTS_WORKFLOW_NAMES = [
+    'clinical',
+    'research'
+]
+
 
 def add_dragen_wgts_rna_draft_event(
         libraries: List[Library],
@@ -150,7 +157,9 @@ def handler(event, context):
 
     # Filter to WTS libraries only
     libraries_list = list(filter(
-        lambda library_iter_: library_iter_['type'] == 'WTS',
+        lambda library_iter_: (
+            library_iter_['type'] == 'WTS'
+        ),
         libraries_list
     ))
 
@@ -173,6 +182,12 @@ def handler(event, context):
     tumor_libraries = list(filter(
         lambda library_iter_: library_iter_['phenotype'] == 'tumor',
         libraries_list
+    ))
+
+    # Filter by workflow type
+    tumor_libraries = list(filter(
+        lambda library_iter_: library_iter_['workflow'] in WGTS_WORKFLOW_NAMES,
+        tumor_libraries
     ))
 
     for library_iter in tumor_libraries:

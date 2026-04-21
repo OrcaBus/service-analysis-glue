@@ -44,6 +44,13 @@ WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
 # Draft status
 DRAFT_STATUS = "DRAFT"
 
+# Only tumor libraries with a workflow value
+# should go through the wgts dna/rna pipeline
+WGTS_WORKFLOW_NAMES = [
+    'clinical',
+    'research'
+]
+
 # Set logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -167,6 +174,16 @@ def handler(event, context):
             library_iter_['type'] == 'WTS'
         ),
         libraries_list
+    ))
+
+    # Filter tumor libraries to only those with a matching 'workflow' value
+    tumor_dna_libraries = list(filter(
+        lambda library_iter_: library_iter_['workflow'] in WGTS_WORKFLOW_NAMES,
+        tumor_dna_libraries
+    ))
+    tumor_rna_libraries = list(filter(
+        lambda library_iter_: library_iter_['workflow'] in WGTS_WORKFLOW_NAMES,
+        tumor_rna_libraries
     ))
 
     # We want to remove these from consideration
