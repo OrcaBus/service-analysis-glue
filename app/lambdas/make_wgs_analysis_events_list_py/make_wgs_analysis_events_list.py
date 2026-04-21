@@ -54,6 +54,12 @@ GERMLINE_ONLY_WORKFLOW_NAMES = [
     'germline',
 ]
 
+# 'workflow' attribute for tumor library must match one of the following
+WGTS_WORKFLOW_NAMES = [
+    'clinical',
+    'research'
+]
+
 # Set logger
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -208,6 +214,12 @@ def handler(event, context):
         libraries_list
     ))
 
+    # Filter tumor libraries to only those with a matching 'workflow' value
+    tumor_libraries = list(filter(
+        lambda library_iter_: library_iter_['workflow'] in WGTS_WORKFLOW_NAMES,
+        tumor_libraries
+    ))
+
     # Check for negative control
     negative_control_libraries = list(filter(
         lambda library_iter_: (
@@ -216,8 +228,8 @@ def handler(event, context):
         libraries_list
     ))
 
+    # Negative control libraries should only go through dragen
     if len(negative_control_libraries) > 0:
-        # Negative control libraries should only go through dragen
         for ntc_library in negative_control_libraries:
             events_list.extend([
                 add_dragen_wgts_dna_draft_event(
@@ -273,7 +285,8 @@ def handler(event, context):
         lambda library_iter_: (
             library_iter_['subject']['orcabusId'] == subject_orcabus_id and
             library_iter_['type'] == 'WGS' and
-            get_libraries_with_readsets([library_iter_])
+            get_libraries_with_readsets([library_iter_]) and
+            library_iter_['workflow'] in WGTS_WORKFLOW_NAMES
         ),
         sorted(
             get_all_libraries(),
