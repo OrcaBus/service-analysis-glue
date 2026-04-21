@@ -187,14 +187,25 @@ export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow & {
   validationState: 'VALIDATED';
 };
 
-export type SashWorkflowObjectType = Workflow & {
-  name: 'sash';
-  version: '0.6.3';
-  codeVersion: '89a7a21';
-  executionEngine: 'ICA';
-  executionEnginePipelineId: '5b4060de-5e43-4aa6-b408-f51537d43c65';
-  validationState: 'VALIDATED';
-};
+export type SashWorkflowObjectType = Workflow &
+  (
+    | {
+        name: 'sash';
+        version: '0.6.3';
+        codeVersion: '89a7a21';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '5b4060de-5e43-4aa6-b408-f51537d43c65';
+        validationState: 'VALIDATED';
+      }
+    | {
+        name: 'sash';
+        version: '0.6.4';
+        codeVersion: '4946aa8';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '51f0d1dc-be92-4a5e-9a8a-ad8d44a6431c';
+        validationState: 'VALIDATED';
+      }
+  );
 
 /**
  * RNA Workflow Versions
