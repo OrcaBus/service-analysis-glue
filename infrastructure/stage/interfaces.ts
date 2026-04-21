@@ -178,14 +178,25 @@ export type DragenWgtsDnaWorkflowObjectType = Workflow &
       }
   );
 
-export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow & {
-  name: 'oncoanalyser-wgts-dna';
-  version: '2.2.0';
-  codeVersion: 'b94cbc7';
-  executionEngine: 'ICA';
-  executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
-  validationState: 'VALIDATED';
-};
+export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow &
+  (
+    | {
+        name: 'oncoanalyser-wgts-dna';
+        version: '2.2.0';
+        codeVersion: 'b94cbc7';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
+        validationState: 'VALIDATED';
+      }
+    | {
+        name: 'oncoanalyser-wgts-dna';
+        version: '2.3.0';
+        codeVersion: '234fd82';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: 'fb07badf-dcba-4a8c-97a9-12e842b97dfb';
+        validationState: 'VALIDATED';
+      }
+  );
 
 export type SashWorkflowObjectType = Workflow &
   (
@@ -229,26 +240,48 @@ export type ArribaWorkflowObjectType = Workflow & {
   validationState: 'VALIDATED';
 };
 
-export type OncoanalyserWgtsRnaWorkflowObjectType = Workflow & {
-  name: 'oncoanalyser-wgts-rna';
-  version: '2.2.0';
-  codeVersion: 'b94cbc7';
-  executionEngine: 'ICA';
-  executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
-  validationState: 'VALIDATED';
-};
+export type OncoanalyserWgtsRnaWorkflowObjectType = Workflow &
+  (
+    | {
+        name: 'oncoanalyser-wgts-rna';
+        version: '2.2.0';
+        codeVersion: 'b94cbc7';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
+        validationState: 'VALIDATED';
+      }
+    | {
+        name: 'oncoanalyser-wgts-rna';
+        version: '2.3.0';
+        codeVersion: '234fd82';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: 'fb07badf-dcba-4a8c-97a9-12e842b97dfb';
+        validationState: 'VALIDATED';
+      }
+  );
 
 /**
  * DNA/RNA Workflow Versions
  */
-export type OncoanalyserWgtsDnaRnaWorkflowObjectType = Workflow & {
-  name: 'oncoanalyser-wgts-dna-rna';
-  version: '2.2.0';
-  codeVersion: 'b94cbc7';
-  executionEngine: 'ICA';
-  executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
-  validationState: 'VALIDATED';
-};
+export type OncoanalyserWgtsDnaRnaWorkflowObjectType = Workflow &
+  (
+    | {
+        name: 'oncoanalyser-wgts-dna-rna';
+        version: '2.2.0';
+        codeVersion: 'b94cbc7';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
+        validationState: 'VALIDATED';
+      }
+    | {
+        name: 'oncoanalyser-wgts-dna-rna';
+        version: '2.3.0';
+        codeVersion: '234fd82';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: 'fb07badf-dcba-4a8c-97a9-12e842b97dfb';
+        validationState: 'VALIDATED';
+      }
+  );
 
 export type RnasumWorkflowObjectType = Workflow & {
   name: 'rnasum';
