@@ -223,7 +223,8 @@ def handler(event, context):
             library_iter_['subject']['orcabusId'] == subject_orcabus_id and
             library_iter_['type'] in ['WGS', 'WTS'] and
             library_iter_['phenotype'] in ['tumor', 'normal'] and
-            get_libraries_with_readsets([library_iter_])
+            get_libraries_with_readsets([library_iter_]) and
+            library_iter_['workflow'] in WGTS_WORKFLOW_NAMES
         ),
         sorted(
             get_all_libraries(),
