@@ -252,17 +252,16 @@ def handler(event, context):
             ))
         }
 
-    # Check for batch control libraries
-    # Or germline specific projects
+    # Check for batch control libraries, germline-specific projects, or accreditation samples
     for normal_library_iter in copy(normal_libraries):
         if (
                 # Is this the batch control library
                 normal_library_iter['workflow'] in GERMLINE_ONLY_WORKFLOW_NAMES or
                 # Automatically process the accreditation samples
-                list(filter(
-                    lambda project_iter_: project_iter_['projectId'] in ACCREDITATION_WGS_PROJECT_ID_LIST,
-                    normal_library_iter['projectSet']
-                ))
+                any(
+                    project_iter_['projectId'] in ACCREDITATION_WGS_PROJECT_ID_LIST
+                    for project_iter_ in normal_library_iter['projectSet']
+                )
         ):
             # Batch control libraries should only go through dragen component
             # Likewise, gen airspace libraries should only go through dragen component
