@@ -259,10 +259,10 @@ def handler(event, context):
                 normal_library_iter['workflow'] in GERMLINE_ONLY_WORKFLOW_NAMES or
                 # Automatically process the accreditation samples
                 any(
+                any(
                     project_iter_['projectId'] in ACCREDITATION_WGS_PROJECT_ID_LIST
                     for project_iter_ in normal_library_iter['projectSet']
                 )
-        ):
             # Batch control libraries should only go through dragen component
             # Likewise, gen airspace libraries should only go through dragen component
             events_list.extend([
