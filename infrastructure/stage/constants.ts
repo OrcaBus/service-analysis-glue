@@ -41,9 +41,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     dragenWgtsDna: {
       name: 'dragen-wgts-dna',
       version: '4.4.6',
-      codeVersion: '5ca7ec6',
+      codeVersion: 'ca414b8',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '054ed1cc-4e29-46c0-afa0-8d2cf637a043',
+      executionEnginePipelineId: '6e13f764-cc88-4214-8eeb-6d30374de354',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
@@ -133,10 +133,10 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     // DNA
     dragenWgtsDna: {
       name: 'dragen-wgts-dna',
-      version: '4.4.4',
-      codeVersion: '724101a',
+      version: '4.4.6',
+      codeVersion: 'ca414b8',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '812c4ee5-b0bd-4c55-b4c2-cafe70ecfc8e',
+      executionEnginePipelineId: '6e13f764-cc88-4214-8eeb-6d30374de354',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
@@ -226,10 +226,10 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     // DNA
     dragenWgtsDna: {
       name: 'dragen-wgts-dna',
-      version: '4.4.4',
-      codeVersion: '724101a',
+      version: '4.4.6',
+      codeVersion: 'ca414b8',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '812c4ee5-b0bd-4c55-b4c2-cafe70ecfc8e',
+      executionEnginePipelineId: '6e13f764-cc88-4214-8eeb-6d30374de354',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
