@@ -168,12 +168,12 @@ export type DragenWgtsDnaWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
     | {
-        // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline%2F4.4.6__20260104232925
+        // https://github.com/umccr/cwl-ica/releases/tag/dragen-wgts-dna-pipeline/4.4.6__20260505001558
         name: 'dragen-wgts-dna';
         version: '4.4.6';
-        codeVersion: '5ca7ec6';
+        codeVersion: 'ca414b8';
         executionEngine: 'ICA';
-        executionEnginePipelineId: '054ed1cc-4e29-46c0-afa0-8d2cf637a043';
+        executionEnginePipelineId: '6e13f764-cc88-4214-8eeb-6d30374de354';
         validationState: 'VALIDATED';
       }
   );
