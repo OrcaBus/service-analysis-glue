@@ -32,9 +32,6 @@ export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
     compatibleArchitectures: [lambda.Architecture.ARM_64],
     bundling: {
       image: getPythonUvDockerImage(),
-      buildArgs: {
-        POETRY_VERSION: '2.2.1',
-      },
       commandHooks: {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         beforeBundling(inputDir: string, outputDir: string): string[] {
@@ -42,7 +39,7 @@ export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
         },
         afterBundling(inputDir: string, outputDir: string): string[] {
           return [
-            `pip install ${inputDir} --target ${outputDir}`,
+            `uv pip install --python python ${inputDir} --target ${outputDir}`,
             // Delete the tests directory from pandas
             `rm -rf ${outputDir}/pandas/tests`,
             // Delete the *pyc files and __pycache__ directories
