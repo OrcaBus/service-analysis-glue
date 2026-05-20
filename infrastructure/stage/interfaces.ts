@@ -221,7 +221,7 @@ export type SashWorkflowObjectType = Workflow &
         version: '0.7.0';
         codeVersion: '09a56c0';
         executionEngine: 'ICA';
-        executionEnginePipelineId: 'UNKNOWN';
+        executionEnginePipelineId: 'e1bfcedb-687b-4191-82ce-c74ac9271270';
         validationState: 'UNVALIDATED';
       }
   );
