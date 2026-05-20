@@ -216,6 +216,14 @@ export type SashWorkflowObjectType = Workflow &
         executionEnginePipelineId: '51f0d1dc-be92-4a5e-9a8a-ad8d44a6431c';
         validationState: 'VALIDATED';
       }
+    | {
+        name: 'sash';
+        version: '0.7.0';
+        codeVersion: '09a56c0';
+        executionEngine: 'ICA';
+        executionEnginePipelineId: 'UNKNOWN';
+        validationState: 'UNVALIDATED';
+      }
   );
 
 /**
