@@ -1,6 +1,8 @@
-ignoredBuiltDependencies:
-  - unrs-resolver
-
-overrides:
-  diff@<8.0.3: '>=8.0.3'
-  minimatch@<10.2.1: '>=10.2.1'
+allowBuilds:
+  unrs-resolver: true
+minimumReleaseAgeExclude:
+  - '@aws-cdk/cloud-assembly-schema@53.25.0'
+  - '@types/node@25.9.1'
+  - aws-cdk-lib@2.256.0
+  - aws-cdk@2.1123.0
+  - ts-jest@29.4.10
