@@ -1,0 +1,40 @@
+diff --git a/lambda/index.js b/lambda/index.js
+index 69c63953beff461375e13eb8858197ceea232194..87ab6e7c650d96cf56bf44a39f8a3ca697971695 100644
+--- a/lambda/index.js
++++ b/lambda/index.js
+@@ -157,7 +157,7 @@ class PythonUvFunction extends aws_lambda_python_alpha_1.PythonFunction {
+                         },
+                         afterBundling(inputDir, outputDir) {
+                             return [
+-                                `pip install ${inputDir} --target ${outputDir}`,
++                                `uv pip install --python python ${inputDir} --target ${outputDir}`,
+                                 // Delete the tests directory from pandas
+                                 `rm -rf ${outputDir}/pandas/tests`,
+                                 // Delete the *pyc files and __pycache__ directories
+@@ -192,7 +192,7 @@ class PythonUvFunction extends aws_lambda_python_alpha_1.PythonFunction {
+                         },
+                         afterBundling(inputDir, outputDir) {
+                             return [
+-                                `pip install ${inputDir} --target ${outputDir}`,
++                                `uv pip install --python python ${inputDir} --target ${outputDir}`,
+                                 // Delete the tests directory from pandas
+                                 `rm -rf ${outputDir}/pandas/tests`,
+                                 // Delete the *pyc files and __pycache__ directories
+@@ -227,7 +227,7 @@ class PythonUvFunction extends aws_lambda_python_alpha_1.PythonFunction {
+                         },
+                         afterBundling(inputDir, outputDir) {
+                             return [
+-                                `pip install ${inputDir} --target ${outputDir}`,
++                                `uv pip install --python python ${inputDir} --target ${outputDir}`,
+                                 // Delete the tests directory from pandas
+                                 `rm -rf ${outputDir}/pandas/tests`,
+                                 // Delete the *pyc files and __pycache__ directories
+@@ -266,7 +266,7 @@ class PythonUvFunction extends aws_lambda_python_alpha_1.PythonFunction {
+                         },
+                         afterBundling(inputDir, outputDir) {
+                             return [
+-                                `pip install ${inputDir} --target ${outputDir}`,
++                                `uv pip install --python python ${inputDir} --target ${outputDir}`,
+                                 // Delete the tests directory from pandas
+                                 `rm -rf ${outputDir}/pandas/tests`,
+                                 // Delete the *pyc files and __pycache__ directories
