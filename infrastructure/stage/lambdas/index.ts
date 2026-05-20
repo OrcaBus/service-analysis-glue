@@ -32,6 +32,9 @@ export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
     compatibleArchitectures: [lambda.Architecture.ARM_64],
     bundling: {
       image: getPythonUvDockerImage(),
+      buildArgs: {
+        POETRY_VERSION: '2.2.1',
+      },
       commandHooks: {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         beforeBundling(inputDir: string, outputDir: string): string[] {
