@@ -2,6 +2,7 @@
  * Stateful application stack interface.
  */
 import { SsmParameterPaths, SsmParameterValues } from './ssm/interfaces';
+import { StageName } from '@orcabus/platform-cdk-constructs/shared-config/accounts';
 
 export interface StatefulApplicationStackConfig {
   // Values
@@ -10,6 +11,12 @@ export interface StatefulApplicationStackConfig {
 
   // Keys
   ssmParameterPaths: SsmParameterPaths;
+
+  // Stage Name
+  stageName: StageName;
+
+  // S3 Bucket Name
+  analysisGlueArtefactsBucketName?: string;
 }
 
 /**
@@ -21,6 +28,12 @@ export interface StatelessApplicationStackConfig {
 
   // Event Stuff
   eventBusName: string;
+
+  // Stage Name
+  stageName: StageName;
+
+  // S3 Bucket Name
+  analysisGlueArtefactsBucketName?: string;
 }
 
 export type SampleType = 'ctDNA' | 'DNA' | 'RNA';
@@ -135,6 +148,7 @@ export type DragenTso500CtdnaWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
   );
+export type DragenTso500CtdnaPayloadVersionType = '2025.07.29';
 
 export type PierianDxTso500CtdnaWorkflowObjectType = Workflow & // 2.1.0 -- DEPRECATED
   (
@@ -152,6 +166,7 @@ export type PierianDxTso500CtdnaWorkflowObjectType = Workflow & // 2.1.0 -- DEPR
         executionEnginePipelineId: 'Unknown';
       }
   );
+export type PierianDxTso500CtdnaPayloadVersionType = '2025.09.25';
 
 /**
  * DNA Workflow Versions
@@ -177,6 +192,7 @@ export type DragenWgtsDnaWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
   );
+export type DragenWgtsDnaPayloadVersionType = '2025.06.04';
 
 export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow &
   (
@@ -197,6 +213,7 @@ export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
   );
+export type OncoanalyserWgtsDnaPayloadVersionType = '2025.08.05' | '2026.04.16';
 
 export type SashWorkflowObjectType = Workflow &
   (
@@ -225,6 +242,7 @@ export type SashWorkflowObjectType = Workflow &
         validationState: 'UNVALIDATED';
       }
   );
+export type SashPayloadVersionType = '2025.08.05';
 
 /**
  * RNA Workflow Versions
@@ -238,6 +256,7 @@ export type DragenWgtsRnaWorkflowObjectType = Workflow & {
   executionEnginePipelineId: '1f15f496-9f76-4bc5-98f7-e1e00ce8a407';
   validationState: 'VALIDATED';
 };
+export type DragenWgtsRnaPayloadVersionType = '2025.08.05';
 
 export type ArribaWorkflowObjectType = Workflow & {
   name: 'arriba-wgts-rna';
@@ -247,6 +266,7 @@ export type ArribaWorkflowObjectType = Workflow & {
   executionEnginePipelineId: '372b7fbd-d4f5-4ed4-8e75-d773971ed25f';
   validationState: 'VALIDATED';
 };
+export type ArribaPayloadVersionType = '2025.08.05';
 
 export type OncoanalyserWgtsRnaWorkflowObjectType = Workflow &
   (
@@ -267,6 +287,7 @@ export type OncoanalyserWgtsRnaWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
   );
+export type OncoanalyserWgtsRnaPayloadVersionType = '2025.08.05' | '2026.05.12';
 
 /**
  * DNA/RNA Workflow Versions
@@ -290,6 +311,7 @@ export type OncoanalyserWgtsDnaRnaWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
   );
+export type OncoanalyserWgtsDnaRnaPayloadVersionType = '2025.08.05';
 
 export type RnasumWorkflowObjectType = Workflow & {
   name: 'rnasum';
@@ -299,25 +321,62 @@ export type RnasumWorkflowObjectType = Workflow & {
   executionEnginePipelineId: 'e999af04-268e-4307-a037-2855ea5aa073';
   validationState: 'VALIDATED';
 };
+export type RnasumPayloadVersionType = '2025.09.30' | '2026.04.28';
 
-export type WorkflowsObjectType =
+export type WorkflowsObjectType = {
   // BCLConvert InterOp QC
-  | Record<'bclconvertInteropQc', BclconvertInteropQcWorkflowObjectType>
+  bclconvertInteropQc: BclconvertInteropQcWorkflowObjectType;
   // ctDNA
-  | Record<'dragenTso500Ctdna', DragenTso500CtdnaWorkflowObjectType>
-  | Record<'pieriandxTso500Ctdna', PierianDxTso500CtdnaWorkflowObjectType>
+  dragenTso500Ctdna: DragenTso500CtdnaWorkflowObjectType;
+  pieriandxTso500Ctdna: PierianDxTso500CtdnaWorkflowObjectType;
   // DNA
-  | Record<'dragenWgtsDna', DragenWgtsDnaWorkflowObjectType>
-  | Record<'oncoanalyserWgtsDna', OncoanalyserWgtsDnaWorkflowObjectType>
-  | Record<'sash', SashWorkflowObjectType>
+  dragenWgtsDna: DragenWgtsDnaWorkflowObjectType;
+  oncoanalyserWgtsDna: OncoanalyserWgtsDnaWorkflowObjectType;
+  sash: SashWorkflowObjectType;
   // RNA
-  | Record<'dragenWgtsRna', DragenWgtsRnaWorkflowObjectType>
-  | Record<'arribaWgtsRna', ArribaWorkflowObjectType>
-  | Record<'oncoanalyserWgtsRna', OncoanalyserWgtsRnaWorkflowObjectType>
+  dragenWgtsRna: DragenWgtsRnaWorkflowObjectType;
+  arribaWgtsRna: ArribaWorkflowObjectType;
+  oncoanalyserWgtsRna: OncoanalyserWgtsRnaWorkflowObjectType;
   // DNA / RNA
-  | Record<'oncoanalyserWgtsDnaRna', OncoanalyserWgtsDnaRnaWorkflowObjectType>
-  | Record<'rnasum', RnasumWorkflowObjectType>;
+  oncoanalyserWgtsDnaRna: OncoanalyserWgtsDnaRnaWorkflowObjectType;
+  rnasum: RnasumWorkflowObjectType;
+};
 
-export type WorkflowPayloadVersionType =
-  // Payload Version Type
-  Record<'bclconvertInteropQc', BclconvertInteropQcPayloadVersionType>;
+export type WorkflowPayloadVersionType = {
+  // BCLConvert InterOp QC
+  bclconvertInteropQc: BclconvertInteropQcPayloadVersionType;
+  // ctDNA
+  dragenTso500Ctdna: DragenTso500CtdnaPayloadVersionType;
+  pieriandxTso500Ctdna: PierianDxTso500CtdnaPayloadVersionType;
+  // DNA
+  dragenWgtsDna: DragenWgtsDnaPayloadVersionType;
+  oncoanalyserWgtsDna: OncoanalyserWgtsDnaPayloadVersionType;
+  sash: SashPayloadVersionType;
+  // RNA
+  dragenWgtsRna: DragenWgtsRnaPayloadVersionType;
+  arribaWgtsRna: ArribaPayloadVersionType;
+  oncoanalyserWgtsRna: OncoanalyserWgtsRnaPayloadVersionType;
+  // DNA / RNA
+  oncoanalyserWgtsDnaRna: OncoanalyserWgtsDnaRnaPayloadVersionType;
+  rnasum: RnasumPayloadVersionType;
+};
+
+export interface TestSamplePreDraftDataConfiguration {
+  libraryIdList: string[];
+  payload: {
+    version: string;
+    data: {
+      tags: object;
+      engineParameters: object;
+    };
+  };
+}
+
+export type TestSamplePreDraftDataConfigurationsByWorkflowName = {
+  // ctDNA
+  dragenTso500CtDna: TestSamplePreDraftDataConfiguration[];
+  // DNA
+  dragenWgtsDna: TestSamplePreDraftDataConfiguration[];
+  oncoanalyserWgtsDna: TestSamplePreDraftDataConfiguration[];
+  sash: TestSamplePreDraftDataConfiguration[];
+};
