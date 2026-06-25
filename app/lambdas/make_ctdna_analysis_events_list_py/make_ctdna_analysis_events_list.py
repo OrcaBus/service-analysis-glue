@@ -9,10 +9,11 @@ If there is just one normal, we find the latest tumor for that subject.
 
 We do not expect the case for there to be multiple tumors and multiple normals for a subject on a given run
 """
+
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Any, Literal, Optional, Union
+from typing import List, Dict, Literal, Optional, Union
 import logging
 
 # Layer imports
