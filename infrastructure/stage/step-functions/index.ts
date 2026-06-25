@@ -59,6 +59,26 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     definitionSubstitutions['__stack_source__'] = EVENT_SOURCE;
   }
 
+  // Test Samples configurations
+  if (sfnRequirements.prodOnly && props.isProdAccount) {
+    definitionSubstitutions['tso500_ctdna_test_samples_configuration'] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'dragen-tso500-ctdna'
+    );
+    definitionSubstitutions['dragen_wgts_dna_test_samples_configuration'] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'dragen-wgts-dna'
+    );
+    definitionSubstitutions['oncoanalyser_wgts_dna_test_samples_configuration'] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'oncoanalyser-wgts-dna'
+    );
+    definitionSubstitutions['sash_test_samples_configuration'] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'sash'
+    );
+  }
+
   return definitionSubstitutions;
 }
 
@@ -66,6 +86,7 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
   /* Wire up lambda permissions */
   const sfnRequirements = stepFunctionsRequirementsMap[props.stateMachineName];
 
+  // Pull in lambdas
   const lambdaFunctionNamesInSfn = stepFunctionToLambdasMap[props.stateMachineName];
   const lambdaFunctions = props.lambdaObjects.filter((lambdaObject) =>
     lambdaFunctionNamesInSfn.includes(lambdaObject.lambdaName)
@@ -73,9 +94,7 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
 
   /* Allow the state machine to invoke the lambda function */
   for (const lambdaObject of lambdaFunctions) {
-    // Anti-pattern compared to other step functions we create
-    // Usually grant invoke on the versioned function, however we may want to redrive
-    // after updating the function, so we need to grant on the alias
+    // Allow invocation across any version of the lambda function
     lambdaObject.lambdaFunction.grantInvoke(props.sfnObject);
 
     /* Nag Suppressions */
@@ -93,6 +112,7 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
     );
   }
 
+  // Write put events
   if (sfnRequirements.needsEventPutPermission) {
     props.eventBus.grantPutEventsTo(props.sfnObject);
   }
@@ -147,8 +167,17 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
   }
 }
 
-function buildStepFunction(scope: Construct, props: BuildStepFunctionProps): StepFunctionObject {
+function buildStepFunction(
+  scope: Construct,
+  props: BuildStepFunctionProps
+): StepFunctionObject | null {
   const sfnNameToSnakeCase = camelCaseToSnakeCase(props.stateMachineName);
+  const sfnRequirements = stepFunctionsRequirementsMap[props.stateMachineName];
+
+  // Check this is the right account for this sfn
+  if (sfnRequirements.prodOnly && !props.isProdAccount) {
+    return null;
+  }
 
   /* Create the state machine definition substitutions */
   const stateMachine = new sfn.StateMachine(scope, props.stateMachineName, {
@@ -197,14 +226,14 @@ export function buildAllStepFunctions(
   const stepFunctionObjects: StepFunctionObject[] = [];
 
   for (const stepFunctionName of stateMachineNameList) {
-    stepFunctionObjects.push(
-      buildStepFunction(scope, {
-        stateMachineName: stepFunctionName,
-        lambdaObjects: props.lambdaObjects,
-        eventBus: props.eventBus,
-        ssmParameterPaths: props.ssmParameterPaths,
-      })
-    );
+    const sfnObject = buildStepFunction(scope, {
+      stateMachineName: stepFunctionName,
+      ...props,
+    });
+
+    if (sfnObject) {
+      stepFunctionObjects.push(sfnObject);
+    }
   }
 
   return stepFunctionObjects;

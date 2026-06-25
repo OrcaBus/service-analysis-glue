@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import * as events from 'aws-cdk-lib/aws-events';
 import { buildAllStepFunctions } from './step-functions';
@@ -23,6 +24,15 @@ export class StatelessApplicationStack extends cdk.Stack {
       props.eventBusName
     );
 
+    // Get the S3 Bucket
+    const analysisGlueArtifactsBucket = props.analysisGlueArtefactsBucketName
+      ? s3.Bucket.fromBucketName(
+          this,
+          'AnalysisGlueArtifactsBucket',
+          props.analysisGlueArtefactsBucketName
+        )
+      : undefined;
+
     // Build analysis Tools Layer
     const analysisToolsLayer = buildAnalysisToolsLayer(this);
 
@@ -30,6 +40,8 @@ export class StatelessApplicationStack extends cdk.Stack {
     const lambdas = buildAllLambdas(this, {
       analysisToolsLayer: analysisToolsLayer,
       ssmParameterPaths: props.ssmParameterPaths,
+      s3ArtefactsBucket: analysisGlueArtifactsBucket,
+      isProdAccount: props.stageName === 'PROD',
     });
 
     // Build the state machines
@@ -37,6 +49,7 @@ export class StatelessApplicationStack extends cdk.Stack {
       lambdaObjects: lambdas,
       eventBus: orcabusMainEventBus,
       ssmParameterPaths: props.ssmParameterPaths,
+      isProdAccount: props.stageName === 'PROD',
     });
 
     // Add event rules
