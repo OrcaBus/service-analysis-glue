@@ -1,0 +1,479 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Get Deployment Status Manager State",
+  "States": {
+    "Get Deployment Status Manager State": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": {},
+      "Arguments": {
+        "FunctionName": "${__get_deployment_status_manager_state_lambda_function_arn__}",
+        "Payload": {}
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Assign": {
+        "deleted": "{% $states.result.Payload.deleted %}",
+        "modified": "{% $states.result.Payload.modified %}",
+        "added": "{% $states.result.Payload.added %}",
+        "prevTimestamp": "{% $states.result.Payload.prevTimestamp %}",
+        "currentTimestamp": "{% $states.result.Payload.currentTimestamp %}"
+      },
+      "Comment": "Get CloudFormation Status of current workflows and dump this to S3",
+      "Next": "For each NATA Approved Workflow"
+    },
+    "For each NATA Approved Workflow": {
+      "Type": "Parallel",
+      "End": true,
+      "Branches": [
+        {
+          "StartAt": "Get ctDNA Test Sample Configurations",
+          "States": {
+            "Get ctDNA Test Sample Configurations": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__tso500_ctdna_test_samples_configuration_ssm_parameter_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "Next": "Generate ctDNA Draft Events",
+              "Output": {
+                "sampleConfigurationsList": "{% $states.result.Parameter.Value ~> $parse %}"
+              }
+            },
+            "Generate ctDNA Draft Events": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Generate Dragen TSO500 ctDNA Validation Analyses Draft Events",
+                "States": {
+                  "Generate Dragen TSO500 ctDNA Validation Analyses Draft Events": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": {
+                      "eventDetail": "{% $states.result.Payload.eventDetail %}"
+                    },
+                    "Assign": {
+                      "portalRunId": "{% $states.result.Payload.eventDetail.portalRunId %}"
+                    },
+                    "Arguments": {
+                      "FunctionName": "${__generate_ctdna_validation_event_lambda_function_arn__}",
+                      "Payload": {
+                        "sampleConfiguration": "{% $states.input %}"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "Next": "Put Dragen TSO500 ctDNA Validation WRU DRAFT Event"
+                  },
+                  "Put Dragen TSO500 ctDNA Validation WRU DRAFT Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::events:putEvents",
+                    "Arguments": {
+                      "Entries": [
+                        {
+                          "Detail": "{% $states.input.eventDetail %}",
+                          "DetailType": "${__workflow_run_update_detail_type__}",
+                          "EventBusName": "${__event_bus_name__}",
+                          "Source": "${__stack_source__}"
+                        }
+                      ]
+                    },
+                    "Next": "Wait 1 Minute (ctDNA)"
+                  },
+                  "Wait 1 Minute (ctDNA)": {
+                    "Type": "Wait",
+                    "Seconds": 60,
+                    "Next": "Summarise deploy status manager changes as comments on workflow (ctDNA)"
+                  },
+                  "Summarise deploy status manager changes as comments on workflow (ctDNA)": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Arguments": {
+                      "Payload": {
+                        "deleted": "{% $deleted %}",
+                        "modified": "{% $modified %}",
+                        "added": "{% $added %}",
+                        "prevTimestamp": "{% $prevTimestamp %}",
+                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "portalRunId": "{% $portalRunId %}"
+                      },
+                      "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true,
+                    "Output": {}
+                  }
+                }
+              },
+              "End": true,
+              "Items": "{% $states.input.sampleConfigurationsList %}"
+            }
+          }
+        },
+        {
+          "StartAt": "Get Dragen WGTS DNA Test Sample Configurations",
+          "States": {
+            "Get Dragen WGTS DNA Test Sample Configurations": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__dragen_wgts_dna_test_samples_configuration_ssm_parameter_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "Next": "Generate Dragen WGTS DNA Draft Events",
+              "Output": {
+                "sampleConfigurationsList": "{% $states.result.Parameter.Value ~> $parse %}"
+              }
+            },
+            "Generate Dragen WGTS DNA Draft Events": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Generate Dragen WGTS DNA Validation Analyses Draft Event",
+                "States": {
+                  "Generate Dragen WGTS DNA Validation Analyses Draft Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": {
+                      "eventDetail": "{% $states.result.Payload.eventDetail %}"
+                    },
+                    "Arguments": {
+                      "FunctionName": "${__generate_dragen_wgts_dna_validation_event_lambda_function_arn__}",
+                      "Payload": {
+                        "sampleConfiguration": "{% $states.input %}"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "Next": "Put Dragen WGTS DNA Validation WRU DRAFT Event",
+                    "Assign": {
+                      "portalRunId": "{% $states.result.Payload.eventDetail.portalRunId %}"
+                    }
+                  },
+                  "Put Dragen WGTS DNA Validation WRU DRAFT Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::events:putEvents",
+                    "Arguments": {
+                      "Entries": [
+                        {
+                          "Detail": "{% $states.input.eventDetail %}",
+                          "DetailType": "${__workflow_run_update_detail_type__}",
+                          "EventBusName": "${__event_bus_name__}",
+                          "Source": "${__stack_source__}"
+                        }
+                      ]
+                    },
+                    "Next": "Wait 1 Minute (Dragen WGTS DNA)"
+                  },
+                  "Wait 1 Minute (Dragen WGTS DNA)": {
+                    "Type": "Wait",
+                    "Seconds": 5,
+                    "Next": "Summarise deploy status manager changes as comments on workflow (Dragen WGTS DNA)"
+                  },
+                  "Summarise deploy status manager changes as comments on workflow (Dragen WGTS DNA)": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": "{% $states.result.Payload %}",
+                    "Arguments": {
+                      "Payload": {
+                        "deleted": "{% $deleted %}",
+                        "modified": "{% $modified %}",
+                        "added": "{% $added %}",
+                        "prevTimestamp": "{% $prevTimestamp %}",
+                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "portalRunId": "{% $portalRunId %}"
+                      },
+                      "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "Items": "{% $states.input.sampleConfigurationsList %}",
+              "Next": "Get Oncoanalyser WGTS DNA Test Sample Configurations"
+            },
+            "Get Oncoanalyser WGTS DNA Test Sample Configurations": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__oncoanalyser_wgts_dna_test_samples_configuration_ssm_parameter_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "Next": "Generate Oncoanalyser WGTS DNA Draft Events",
+              "Output": {
+                "sampleConfigurationsList": "{% $states.result.Parameter.Value ~> $parse %}"
+              }
+            },
+            "Generate Oncoanalyser WGTS DNA Draft Events": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Generate Oncoanalyser WGTS DNA Validation Analyses Draft Event",
+                "States": {
+                  "Generate Oncoanalyser WGTS DNA Validation Analyses Draft Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": {
+                      "eventDetail": "{% $states.result.Payload.eventDetail %}"
+                    },
+                    "Arguments": {
+                      "FunctionName": "${__generate_oncoanalyser_wgts_dna_validation_event_lambda_function_arn__}",
+                      "Payload": {
+                        "sampleConfiguration": "{% $states.input %}"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "Next": "Put Oncoanalyser WGTS DNA Validation WRU DRAFT Event",
+                    "Assign": {
+                      "portalRunId": "{% $states.result.Payload.eventDetail.portalRunId %}"
+                    }
+                  },
+                  "Put Oncoanalyser WGTS DNA Validation WRU DRAFT Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::events:putEvents",
+                    "Arguments": {
+                      "Entries": [
+                        {
+                          "Detail": "{% $states.input.eventDetail %}",
+                          "DetailType": "${__workflow_run_update_detail_type__}",
+                          "EventBusName": "${__event_bus_name__}",
+                          "Source": "${__stack_source__}"
+                        }
+                      ]
+                    },
+                    "Next": "Wait 1 Minute (Oncoanalyser WGTS DNA)"
+                  },
+                  "Wait 1 Minute (Oncoanalyser WGTS DNA)": {
+                    "Type": "Wait",
+                    "Seconds": 60,
+                    "Next": "Summarise deploy status manager changes as comments on workflow (Oncoanalyser WGTS DNA)"
+                  },
+                  "Summarise deploy status manager changes as comments on workflow (Oncoanalyser WGTS DNA)": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": "{% $states.result.Payload %}",
+                    "Arguments": {
+                      "Payload": {
+                        "deleted": "{% $deleted %}",
+                        "modified": "{% $modified %}",
+                        "added": "{% $added %}",
+                        "prevTimestamp": "{% $prevTimestamp %}",
+                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "portalRunId": "{% $portalRunId %}"
+                      },
+                      "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "Items": "{% $states.input.sampleConfigurationsList %}",
+              "Next": "Get Sash Test Sample Configurations"
+            },
+            "Get Sash Test Sample Configurations": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__sash_test_samples_configuration_ssm_parameter_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "Next": "Generate Sash Draft Events",
+              "Output": {
+                "sampleConfigurationsList": "{% $states.result.Parameter.Value ~> $parse %}"
+              }
+            },
+            "Generate Sash Draft Events": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Generate Sash Validation Analyses Draft Event",
+                "States": {
+                  "Generate Sash Validation Analyses Draft Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": {
+                      "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                    },
+                    "Arguments": {
+                      "Payload": {
+                        "sampleConfiguration": "{% $states.input %}"
+                      },
+                      "FunctionName": "${__generate_sash_validation_event_lambda_function_arn__}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "Next": "Put Sash Validation WRU DRAFT Event",
+                    "Assign": {
+                      "portalRunId": "{% $states.result.Payload.eventDetail.portalRunId %}"
+                    }
+                  },
+                  "Put Sash Validation WRU DRAFT Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::events:putEvents",
+                    "Arguments": {
+                      "Entries": [
+                        {
+                          "Detail": "{% $states.input %}",
+                          "DetailType": "${__workflow_run_update_detail_type__}",
+                          "EventBusName": "${__event_bus_name__}",
+                          "Source": "${__stack_source__}"
+                        }
+                      ]
+                    },
+                    "Next": "Wait 1 Minute (Sash)"
+                  },
+                  "Wait 1 Minute (Sash)": {
+                    "Type": "Wait",
+                    "Seconds": 60,
+                    "Next": "Summarise deploy status manager changes as comments on workflow (Sash)"
+                  },
+                  "Summarise deploy status manager changes as comments on workflow (Sash)": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": "{% $states.result.Payload %}",
+                    "Arguments": {
+                      "Payload": {
+                        "deleted": "{% $deleted %}",
+                        "modified": "{% $modified %}",
+                        "added": "{% $added %}",
+                        "prevTimestamp": "{% $prevTimestamp %}",
+                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "portalRunId": "{% $portalRunId %}"
+                      },
+                      "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true
+                  }
+                }
+              },
+              "Items": "{% $states.input.sampleConfigurationsList %}",
+              "End": true
+            }
+          }
+        }
+      ]
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
