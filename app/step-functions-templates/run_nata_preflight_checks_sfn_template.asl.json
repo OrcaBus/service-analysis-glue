@@ -219,7 +219,7 @@
                   },
                   "Wait 1 Minute (Dragen WGTS DNA)": {
                     "Type": "Wait",
-                    "Seconds": 5,
+                    "Seconds": 60,
                     "Next": "Summarise deploy status manager changes as comments on workflow (Dragen WGTS DNA)"
                   },
                   "Summarise deploy status manager changes as comments on workflow (Dragen WGTS DNA)": {
@@ -387,7 +387,7 @@
                     "Type": "Task",
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "Output": {
-                      "eventDetailList": "{% $states.result.Payload.eventDetailList %}"
+                      "eventDetail": "{% $states.result.Payload.eventDetail %}"
                     },
                     "Arguments": {
                       "Payload": {
