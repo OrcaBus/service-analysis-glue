@@ -59,6 +59,7 @@ export const stepFunctionsRequirementsMap: Record<StateMachineName, StepFunction
   runNataPreflightChecks: {
     needsEventPutPermission: true,
     needsSsmParameterAccess: true,
+    prodOnly: true,
   },
 };
 

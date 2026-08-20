@@ -121,6 +121,29 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
     props.eventBus.grantPutEventsTo(props.sfnObject);
   }
 
+  // SSM GetParameter permissions
+  if (sfnRequirements.needsSsmParameterAccess) {
+    props.sfnObject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ssm:GetParameter'],
+        resources: [
+          `arn:aws:ssm:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:parameter${props.ssmParameterPaths.rootPrefix}*`,
+        ],
+      })
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      props.sfnObject,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason: `SSM GetParameter permissions are scoped to ${props.ssmParameterPaths.rootPrefix}*`,
+        },
+      ],
+      true
+    );
+  }
+
   /* Check if the state machine needs the abilty to start / monitor distributed maps */
   if (sfnRequirements.needsDistributedMapPermission) {
     // Because this steps execution uses a distributed map in its step function, we
