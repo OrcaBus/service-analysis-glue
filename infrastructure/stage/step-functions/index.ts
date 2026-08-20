@@ -61,19 +61,23 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
 
   // Test Samples configurations
   if (sfnRequirements.prodOnly && props.isProdAccount) {
-    definitionSubstitutions['tso500_ctdna_test_samples_configuration'] = path.join(
-      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
-      'dragen-tso500-ctdna'
-    );
-    definitionSubstitutions['dragen_wgts_dna_test_samples_configuration'] = path.join(
-      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
-      'dragen-wgts-dna'
-    );
-    definitionSubstitutions['oncoanalyser_wgts_dna_test_samples_configuration'] = path.join(
+    definitionSubstitutions['__tso500_ctdna_test_samples_configuration_ssm_parameter_name__'] =
+      path.join(
+        <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+        'dragen-tso500-ctdna'
+      );
+    definitionSubstitutions['__dragen_wgts_dna_test_samples_configuration_ssm_parameter_name__'] =
+      path.join(
+        <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+        'dragen-wgts-dna'
+      );
+    definitionSubstitutions[
+      '__oncoanalyser_wgts_dna_test_samples_configuration_ssm_parameter_name__'
+    ] = path.join(
       <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
       'oncoanalyser-wgts-dna'
     );
-    definitionSubstitutions['sash_test_samples_configuration'] = path.join(
+    definitionSubstitutions['__sash_test_samples_configuration_ssm_parameter_name__'] = path.join(
       <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
       'sash'
     );
