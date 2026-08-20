@@ -134,7 +134,7 @@ def compare_deployment_status_manager_state(
         if (
             # Stack previously deleted or non-existent
             (
-                    not stack_name in list(map(
+                    not any(map(
                         lambda stack_iter_: stack_iter_['StackName'] == stack_name,
                         status_manager_state_old
                     )) or
@@ -145,7 +145,7 @@ def compare_deployment_status_manager_state(
             ) and
             # Stack now exists and not in a deleted state
             (
-                    stack_name in list(map(
+                    any(map(
                         lambda stack_iter_: stack_iter_['StackName'] == stack_name,
                         status_manager_state_new
                     )) and
@@ -164,9 +164,9 @@ def compare_deployment_status_manager_state(
         elif (
             # Stack previously existed
             (
-                    stack_name in list(map(
-                    lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                    status_manager_state_old
+                    any(map(
+                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
+                        status_manager_state_old
                     )) and
                     not next(filter(
                         lambda stack_iter_: stack_iter_['StackName'] == stack_name,
@@ -175,7 +175,7 @@ def compare_deployment_status_manager_state(
             ) and
             # Stack now no longer exists
             (
-                    not stack_name in list(map(
+                    not any(map(
                         lambda stack_iter_: stack_iter_['StackName'] == stack_name,
                         status_manager_state_new
                     )) or
@@ -196,12 +196,12 @@ def compare_deployment_status_manager_state(
                         next(filter(
                             lambda stack_iter_: stack_iter_['StackName'] == stack_name,
                             status_manager_state_old
-                        ))['gitCommitId']
+                        )).get('gitCommitId')
                 ) == (
                         next(filter(
                             lambda stack_iter_: stack_iter_['StackName'] == stack_name,
                             status_manager_state_new
-                        ))['gitCommitId']
+                        )).get('gitCommitId')
                 )
         ):
             stacks_modified.append([
@@ -237,26 +237,38 @@ def handler(event, context) -> ResponseDict:
     s3_uri_prefix_obj = urlparse(s3_uri_prefix)
 
     # Get git stacks to object
-    stacks_to_observe_list = json.loads(get_ssm_value(GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR))
+    stacks_to_observe_list = json.loads(get_ssm_value(environ[GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR]))
 
     # Find most recent s3 file in path
-    prev_timestamp, previous_status = find_most_recent_deployment_status(
+    deployment_result = find_most_recent_deployment_status(
         bucket=s3_uri_prefix_obj.netloc,
         prefix=s3_uri_prefix_obj.path
     )
+    if deployment_result is not None:
+        prev_timestamp, previous_status = deployment_result
+    else:
+        prev_timestamp = None
+        previous_status = None
+
+    # Dump current state to s3
     dump_current_state_to_s3(
         current_timestamp=now,
         all_stacks_summary=all_stacks_summary,
         s3_uri=s3_uri_prefix
     )
     if previous_status is None:
-        return jsonable_encoder({
-            "deleted": None,
-            "modified": None,
-            "added": stacks_to_observe_list,
-            "prevTimestamp": None,
-            "currentTimestamp": now,
-        })
+        return (
+            cast(
+                ResponseDict,
+                jsonable_encoder({
+                    "deleted": None,
+                    "modified": None,
+                    "added": stacks_to_observe_list,
+                    "prevTimestamp": None,
+                    "currentTimestamp": now,
+                })
+            )
+        )
 
     stacks_deleted, stacks_modified, stacks_added = compare_deployment_status_manager_state(
         status_manager_state_old=previous_status,
@@ -264,10 +276,13 @@ def handler(event, context) -> ResponseDict:
         stacks_to_observe_list=stacks_to_observe_list
     )
 
-    return jsonable_encoder({
-        "deleted": stacks_deleted,
-        "modified": stacks_modified,
-        "added": stacks_added,
-        "prevTimestamp": prev_timestamp,
-        "currentTimestamp": now,
-    })
+    return cast(
+        ResponseDict,
+        jsonable_encoder({
+            "deleted": stacks_deleted,
+            "modified": stacks_modified,
+            "added": stacks_added,
+            "prevTimestamp": prev_timestamp,
+            "currentTimestamp": now,
+        })
+    )
