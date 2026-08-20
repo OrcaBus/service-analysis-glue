@@ -33,15 +33,14 @@ from analysis_tool_kit import (
 )
 from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
 
-
 # Type hints
 WorkflowName = Literal['DRAGEN_WGTS_DNA', 'ONCOANALYSER_WGTS_DNA', 'SASH']
-
 
 # Globals
 WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
     "DRAGEN_WGTS_DNA": json.loads(get_ssm_value(environ['DRAGEN_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
-    "ONCOANALYSER_WGTS_DNA": json.loads(get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+    "ONCOANALYSER_WGTS_DNA": json.loads(
+        get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
     "SASH": json.loads(get_ssm_value(environ['SASH_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
 }
 
@@ -228,7 +227,7 @@ def handler(event, context):
     # Check for negative control
     negative_control_libraries = list(filter(
         lambda library_iter_: (
-                library_iter_['phenotype'].startswith('negative')
+            library_iter_['phenotype'].startswith('negative')
         ),
         libraries_list
     ))
@@ -292,10 +291,10 @@ def handler(event, context):
     # This assumes that orcabusIds are assigned in increasing order over time
     all_subject_libraries = list(filter(
         lambda library_iter_: (
-            library_iter_['subject']['orcabusId'] == subject_orcabus_id and
-            library_iter_['type'] == 'WGS' and
-            get_libraries_with_readsets([library_iter_]) and
-            library_iter_['workflow'] in WGTS_WORKFLOW_NAMES
+                library_iter_['subject']['orcabusId'] == subject_orcabus_id and
+                library_iter_['type'] == 'WGS' and
+                get_libraries_with_readsets([library_iter_]) and
+                library_iter_['workflow'] in WGTS_WORKFLOW_NAMES
         ),
         sorted(
             get_all_libraries(),
@@ -313,11 +312,11 @@ def handler(event, context):
                         all_subject_libraries
                     ))) == 0
             ) or (
-                    len(list(filter(
-                        lambda library_iter_: library_iter_['phenotype'] == 'normal',
-                        all_subject_libraries
-                    ))) == 0
-            )
+            len(list(filter(
+                lambda library_iter_: library_iter_['phenotype'] == 'normal',
+                all_subject_libraries
+            ))) == 0
+    )
     ):
         return {
             "eventDetailList": list(filter(

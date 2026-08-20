@@ -84,7 +84,6 @@ def find_most_recent_deployment_status(bucket: str, prefix: str) -> Optional[Tup
     except StopIteration:
         return None
 
-
 def dump_current_state_to_s3(
         current_timestamp: datetime,
         all_stacks_summary: List[StackEventResponseDict],
