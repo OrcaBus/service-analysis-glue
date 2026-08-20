@@ -12,6 +12,8 @@ import { Construct } from 'constructs';
 import {
   FASTQ_GLUE_EVENT_SOURCE,
   FASTQ_GLUE_FASTQ_SET_CREATED_EVENT_DETAIL_TYPE,
+  SRM_EVENT_SOURCE,
+  SRM_SAMPLE_SHEET_STATE_CHANGE_DETAIL_TYPE,
   STACK_PREFIX,
 } from '../constants';
 
@@ -26,6 +28,13 @@ function buildFastqSetCreatedEventPattern(): EventPattern {
     detail: {
       instrumentRunId: [{ exists: true }],
     },
+  };
+}
+
+function buildSrmSampleSheetStateChangeEventPattern(): EventPattern {
+  return {
+    detailType: [SRM_SAMPLE_SHEET_STATE_CHANGE_DETAIL_TYPE],
+    source: [SRM_EVENT_SOURCE],
   };
 }
 
@@ -59,6 +68,17 @@ export function buildAllEventRules(
           ruleName: ruleName,
           ruleObject: buildFastqSetsCreatedRule(scope, {
             ruleName: ruleName,
+            eventBus: props.eventBus,
+          }),
+        });
+        break;
+      }
+      case 'SrmSampleSheetStateChange': {
+        eventBridgeRuleObjects.push({
+          ruleName: ruleName,
+          ruleObject: buildEventRule(scope, {
+            ruleName: ruleName,
+            eventPattern: buildSrmSampleSheetStateChangeEventPattern(),
             eventBus: props.eventBus,
           }),
         });

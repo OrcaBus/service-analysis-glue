@@ -30,10 +30,10 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
         });
         break;
       }
-      case 'readSetAddedToPreFlightValidationSfnTarget': {
+      case 'srmSampleSheetChangeToPreFlightValidationSfnTarget': {
         ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
-            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqGlueFastqSetCreated'
+            (eventBridgeObject) => eventBridgeObject.ruleName === 'SrmSampleSheetStateChange'
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
             (sfnObject) => sfnObject.stateMachineName === 'runNataPreflightChecks'

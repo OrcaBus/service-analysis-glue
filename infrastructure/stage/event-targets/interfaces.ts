@@ -8,12 +8,12 @@ import { StepFunctionObject } from '../step-functions/interfaces';
  */
 export type EventBridgeTargetName =
   // Event Rules
-  'readSetAddedToAnalysisBuilderSfnTarget' | 'readSetAddedToPreFlightValidationSfnTarget';
+  'readSetAddedToAnalysisBuilderSfnTarget' | 'srmSampleSheetChangeToPreFlightValidationSfnTarget';
 
 export const eventBridgeTargetsNameList: EventBridgeTargetName[] = [
   // Event Rules
   'readSetAddedToAnalysisBuilderSfnTarget',
-  'readSetAddedToPreFlightValidationSfnTarget',
+  'srmSampleSheetChangeToPreFlightValidationSfnTarget',
 ];
 
 export interface AddSfnAsEventBridgeTargetProps {
