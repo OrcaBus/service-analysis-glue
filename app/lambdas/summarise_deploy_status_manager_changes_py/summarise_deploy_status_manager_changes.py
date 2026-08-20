@@ -53,7 +53,7 @@ def handler(event, context):
     )
 
     # Deleted stack change
-    if len(deleted) > 0:
+    if len(deleted) == 0:
         pass
     elif len(deleted) == 1:
         add_comment_to_workflow_run(
@@ -74,7 +74,7 @@ def handler(event, context):
             )
 
     # Modification stack change
-    if len(modified) > 0:
+    if len(modified) == 0:
         pass
     elif len(modified) == 1:
         modified_old = modified[0][0]
@@ -131,7 +131,7 @@ def handler(event, context):
             )
 
     # Added stack change
-    if len(added) > 0:
+    if len(added) == 0:
         pass
     elif len(added) == 1:
         add_comment_to_workflow_run(
