@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as events from 'aws-cdk-lib/aws-events';
+import { GitStack } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
 import { buildAllStepFunctions } from './step-functions';
 import { StatelessApplicationStackConfig } from './interfaces';
 import { buildAllEventRules } from './event-rules';
@@ -9,7 +10,7 @@ import { buildAllLambdas, buildAnalysisToolsLayer } from './lambdas';
 
 export type StatelessApplicationStackProps = cdk.StackProps & StatelessApplicationStackConfig;
 
-export class StatelessApplicationStack extends cdk.Stack {
+export class StatelessApplicationStack extends GitStack {
   constructor(scope: Construct, id: string, props: StatelessApplicationStackProps) {
     super(scope, id, props);
 
