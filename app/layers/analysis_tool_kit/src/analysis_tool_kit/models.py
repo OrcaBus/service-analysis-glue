@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Standard Imports
-from typing import List, TypedDict, NotRequired
+from typing import List, TypedDict, NotRequired, Dict, Any
 
 # Layer imports
 from orcabus_api_tools.metadata.models import LibraryBase
@@ -23,3 +23,8 @@ class ReadSet(TypedDict):
 
 class EventLibrary(LibraryBase):
     readsets: List[ReadSet]
+
+
+class Payload(TypedDict):
+    version: str
+    data: Dict[str, Any]

@@ -6,9 +6,7 @@ import {
 import * as eventsTargets from 'aws-cdk-lib/aws-events-targets';
 import * as events from 'aws-cdk-lib/aws-events';
 
-export function buildReadSetsAddedToAnalysisBuilderSfnTarget(
-  props: AddSfnAsEventBridgeTargetProps
-) {
+function ruleToSfnTarget(props: AddSfnAsEventBridgeTargetProps) {
   // We take in the event detail from the dragen wgts dna ready event
   // And return the entire detail to the state machine
   props.eventBridgeRuleObj.addTarget(
@@ -22,7 +20,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
   for (const eventBridgeTargetsName of eventBridgeTargetsNameList) {
     switch (eventBridgeTargetsName) {
       case 'readSetAddedToAnalysisBuilderSfnTarget': {
-        buildReadSetsAddedToAnalysisBuilderSfnTarget(<AddSfnAsEventBridgeTargetProps>{
+        ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
             (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqGlueFastqSetCreated'
           )?.ruleObject,
@@ -30,6 +28,19 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
             (sfnObject) => sfnObject.stateMachineName === 'analysisBuilder'
           )?.sfnObject,
         });
+        break;
+      }
+      case 'srmSampleSheetChangeToPreFlightValidationSfnTarget': {
+        if (props.prodOnly) {
+          ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
+            eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
+              (eventBridgeObject) => eventBridgeObject.ruleName === 'SrmSampleSheetStateChange'
+            )?.ruleObject,
+            stateMachineObj: props.stepFunctionObjects.find(
+              (sfnObject) => sfnObject.stateMachineName === 'runNataPreflightChecks'
+            )?.sfnObject,
+          });
+        }
         break;
       }
     }

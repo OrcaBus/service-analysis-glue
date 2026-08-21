@@ -10,7 +10,7 @@ import {
   lambdaRequirementsMap,
 } from './interfaces';
 import { getPythonUvDockerImage, PythonUvFunction } from '@orcabus/platform-cdk-constructs/lambda';
-import { LAMBDA_DIR, LAYERS_DIR } from '../constants';
+import { DEPLOYMENT_SNAPSHOTS_S3_PREFIX, LAMBDA_DIR, LAYERS_DIR } from '../constants';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { Duration } from 'aws-cdk-lib';
 import { NagSuppressions } from 'cdk-nag';
@@ -21,6 +21,7 @@ import * as path from 'path';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import { WorkflowNameType } from '../interfaces';
 import { PythonLayerVersion } from '@aws-cdk/aws-lambda-python-alpha';
+import { IBucket } from 'aws-cdk-lib/aws-s3';
 
 export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
   /**
@@ -55,9 +56,15 @@ export function buildAnalysisToolsLayer(scope: Construct): PythonLayerVersion {
   });
 }
 
-function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
+function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | null {
   const lambdaNameToSnakeCase = camelCaseToSnakeCase(props.lambdaName);
   const lambdaRequirements = lambdaRequirementsMap[props.lambdaName];
+
+  // Check lambda requirements to ensure that
+  // we're in the prod account OR we're not in the prod account but the lambda is not prod only
+  if (lambdaRequirements.prodOnly && !props.isProdAccount) {
+    return null;
+  }
 
   // Create the lambda function
   const lambdaFunction = new PythonUvFunction(scope, props.lambdaName, {
@@ -109,6 +116,7 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
     );
   }
 
+  // Needs Analysis Layer
   if (lambdaRequirements.needsAnalysisToolsLayer) {
     /* Add the analysis tools layer */
     lambdaFunction.addLayers(props.analysisToolsLayer);
@@ -134,7 +142,10 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   }
 
   // ctDNA
-  if (props.lambdaName === 'makeCtdnaAnalysisEventsList') {
+  if (
+    props.lambdaName === 'makeCtdnaAnalysisEventsList' ||
+    props.lambdaName === 'generateCtdnaValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'DRAGEN_TSO500_CTDNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -143,7 +154,6 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
       )
     );
   }
-
   if (props.lambdaName === 'makeCtdnaPostAnalysisEventsList') {
     lambdaFunction.addEnvironment(
       'PIERIANDX_TSO500_CTDNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
@@ -155,7 +165,12 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
   }
 
   // DNA
-  if (props.lambdaName === 'makeWgsAnalysisEventsList') {
+  if (
+    props.lambdaName === 'makeWgsAnalysisEventsList' ||
+    props.lambdaName === 'generateDragenWgtsDnaValidationEvent' ||
+    props.lambdaName === 'generateOncoanalyserWgtsDnaValidationEvent' ||
+    props.lambdaName === 'generateSashValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'DRAGEN_WGTS_DNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -222,6 +237,42 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject {
     );
   }
 
+  // Needs S3 Permissions
+  if (lambdaRequirements.prodOnly && props.isProdAccount) {
+    /*
+      Add the s3 permissions
+    */
+    if (lambdaRequirements.needsS3Permissions) {
+      // s3 artefact bucket defined in prod account
+      (<IBucket>props.s3ArtefactsBucket).grantReadWrite(
+        lambdaFunction,
+        `${DEPLOYMENT_SNAPSHOTS_S3_PREFIX}*`
+      );
+      /* As such we need to add the wildcard to the resource */
+      NagSuppressions.addResourceSuppressions(
+        lambdaFunction,
+        [
+          {
+            id: 'AwsSolutions-IAM5',
+            reason: `We need to give the lambda full read/write access bucket under ${DEPLOYMENT_SNAPSHOTS_S3_PREFIX}`,
+          },
+        ],
+        true
+      );
+    }
+
+    if (props.lambdaName === 'getDeploymentStatusManagerState') {
+      lambdaFunction.addEnvironment(
+        'S3_DEPLOYMENT_STATUS_DUMP_PATH_PREFIX_SSM_PARAMETER_NAME',
+        <string>props.ssmParameterPaths.s3DeploymentSnapshot
+      );
+      lambdaFunction.addEnvironment(
+        'GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME',
+        <string>props.ssmParameterPaths.gitStacksToObserveList
+      );
+    }
+  }
+
   /* Return the function */
   return {
     lambdaName: props.lambdaName,
@@ -233,13 +284,14 @@ export function buildAllLambdas(scope: Construct, props: BuildAllLambdasProps): 
   // Iterate over lambdaLayerToMapping and create the lambda functions
   const lambdaObjects: LambdaObject[] = [];
   for (const lambdaName of lambdaNameList) {
-    lambdaObjects.push(
-      buildLambda(scope, {
-        lambdaName: lambdaName,
-        ...props,
-      })
-    );
+    const lambdaObject = buildLambda(scope, {
+      lambdaName: lambdaName,
+      ...props,
+    });
+    if (lambdaObject) {
+      lambdaObjects.push(lambdaObject);
+    }
   }
-
+  // Return all built lambda objects
   return lambdaObjects;
 }

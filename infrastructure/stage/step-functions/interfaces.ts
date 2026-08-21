@@ -9,11 +9,15 @@ import { LambdaName, LambdaObject } from '../lambdas/interfaces';
  */
 export type StateMachineName =
   // Analysis Builder
-  'analysisBuilder';
+  | 'analysisBuilder'
+  // Validation Builder
+  | 'runNataPreflightChecks';
 
 export const stateMachineNameList: StateMachineName[] = [
   // Analysis Builder
   'analysisBuilder',
+  // Validation Builder
+  'runNataPreflightChecks',
 ];
 
 // Requirements interface for Step Functions
@@ -22,6 +26,10 @@ export interface StepFunctionRequirements {
   needsDistributedMapPermission?: boolean;
   // Event stuff
   needsEventPutPermission?: boolean;
+  // SSM Stuff
+  needsSsmParameterAccess?: boolean;
+  // SFN Account Specific?
+  prodOnly?: boolean;
 }
 
 export interface StepFunctionInput {
@@ -32,6 +40,7 @@ export interface BuildStepFunctionProps extends StepFunctionInput {
   lambdaObjects: LambdaObject[];
   eventBus: IEventBus;
   ssmParameterPaths: SsmParameterPaths;
+  isProdAccount: boolean;
 }
 
 export interface StepFunctionObject extends StepFunctionInput {
@@ -46,6 +55,11 @@ export const stepFunctionsRequirementsMap: Record<StateMachineName, StepFunction
   analysisBuilder: {
     needsEventPutPermission: true,
     needsDistributedMapPermission: true,
+  },
+  runNataPreflightChecks: {
+    needsEventPutPermission: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
   },
 };
 
@@ -62,5 +76,16 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     // Post Event Detail Makers
     'makeCtdnaPostAnalysisEventsList',
     'makeWgtsPostAnalysisEventsList',
+  ],
+  runNataPreflightChecks: [
+    // Build up the current status manager state
+    'getDeploymentStatusManagerState',
+    // Generate the validation event drafts
+    'generateCtdnaValidationEvent',
+    'generateDragenWgtsDnaValidationEvent',
+    'generateOncoanalyserWgtsDnaValidationEvent',
+    'generateSashValidationEvent',
+    // Summarise the changes in comments to the workflow manager
+    'summariseDeployStatusManagerChanges',
   ],
 };

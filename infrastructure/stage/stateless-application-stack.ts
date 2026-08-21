@@ -1,4 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import * as events from 'aws-cdk-lib/aws-events';
 import { GitStack } from '@orcabus/platform-cdk-constructs/deployment-stack-pipeline';
@@ -24,6 +25,15 @@ export class StatelessApplicationStack extends GitStack {
       props.eventBusName
     );
 
+    // Get the S3 Bucket
+    const analysisGlueArtifactsBucket = props.analysisGlueArtefactsBucketName
+      ? s3.Bucket.fromBucketName(
+          this,
+          'AnalysisGlueArtifactsBucket',
+          props.analysisGlueArtefactsBucketName
+        )
+      : undefined;
+
     // Build analysis Tools Layer
     const analysisToolsLayer = buildAnalysisToolsLayer(this);
 
@@ -31,6 +41,8 @@ export class StatelessApplicationStack extends GitStack {
     const lambdas = buildAllLambdas(this, {
       analysisToolsLayer: analysisToolsLayer,
       ssmParameterPaths: props.ssmParameterPaths,
+      s3ArtefactsBucket: analysisGlueArtifactsBucket,
+      isProdAccount: props.stageName === 'PROD',
     });
 
     // Build the state machines
@@ -38,17 +50,20 @@ export class StatelessApplicationStack extends GitStack {
       lambdaObjects: lambdas,
       eventBus: orcabusMainEventBus,
       ssmParameterPaths: props.ssmParameterPaths,
+      isProdAccount: props.stageName === 'PROD',
     });
 
     // Add event rules
     const eventRules = buildAllEventRules(this, {
       eventBus: orcabusMainEventBus,
+      prodOnly: props.stageName === 'PROD',
     });
 
     // Add event targets
     buildAllEventBridgeTargets({
       eventBridgeRuleObjects: eventRules,
       stepFunctionObjects: stateMachines,
+      prodOnly: props.stageName === 'PROD',
     });
   }
 }

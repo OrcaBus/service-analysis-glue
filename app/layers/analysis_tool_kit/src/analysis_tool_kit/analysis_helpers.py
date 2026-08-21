@@ -17,7 +17,11 @@ from orcabus_api_tools.workflow import (
     list_workflows,
     get_workflow_runs_from_metadata,
 )
-from orcabus_api_tools.workflow.models import WorkflowRunDetail
+from orcabus_api_tools.workflow.models import (
+    WorkflowRunDetail,
+    ExecutionEngineType,
+    ValidationStateType,
+)
 from orcabus_api_tools.fastq import (
     get_fastqs_in_library,
     get_fastqs_in_libraries_and_instrument_run_id,
@@ -25,7 +29,7 @@ from orcabus_api_tools.fastq import (
 
 # Local imports
 from .globals import DRAFT_STATUS, DEPRECATED_STATUS
-from .models import ReadSet, EventLibrary, Workflow
+from .models import ReadSet, EventLibrary, Workflow, Payload
 
 # Type hints
 WorkflowsList = Literal['DRAGEN_TSO500_CTDNA']
@@ -137,17 +141,21 @@ def get_existing_workflow_runs(
 
 def add_workflow_draft_event_detail(
         libraries: List[Library],
+        payload: Optional[Payload],
+        workflow_run_prefix: Optional[str] = None,
         **kwargs: Unpack[Workflow]
 ):
     """
     Add the workflow draft event detail
     :param libraries:
+    :param payload
+    :param workflow_run_prefix:
     :param kwargs:
     :return:
     """
     # Get the workflow version from kwargs
-    workflow_name = kwargs.pop('name')
-    workflow_version = kwargs.pop('version')
+    workflow_name = kwargs['name']
+    workflow_version = kwargs['version']
 
     # Set the portal run id
     portal_run_id = create_portal_run_id()
@@ -156,7 +164,8 @@ def add_workflow_draft_event_detail(
     workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
-        portal_run_id=portal_run_id
+        portal_run_id=portal_run_id,
+        workflow_run_prefix=workflow_run_prefix,
     )
 
     # Get the workflow object
@@ -166,9 +175,9 @@ def add_workflow_draft_event_detail(
                 workflow_name=workflow_name,
                 workflow_version=workflow_version,
                 code_version=kwargs.get("codeVersion", None),
-                execution_engine=kwargs.get("executionEngine", None),
+                execution_engine=cast(Optional[ExecutionEngineType], kwargs.get("executionEngine", None)),
                 execution_engine_pipeline_id=kwargs.get("executionEnginePipelineId", None),
-                validation_state=kwargs.get("validationState", None),
+                validation_state=cast(Optional[ValidationStateType], kwargs.get("validationState", None)),
             )
         ))
     except StopIteration:
@@ -176,10 +185,14 @@ def add_workflow_draft_event_detail(
             f"Workflow {workflow_name} version {workflow_version} not found"
         )
 
-    return {
-        "status": DRAFT_STATUS,
-        "workflow": workflow,
-        "workflowRunName": workflow_run_name,
-        "portalRunId": portal_run_id,
-        "libraries": get_libraries_with_readsets(libraries)
-    }
+    return dict(filter(
+        lambda kv_iter_: kv_iter_[1] is not None,
+        {
+            "status": DRAFT_STATUS,
+            "workflow": workflow,
+            "workflowRunName": workflow_run_name,
+            "portalRunId": portal_run_id,
+            "libraries": get_libraries_with_readsets(libraries),
+            "payload": payload
+        }.items()
+    ))

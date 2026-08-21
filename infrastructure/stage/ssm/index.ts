@@ -42,4 +42,19 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
       stringValue: value,
     });
   }
+
+  /**
+   * Add the pre-draft data configurations
+   */
+  if (props.preDraftDataConfigurations) {
+    for (const [key, value] of Object.entries(props.preDraftDataConfigurations)) {
+      new ssm.StringParameter(scope, `pre-draft-data-configurations-${key}`, {
+        parameterName: path.join(
+          <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+          camelCaseToKebabCase(key)
+        ),
+        stringValue: JSON.stringify(value),
+      });
+    }
+  }
 }
