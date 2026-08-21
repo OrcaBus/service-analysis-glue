@@ -56,12 +56,14 @@ export class StatelessApplicationStack extends GitStack {
     // Add event rules
     const eventRules = buildAllEventRules(this, {
       eventBus: orcabusMainEventBus,
+      prodOnly: props.stageName === 'PROD',
     });
 
     // Add event targets
     buildAllEventBridgeTargets({
       eventBridgeRuleObjects: eventRules,
       stepFunctionObjects: stateMachines,
+      prodOnly: props.stageName === 'PROD',
     });
   }
 }

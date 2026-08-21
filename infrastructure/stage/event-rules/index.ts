@@ -74,14 +74,16 @@ export function buildAllEventRules(
         break;
       }
       case 'SrmSampleSheetStateChange': {
-        eventBridgeRuleObjects.push({
-          ruleName: ruleName,
-          ruleObject: buildEventRule(scope, {
+        if (props.prodOnly) {
+          eventBridgeRuleObjects.push({
             ruleName: ruleName,
-            eventPattern: buildSrmSampleSheetStateChangeEventPattern(),
-            eventBus: props.eventBus,
-          }),
-        });
+            ruleObject: buildEventRule(scope, {
+              ruleName: ruleName,
+              eventPattern: buildSrmSampleSheetStateChangeEventPattern(),
+              eventBus: props.eventBus,
+            }),
+          });
+        }
         break;
       }
     }

@@ -24,6 +24,7 @@ export interface EventBridgeRuleProps {
 
 export interface EventBridgeRulesProps {
   eventBus: IEventBus;
+  prodOnly: boolean;
 }
 
 export interface EventBridgeRuleObject {

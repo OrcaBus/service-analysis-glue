@@ -24,4 +24,5 @@ export interface AddSfnAsEventBridgeTargetProps {
 export interface EventBridgeTargetsProps {
   eventBridgeRuleObjects: EventBridgeRuleObject[];
   stepFunctionObjects: StepFunctionObject[];
+  prodOnly: boolean;
 }
