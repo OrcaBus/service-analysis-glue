@@ -234,10 +234,10 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     // DNA
     dragenWgtsDna: {
       name: 'dragen-wgts-dna',
-      version: '4.4.6',
-      codeVersion: 'ca414b8',
+      version: '4.4.4',
+      codeVersion: '724101a',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '6e13f764-cc88-4214-8eeb-6d30374de354',
+      executionEnginePipelineId: '812c4ee5-b0bd-4c55-b4c2-cafe70ecfc8e',
       validationState: 'VALIDATED',
     },
     arribaWgtsRna: {
