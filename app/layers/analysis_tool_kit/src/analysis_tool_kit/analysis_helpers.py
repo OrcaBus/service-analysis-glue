@@ -141,7 +141,7 @@ def get_existing_workflow_runs(
 
 def add_workflow_draft_event_detail(
         libraries: List[Library],
-        payload: Optional[Payload],
+        payload: Optional[Payload] = None,
         workflow_run_prefix: Optional[str] = None,
         **kwargs: Unpack[Workflow]
 ):
