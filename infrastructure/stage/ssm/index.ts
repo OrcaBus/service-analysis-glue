@@ -57,4 +57,30 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
       });
     }
   }
+
+  /**
+   * Add the deployment snapshot S3 prefix (PROD only)
+   */
+  if (
+    props.ssmParameterPaths.s3DeploymentSnapshot &&
+    props.ssmParameterValues.s3DeploymentSnapshotPrefix
+  ) {
+    new ssm.StringParameter(scope, 'deployment-snapshot-s3-prefix', {
+      parameterName: props.ssmParameterPaths.s3DeploymentSnapshot,
+      stringValue: props.ssmParameterValues.s3DeploymentSnapshotPrefix,
+    });
+  }
+
+  /**
+   * Add the git stacks to observe list (PROD only)
+   */
+  if (
+    props.ssmParameterPaths.gitStacksToObserveList &&
+    props.ssmParameterValues.gitStacksToObserveList
+  ) {
+    new ssm.StringParameter(scope, 'git-stacks-to-observe', {
+      parameterName: props.ssmParameterPaths.gitStacksToObserveList,
+      stringValue: JSON.stringify(props.ssmParameterValues.gitStacksToObserveList),
+    });
+  }
 }
