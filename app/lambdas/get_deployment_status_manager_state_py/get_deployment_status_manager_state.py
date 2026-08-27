@@ -60,7 +60,7 @@ def find_most_recent_deployment_status(bucket: str, prefix: str) -> Optional[Tup
         latest_response_obj: 'ObjectTypeDef' = next(filter(
             lambda object_iter_: (
                 object_iter_['Key'].endswith('.json') and
-                object_iter_['Key'].startswith('all_stacks_summary_')
+                Path(object_iter_['Key']).name.startswith('all_stacks_summary_')
             ),
             sorted(
                 response['Contents'],
@@ -91,10 +91,14 @@ def dump_current_state_to_s3(
 ):
     # Get s3 path
     s3_deployment_status_dump_path_url_obj = urlparse(s3_uri)
+    # urlparse leaves a leading '/' on the path (e.g. '/deployment-snapshots/').
+    # S3 object keys must not start with '/', otherwise the key won't match the
+    # IAM resource pattern (deployment-snapshots/*) and PutObject is denied.
+    s3_key_prefix = s3_deployment_status_dump_path_url_obj.path.lstrip('/')
     get_s3_client().put_object(
         Bucket=s3_deployment_status_dump_path_url_obj.netloc,
         Key=str(
-            Path(s3_deployment_status_dump_path_url_obj.path) /
+            Path(s3_key_prefix) /
             f'year={str(current_timestamp.year).zfill(4)}' /
             f'month={str(current_timestamp.month).zfill(2)}' /
             f'day={str(current_timestamp.day).zfill(2)}' /
@@ -240,9 +244,11 @@ def handler(event, context) -> ResponseDict:
     stacks_to_observe_list = json.loads(get_ssm_value(environ[GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR]))
 
     # Find most recent s3 file in path
+    # Strip the leading '/' from the parsed path so the list prefix matches the
+    # object keys we write (which must not start with '/').
     deployment_result = find_most_recent_deployment_status(
         bucket=s3_uri_prefix_obj.netloc,
-        prefix=s3_uri_prefix_obj.path
+        prefix=s3_uri_prefix_obj.path.lstrip('/')
     )
     if deployment_result is not None:
         prev_timestamp, previous_status = deployment_result
