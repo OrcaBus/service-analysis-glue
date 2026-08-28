@@ -15,6 +15,7 @@ from orcabus_api_tools.workflow import (
     add_comment_to_workflow_run
 )
 from orcabus_api_tools.deploy_status.models import StackEventResponseDict
+from orcabus_api_tools.deploy_status import get_all_stacks_summary
 
 # Get workflow env vars as values
 COMMENT_AUTHOR = f"analysis-glue--validation-service"
@@ -39,8 +40,19 @@ def handler(event, context):
     # Get the workflow run from the portal run id
     workflow_run = get_workflow_run_from_portal_run_id(portal_run_id)
 
+    # deleted / modified / added may be None type, convert all to lists
+    if deleted is None:
+        deleted = []
+    if modified is None:
+        modified = []
+    if added is None:
+        added = []
+
     if all([len(deleted) == 0, len(modified) == 0, len(added) == 0]):
         return
+
+    # Get all current stack statuses
+    current_stack_statuses = get_all_stacks_summary()
 
     # Create a comment stating timestamps
     add_comment_to_workflow_run(
