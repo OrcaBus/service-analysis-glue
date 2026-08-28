@@ -6,7 +6,7 @@ Deploy status manager changes
 """
 
 # Standard imports
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 from datetime import datetime
 
 # From layers
@@ -29,9 +29,9 @@ def handler(event, context):
     """
 
     # Inputs
-    deleted: List[StackEventResponseDict] = event["deleted"]
-    modified: List[Tuple[StackEventResponseDict, StackEventResponseDict]] = event["modified"]
-    added: List[StackEventResponseDict] = event["added"]
+    deleted: Optional[List[StackEventResponseDict]] = event["deleted"]
+    modified: Optional[List[Tuple[StackEventResponseDict, StackEventResponseDict]]] = event["modified"]
+    added: Optional[List[StackEventResponseDict]] = event["added"]
     prev_timestamp: datetime = event["prevTimestamp"]
     current_timestamp: datetime = event["currentTimestamp"]
     portal_run_id: str = event["portalRunId"]
