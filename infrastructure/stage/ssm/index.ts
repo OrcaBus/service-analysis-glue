@@ -46,8 +46,10 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
   /**
    * Add the pre-draft data configurations
    */
-  if (props.preDraftDataConfigurations) {
-    for (const [key, value] of Object.entries(props.preDraftDataConfigurations)) {
+  if (props.ssmParameterValues.preDraftDataConfigurations) {
+    for (const [key, value] of Object.entries(
+      props.ssmParameterValues.preDraftDataConfigurations
+    )) {
       new ssm.StringParameter(scope, `pre-draft-data-configurations-${key}`, {
         parameterName: path.join(
           <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,

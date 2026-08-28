@@ -36,7 +36,7 @@ export function getSsmParameterValues(stage: StageName): SsmParameterValues {
     return {
       ...ssmParametersBase,
       preDraftDataConfigurations: {
-        dragenTso500CtDna: PROD_CTDNA_TEST_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS,
+        dragenTso500Ctdna: PROD_CTDNA_TEST_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS,
         dragenWgtsDna: PROD_DRAGEN_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS,
         oncoanalyserWgtsDna: PROD_ONCOANALYSER_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS,
         sash: PROD_SASH_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS,
