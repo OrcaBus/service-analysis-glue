@@ -30,9 +30,9 @@ def handler(event, context):
     """
 
     # Inputs
-    deleted: Optional[List[StackEventResponseDict]] = event["deleted"]
-    modified: Optional[List[Tuple[StackEventResponseDict, StackEventResponseDict]]] = event["modified"]
-    added: Optional[List[StackEventResponseDict]] = event["added"]
+    deleted: Optional[List[str]] = event["deleted"]
+    modified: Optional[List[Tuple[str, str]]] = event["modified"]
+    added: Optional[List[str]] = event["added"]
     prev_timestamp: datetime = event["prevTimestamp"]
     current_timestamp: datetime = event["currentTimestamp"]
     portal_run_id: str = event["portalRunId"]
@@ -43,10 +43,13 @@ def handler(event, context):
     # deleted / modified / added may be None type, convert all to lists
     if deleted is None:
         deleted = []
+    deleted: List[str]
     if modified is None:
         modified = []
+    modified: List[Tuple[str, str]]
     if added is None:
         added = []
+    added: List[str]
 
     if all([len(deleted) == 0, len(modified) == 0, len(added) == 0]):
         return
