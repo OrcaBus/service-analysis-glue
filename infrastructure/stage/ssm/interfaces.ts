@@ -24,5 +24,4 @@ export interface SsmParameterPaths {
 export interface BuildSsmParameterProps {
   ssmParameterValues: SsmParameterValues;
   ssmParameterPaths: SsmParameterPaths;
-  preDraftDataConfigurations?: TestSamplePreDraftDataConfigurationsByWorkflowName;
 }

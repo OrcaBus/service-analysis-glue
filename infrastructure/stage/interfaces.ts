@@ -374,7 +374,7 @@ export interface TestSamplePreDraftDataConfiguration {
 
 export type TestSamplePreDraftDataConfigurationsByWorkflowName = {
   // ctDNA
-  dragenTso500CtDna: TestSamplePreDraftDataConfiguration[];
+  dragenTso500Ctdna: TestSamplePreDraftDataConfiguration[];
   // DNA
   dragenWgtsDna: TestSamplePreDraftDataConfiguration[];
   oncoanalyserWgtsDna: TestSamplePreDraftDataConfiguration[];
