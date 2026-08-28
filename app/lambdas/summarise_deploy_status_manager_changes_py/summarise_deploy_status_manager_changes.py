@@ -65,6 +65,12 @@ def handler(event, context):
     )
 
     # Deleted stack change
+    if deleted:
+        deleted = list(filter(
+            lambda stack: stack['stackName'] in deleted,
+            current_stack_statuses
+        ))
+
     if len(deleted) == 0:
         pass
     elif len(deleted) == 1:
@@ -86,6 +92,12 @@ def handler(event, context):
             )
 
     # Modification stack change
+    if modified:
+        modified = list(filter(
+            lambda stack: stack['stackName'] in modified,
+            current_stack_statuses
+        ))
+
     if len(modified) == 0:
         pass
     elif len(modified) == 1:
@@ -143,6 +155,12 @@ def handler(event, context):
             )
 
     # Added stack change
+    if added:
+        added = list(filter(
+            lambda stack: stack['stackName'] in added,
+            current_stack_statuses
+        ))
+
     if len(added) == 0:
         pass
     elif len(added) == 1:
