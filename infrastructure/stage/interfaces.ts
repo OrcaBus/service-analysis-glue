@@ -367,7 +367,8 @@ export interface TestSamplePreDraftDataConfiguration {
     version: string;
     data: {
       tags: object;
-      engineParameters: object;
+      // Some workflows (e.g. PierianDx) do not require engine parameters
+      engineParameters?: object;
     };
   };
 }
@@ -375,8 +376,36 @@ export interface TestSamplePreDraftDataConfiguration {
 export type TestSamplePreDraftDataConfigurationsByWorkflowName = {
   // ctDNA
   dragenTso500Ctdna: TestSamplePreDraftDataConfiguration[];
+  pieriandxTso500Ctdna: TestSamplePreDraftDataConfiguration[];
   // DNA
   dragenWgtsDna: TestSamplePreDraftDataConfiguration[];
   oncoanalyserWgtsDna: TestSamplePreDraftDataConfiguration[];
   sash: TestSamplePreDraftDataConfiguration[];
+  // RNA
+  dragenWgtsRna: TestSamplePreDraftDataConfiguration[];
+  arribaWgtsRna: TestSamplePreDraftDataConfiguration[];
+  oncoanalyserWgtsRna: TestSamplePreDraftDataConfiguration[];
+  // DNA / RNA
+  oncoanalyserWgtsDnaRna: TestSamplePreDraftDataConfiguration[];
+  rnasum: TestSamplePreDraftDataConfiguration[];
 };
+
+// The subset of validation workflows that run the deploy-status pre-flight checks and therefore
+// have a per-workflow list of cloudformation stacks to observe.
+export type ValidationWorkflowNameType =
+  // ctDNA
+  | 'dragenTso500Ctdna'
+  | 'pieriandxTso500Ctdna'
+  // DNA
+  | 'dragenWgtsDna'
+  | 'oncoanalyserWgtsDna'
+  | 'sash'
+  // RNA
+  | 'dragenWgtsRna'
+  | 'arribaWgtsRna'
+  | 'oncoanalyserWgtsRna'
+  // DNA / RNA
+  | 'oncoanalyserWgtsDnaRna'
+  | 'rnasum';
+
+export type GitStacksToObserveByWorkflowName = Record<ValidationWorkflowNameType, string[]>;

@@ -22,9 +22,15 @@ export type LambdaName =
   // Validation Makers
   | 'getDeploymentStatusManagerState'
   | 'generateCtdnaValidationEvent'
+  | 'generatePieriandxValidationEvent'
   | 'generateDragenWgtsDnaValidationEvent'
   | 'generateOncoanalyserWgtsDnaValidationEvent'
   | 'generateSashValidationEvent'
+  | 'generateDragenWgtsRnaValidationEvent'
+  | 'generateArribaWgtsRnaValidationEvent'
+  | 'generateOncoanalyserWgtsRnaValidationEvent'
+  | 'generateOncoanalyserWgtsDnaRnaValidationEvent'
+  | 'generateRnasumValidationEvent'
   | 'summariseDeployStatusManagerChanges';
 
 export const lambdaNameList: LambdaName[] = [
@@ -42,9 +48,15 @@ export const lambdaNameList: LambdaName[] = [
   // Validation Makers
   'getDeploymentStatusManagerState',
   'generateCtdnaValidationEvent',
+  'generatePieriandxValidationEvent',
   'generateDragenWgtsDnaValidationEvent',
   'generateOncoanalyserWgtsDnaValidationEvent',
   'generateSashValidationEvent',
+  'generateDragenWgtsRnaValidationEvent',
+  'generateArribaWgtsRnaValidationEvent',
+  'generateOncoanalyserWgtsRnaValidationEvent',
+  'generateOncoanalyserWgtsDnaRnaValidationEvent',
+  'generateRnasumValidationEvent',
   'summariseDeployStatusManagerChanges',
 ];
 
@@ -121,6 +133,12 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsSsmParameterAccess: true,
     prodOnly: true,
   },
+  generatePieriandxValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
   generateDragenWgtsDnaValidationEvent: {
     needsOrcabusApiTools: true,
     needsAnalysisToolsLayer: true,
@@ -139,8 +157,40 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsSsmParameterAccess: true,
     prodOnly: true,
   },
+  generateDragenWgtsRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateArribaWgtsRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateOncoanalyserWgtsRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateOncoanalyserWgtsDnaRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateRnasumValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
   summariseDeployStatusManagerChanges: {
     needsOrcabusApiTools: true,
+    needsSsmParameterAccess: true,
+    needsS3Permissions: true,
     prodOnly: true,
   },
 };

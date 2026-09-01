@@ -1,4 +1,5 @@
 import {
+  GitStacksToObserveByWorkflowName,
   TestSamplePreDraftDataConfigurationsByWorkflowName,
   WorkflowPayloadVersionType,
   WorkflowsObjectType,
@@ -9,7 +10,7 @@ export interface SsmParameterValues {
   payloadVersionsByWorkflowName: WorkflowPayloadVersionType;
   preDraftDataConfigurations?: TestSamplePreDraftDataConfigurationsByWorkflowName;
   s3DeploymentSnapshotPrefix?: string;
-  gitStacksToObserveList?: string[];
+  gitStacksToObserveByWorkflowName?: GitStacksToObserveByWorkflowName;
 }
 
 export interface SsmParameterPaths {
@@ -18,7 +19,7 @@ export interface SsmParameterPaths {
   payloadVersionsPrefix: string;
   preDraftDataConfigurationsPrefix?: string;
   s3DeploymentSnapshot?: string;
-  gitStacksToObserveList?: string;
+  gitStacksToObservePrefix?: string;
 }
 
 export interface BuildSsmParameterProps {

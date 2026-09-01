@@ -5,6 +5,7 @@ Helper functions for analysis workflows
 """
 
 # Standard imports
+import copy
 from functools import reduce
 from operator import concat
 from typing import List, Any, cast, Unpack, Literal, Optional
@@ -34,9 +35,47 @@ from .models import ReadSet, EventLibrary, Workflow, Payload
 # Type hints
 WorkflowsList = Literal['DRAGEN_TSO500_CTDNA']
 
+# Map of the engineParameters "*UriPrefix" keys to their resolved "*Uri" keys.
+# The prefix value is a directory prefix (ending in '/'); the resolved value
+# appends the portal run id (with a trailing slash) to give the run-specific uri.
+ENGINE_PARAMETER_URI_PREFIX_KEYS = {
+    "logsUriPrefix": "logsUri",
+    "cacheUriPrefix": "cacheUri",
+    "outputUriPrefix": "outputUri",
+}
+
+
 # Functions
 def flatten(list_of_lists: List[List[Any]]) -> List[Any]:
     return list(reduce(concat, list_of_lists, []))
+
+
+def resolve_engine_parameter_uri_prefixes(
+    payload: Payload,
+    portal_run_id: str,
+) -> Payload:
+    """
+    Resolve the "*UriPrefix" engineParameters into run-specific "*Uri" values.
+
+    Each prefix (e.g. logsUriPrefix) is a directory prefix ending in '/'.
+    The resolved uri (e.g. logsUri) is '<prefix><portal_run_id>/'.
+    :param payload: The payload containing data.engineParameters
+    :param portal_run_id: The portal run id to append to each prefix
+    :return: A new payload with the resolved uri keys
+    """
+    payload = copy.deepcopy(payload)
+
+    engine_parameters = payload.get("data", {}).get("engineParameters")
+    if not engine_parameters:
+        return payload
+
+    for prefix_key, uri_key in ENGINE_PARAMETER_URI_PREFIX_KEYS.items():
+        if prefix_key not in engine_parameters:
+            continue
+        prefix_value = engine_parameters.pop(prefix_key)
+        engine_parameters[uri_key] = f"{prefix_value}{portal_run_id}/"
+
+    return payload
 
 
 def get_readsets_in_library(library_id: str, instrument_run_id: Optional[str] = None) -> List[ReadSet]:
@@ -159,6 +198,11 @@ def add_workflow_draft_event_detail(
 
     # Set the portal run id
     portal_run_id = create_portal_run_id()
+
+    # Resolve the "*UriPrefix" engineParameters into run-specific "*Uri" values
+    # (i.e '<prefix><portal_run_id>/') now that we have the portal run id.
+    if payload is not None:
+        payload = resolve_engine_parameter_uri_prefixes(payload, portal_run_id)
 
     # Workflow run name
     workflow_run_name = create_workflow_run_name_from_workflow_name_workflow_version_and_portal_run_id(
