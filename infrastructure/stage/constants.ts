@@ -437,6 +437,12 @@ const PROD_CTDNA_CLOUDFORMATION_STACKS: string[] = [
   'OrcaBusProd-StatelessDragenTso500Ctdna',
 ];
 
+// PierianDx ctDNA pipeline stacks
+const PROD_PIERIANDX_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-OrcaBusStatefulPdxServiceStack',
+  'OrcaBusProd-OrcaBusStatelessPdxServiceStack',
+];
+
 // Dragen WGTS DNA pipeline stacks
 const PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS: string[] = [
   'OrcaBusProd-StatefulDragenWgtsDnaPipeline',
@@ -496,9 +502,15 @@ const PROD_RNASUM_CLOUDFORMATION_STACKS: string[] = [
 // - Oncoanalyser WGTS RNA additionally depends on Dragen WGTS RNA
 // - Oncoanalyser WGTS DNA+RNA depends on the DNA and RNA oncoanalyser pipelines (+ upstream Dragen)
 // - RNASum depends on the DNA+RNA oncoanalyser pipeline and the RNA pipelines
+// - PierianDx ctDNA additionally depends on Dragen TSO500 ctDNA (runs after it)
 export const PROD_CLOUDFORMATION_STACKS_TO_MONITOR_BY_WORKFLOW_NAME: GitStacksToObserveByWorkflowName =
   {
     dragenTso500Ctdna: [...PROD_SHARED_CLOUDFORMATION_STACKS, ...PROD_CTDNA_CLOUDFORMATION_STACKS],
+    pieriandxTso500Ctdna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_CTDNA_CLOUDFORMATION_STACKS,
+      ...PROD_PIERIANDX_CLOUDFORMATION_STACKS,
+    ],
     dragenWgtsDna: [
       ...PROD_SHARED_CLOUDFORMATION_STACKS,
       ...PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS,
@@ -574,6 +586,24 @@ export const PROD_CTDNA_TEST_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePr
             cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${CTDNA_WORKFLOW_MIDFIX}/`,
             outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${CTDNA_WORKFLOW_MIDFIX}/`,
             projectId: HOFMANN_MAIN_PROJECT_ID,
+          },
+        },
+      },
+    },
+  ];
+
+// PIERIANDX (ctDNA tertiary)
+// Uses the same library as the ctDNA workflow. PierianDx only needs the libraryId tag
+// in its payload data and does not require any engine parameters.
+export const PROD_PIERIANDX_TEST_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
+  [
+    {
+      libraryIdList: [SERA_CTDNA_COMP_1PCT_LIBRARY_ID],
+      payload: {
+        version: PAYLOAD_VERSIONS_BY_NAME.PROD.pieriandxTso500Ctdna,
+        data: {
+          tags: {
+            libraryId: SERA_CTDNA_COMP_1PCT_LIBRARY_ID,
           },
         },
       },

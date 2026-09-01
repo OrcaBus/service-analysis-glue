@@ -154,7 +154,10 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
       )
     );
   }
-  if (props.lambdaName === 'makeCtdnaPostAnalysisEventsList') {
+  if (
+    props.lambdaName === 'makeCtdnaPostAnalysisEventsList' ||
+    props.lambdaName === 'generatePieriandxValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'PIERIANDX_TSO500_CTDNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(

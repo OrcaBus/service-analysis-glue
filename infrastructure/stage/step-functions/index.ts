@@ -66,6 +66,11 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
         <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
         'dragen-tso500-ctdna'
       );
+    definitionSubstitutions['__pieriandx_test_samples_configuration_ssm_parameter_name__'] =
+      path.join(
+        <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+        'pieriandx-tso500-ctdna'
+      );
     definitionSubstitutions['__dragen_wgts_dna_test_samples_configuration_ssm_parameter_name__'] =
       path.join(
         <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
@@ -114,6 +119,10 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     definitionSubstitutions['__ctdna_git_stacks_to_observe_ssm_parameter_name__'] = path.join(
       <string>props.ssmParameterPaths.gitStacksToObservePrefix,
       'dragen-tso500-ctdna'
+    );
+    definitionSubstitutions['__pieriandx_git_stacks_to_observe_ssm_parameter_name__'] = path.join(
+      <string>props.ssmParameterPaths.gitStacksToObservePrefix,
+      'pieriandx-tso500-ctdna'
     );
     definitionSubstitutions['__dragen_wgts_dna_git_stacks_to_observe_ssm_parameter_name__'] =
       path.join(<string>props.ssmParameterPaths.gitStacksToObservePrefix, 'dragen-wgts-dna');

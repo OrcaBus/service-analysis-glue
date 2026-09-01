@@ -22,6 +22,7 @@ export type LambdaName =
   // Validation Makers
   | 'getDeploymentStatusManagerState'
   | 'generateCtdnaValidationEvent'
+  | 'generatePieriandxValidationEvent'
   | 'generateDragenWgtsDnaValidationEvent'
   | 'generateOncoanalyserWgtsDnaValidationEvent'
   | 'generateSashValidationEvent'
@@ -47,6 +48,7 @@ export const lambdaNameList: LambdaName[] = [
   // Validation Makers
   'getDeploymentStatusManagerState',
   'generateCtdnaValidationEvent',
+  'generatePieriandxValidationEvent',
   'generateDragenWgtsDnaValidationEvent',
   'generateOncoanalyserWgtsDnaValidationEvent',
   'generateSashValidationEvent',
@@ -126,6 +128,12 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     prodOnly: true,
   },
   generateCtdnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generatePieriandxValidationEvent: {
     needsOrcabusApiTools: true,
     needsAnalysisToolsLayer: true,
     needsSsmParameterAccess: true,

@@ -139,6 +139,110 @@
                   }
                 }
               },
+              "Next": "Get PierianDx Test Sample Configurations",
+              "Items": "{% $states.input.sampleConfigurationsList %}"
+            },
+            "Get PierianDx Test Sample Configurations": {
+              "Type": "Task",
+              "Arguments": {
+                "Name": "${__pieriandx_test_samples_configuration_ssm_parameter_name__}"
+              },
+              "Resource": "arn:aws:states:::aws-sdk:ssm:getParameter",
+              "Next": "Generate PierianDx Draft Events",
+              "Output": {
+                "sampleConfigurationsList": "{% $states.result.Parameter.Value ~> $parse %}"
+              }
+            },
+            "Generate PierianDx Draft Events": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "INLINE"
+                },
+                "StartAt": "Generate PierianDx Validation Analyses Draft Event",
+                "States": {
+                  "Generate PierianDx Validation Analyses Draft Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Output": {
+                      "eventDetail": "{% $states.result.Payload.eventDetail %}"
+                    },
+                    "Assign": {
+                      "portalRunId": "{% $states.result.Payload.eventDetail.portalRunId %}"
+                    },
+                    "Arguments": {
+                      "FunctionName": "${__generate_pieriandx_validation_event_lambda_function_arn__}",
+                      "Payload": {
+                        "sampleConfiguration": "{% $states.input %}"
+                      }
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "Next": "Put PierianDx Validation WRU DRAFT Event"
+                  },
+                  "Put PierianDx Validation WRU DRAFT Event": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::events:putEvents",
+                    "Arguments": {
+                      "Entries": [
+                        {
+                          "Detail": "{% $states.input.eventDetail %}",
+                          "DetailType": "${__workflow_run_update_detail_type__}",
+                          "EventBusName": "${__event_bus_name__}",
+                          "Source": "${__stack_source__}"
+                        }
+                      ]
+                    },
+                    "Next": "Wait 1 Minute (PierianDx)"
+                  },
+                  "Wait 1 Minute (PierianDx)": {
+                    "Type": "Wait",
+                    "Seconds": 60,
+                    "Next": "Summarise deploy status manager changes as comments on workflow (PierianDx)"
+                  },
+                  "Summarise deploy status manager changes as comments on workflow (PierianDx)": {
+                    "Type": "Task",
+                    "Resource": "arn:aws:states:::lambda:invoke",
+                    "Arguments": {
+                      "Payload": {
+                        "oldSummary": "{% $oldSummary %}",
+                        "newSummary": "{% $newSummary %}",
+                        "gitStacksToObserveSsmParameterName": "${__pieriandx_git_stacks_to_observe_ssm_parameter_name__}",
+                        "portalRunId": "{% $portalRunId %}"
+                      },
+                      "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
+                    },
+                    "Retry": [
+                      {
+                        "ErrorEquals": [
+                          "Lambda.ServiceException",
+                          "Lambda.AWSLambdaException",
+                          "Lambda.SdkClientException",
+                          "Lambda.TooManyRequestsException"
+                        ],
+                        "IntervalSeconds": 1,
+                        "MaxAttempts": 3,
+                        "BackoffRate": 2,
+                        "JitterStrategy": "FULL"
+                      }
+                    ],
+                    "End": true,
+                    "Output": {}
+                  }
+                }
+              },
               "End": true,
               "Items": "{% $states.input.sampleConfigurationsList %}"
             }

@@ -82,6 +82,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     'getDeploymentStatusManagerState',
     // Generate the validation event drafts
     'generateCtdnaValidationEvent',
+    'generatePieriandxValidationEvent',
     'generateDragenWgtsDnaValidationEvent',
     'generateOncoanalyserWgtsDnaValidationEvent',
     'generateSashValidationEvent',

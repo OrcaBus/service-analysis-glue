@@ -367,7 +367,8 @@ export interface TestSamplePreDraftDataConfiguration {
     version: string;
     data: {
       tags: object;
-      engineParameters: object;
+      // Some workflows (e.g. PierianDx) do not require engine parameters
+      engineParameters?: object;
     };
   };
 }
@@ -375,6 +376,7 @@ export interface TestSamplePreDraftDataConfiguration {
 export type TestSamplePreDraftDataConfigurationsByWorkflowName = {
   // ctDNA
   dragenTso500Ctdna: TestSamplePreDraftDataConfiguration[];
+  pieriandxTso500Ctdna: TestSamplePreDraftDataConfiguration[];
   // DNA
   dragenWgtsDna: TestSamplePreDraftDataConfiguration[];
   oncoanalyserWgtsDna: TestSamplePreDraftDataConfiguration[];
@@ -393,6 +395,7 @@ export type TestSamplePreDraftDataConfigurationsByWorkflowName = {
 export type ValidationWorkflowNameType =
   // ctDNA
   | 'dragenTso500Ctdna'
+  | 'pieriandxTso500Ctdna'
   // DNA
   | 'dragenWgtsDna'
   | 'oncoanalyserWgtsDna'
