@@ -14,7 +14,8 @@ from orcabus_api_tools.workflow import (
     get_workflow_run_from_portal_run_id,
     add_comment_to_workflow_run
 )
-from orcabus_api_tools.deploy_status.models import StackEventResponseDict
+from orcabus_api_tools.deploy_status.models import StackEventResponseDict, StackEventResponseWithCfnOutputDict, \
+    StackEventResponseWithoutCfnOutputDict
 from orcabus_api_tools.deploy_status import get_all_stacks_summary
 
 # Get workflow env vars as values
@@ -73,6 +74,8 @@ def handler(event, context):
             lambda stack: stack['stackName'] in deleted,
             current_stack_statuses
         ))
+    deleted: List[StackEventResponseWithCfnOutputDict | StackEventResponseWithoutCfnOutputDict]
+
 
     if len(deleted) == 0:
         pass
@@ -100,6 +103,12 @@ def handler(event, context):
             lambda stack: stack['stackName'] in modified,
             current_stack_statuses
         ))
+    modified: List[
+        Tuple[
+            StackEventResponseWithCfnOutputDict | StackEventResponseWithoutCfnOutputDict,
+            StackEventResponseWithCfnOutputDict | StackEventResponseWithoutCfnOutputDict
+        ]
+    ]
 
     if len(modified) == 0:
         pass
@@ -163,6 +172,7 @@ def handler(event, context):
             lambda stack: stack['stackName'] in added,
             current_stack_statuses
         ))
+    added: List[StackEventResponseWithCfnOutputDict | StackEventResponseWithoutCfnOutputDict]
 
     if len(added) == 0:
         pass
