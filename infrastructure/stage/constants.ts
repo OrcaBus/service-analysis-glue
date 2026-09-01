@@ -1,4 +1,5 @@
 import {
+  GitStacksToObserveByWorkflowName,
   TestSamplePreDraftDataConfiguration,
   WorkflowPayloadVersionType,
   WorkflowsObjectType,
@@ -395,7 +396,7 @@ export const SSM_PARAMETER_PATH_S3_DEPLOYMENT_SNAPSHOT_PREFIX = path.join(
   SSM_PARAMETER_PATH_PREFIX,
   'deployment-snapshot-s3-prefix'
 );
-export const SSM_PARAMETER_PATH_GIT_STACK_LIST = path.join(
+export const SSM_PARAMETER_PATH_GIT_STACK_LIST_PREFIX = path.join(
   SSM_PARAMETER_PATH_PREFIX,
   'git-stacks-to-observe'
 );
@@ -405,7 +406,13 @@ export const SSM_PARAMETER_PATH_CONFIGURATIONS_PREFIX = path.join(
 );
 
 // CLOUDFORMATION STACKS OF INTEREST
-export const PROD_CLOUDFORMATION_STACKS_TO_MONITOR: string[] = [
+// The stacks are grouped so that each validation workflow only observes the stacks that are
+// relevant to it (shared infrastructure + its own pipeline + any upstream pipelines it depends
+// on). This keeps the deployment-change comments on each validation workflow run focused and
+// avoids clogging them with updates to unrelated pipelines.
+
+// Shared infrastructure + workflow-running stacks - relevant to every validation workflow
+const PROD_SHARED_CLOUDFORMATION_STACKS: string[] = [
   // Upstream services
   'OrcaBusProd-MetadataManagerStack',
   'OrcaBusProd-FileManagerStatefulStack',
@@ -419,24 +426,124 @@ export const PROD_CLOUDFORMATION_STACKS_TO_MONITOR: string[] = [
   'OrcaBusProd-StatelessFastqSyncManager',
   'OrcaBusProd-StatefulFastqStack',
   'OrcaBusProd-StatelessFastqStack',
-  // Pipeline generation
-  // ctDNA pipeline
-  'OrcaBusProd-StatefulDragenTso500Ctdna',
-  'OrcaBusProd-StatelessDragenTso500Ctdna',
-  // WGTS DNA Pipeline
-  // Dragen WGTS DNA Stack
-  'OrcaBusProd-StatefulDragenWgtsDnaPipeline',
-  'OrcaBusProd-StatelessDragenWgtsDnaPipelineManager',
-  // Oncoanalyser WGTS DNA Stack
-  'OrcaBusProd-StatefulOncoanalyserWgtsDnaPipeline',
-  'OrcaBusProd-StatelessOncoanalyserWgtsDnaPipelineManager',
-  // Sash WGTS DNA Stack
-  'OrcaBusProd-StatefulSashPipeline',
-  'OrcaBusProd-StatelessSashPipelineManager',
-  // Workflow Running
+  // Workflow Running (shared execution engine)
   'OrcaBusProd-Icav2WesManagerStatefulDeployStack',
   'OrcaBusProd-Icav2WesManagerStatelessDeployStack',
 ];
+
+// ctDNA pipeline stacks
+const PROD_CTDNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulDragenTso500Ctdna',
+  'OrcaBusProd-StatelessDragenTso500Ctdna',
+];
+
+// Dragen WGTS DNA pipeline stacks
+const PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulDragenWgtsDnaPipeline',
+  'OrcaBusProd-StatelessDragenWgtsDnaPipelineManager',
+];
+
+// Oncoanalyser WGTS DNA pipeline stacks
+const PROD_ONCOANALYSER_WGTS_DNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulOncoanalyserWgtsDnaPipeline',
+  'OrcaBusProd-StatelessOncoanalyserWgtsDnaPipelineManager',
+];
+
+// Sash pipeline stacks
+const PROD_SASH_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulSashPipeline',
+  'OrcaBusProd-StatelessSashPipelineManager',
+];
+
+// Dragen WGTS RNA pipeline stacks
+const PROD_DRAGEN_WGTS_RNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulDragenWgtsRnaPipeline',
+  'OrcaBusProd-StatelessDragenWgtsRnaPipelineManager',
+];
+
+// Arriba WGTS RNA pipeline stacks
+const PROD_ARRIBA_WGTS_RNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulArribaWgtsRnaPipeline',
+  'OrcaBusProd-StatelessArribaWgtsRnaPipelineManager',
+];
+
+// Oncoanalyser WGTS RNA pipeline stacks
+const PROD_ONCOANALYSER_WGTS_RNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulOncoanalyserWgtsRnaPipeline',
+  'OrcaBusProd-StatelessOncoanalyserWgtsRnaPipelineManager',
+];
+
+// Oncoanalyser WGTS DNA/RNA (Both) pipeline stacks
+const PROD_ONCOANALYSER_WGTS_DNA_RNA_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulOncoanalyserWgtsBothPipeline',
+  'OrcaBusProd-StatelessOncoanalyserWgtsBothPipelineManager',
+];
+
+// RNASum pipeline stacks
+const PROD_RNASUM_CLOUDFORMATION_STACKS: string[] = [
+  'OrcaBusProd-StatefulRnasumPipeline',
+  'OrcaBusProd-StatelessRnasumPipelineManager',
+];
+
+// Per-workflow observed stacks.
+// Dependency rules:
+// - ctDNA only cares about its own pipeline (+ shared infra)
+// - Dragen WGTS DNA only cares about its own pipeline (+ shared infra)
+// - Oncoanalyser WGTS DNA additionally depends on Dragen WGTS DNA
+// - Sash additionally depends on Dragen WGTS DNA and Oncoanalyser WGTS DNA
+// - Dragen WGTS RNA only cares about its own pipeline (+ shared infra)
+// - Arriba WGTS RNA additionally depends on Dragen WGTS RNA
+// - Oncoanalyser WGTS RNA additionally depends on Dragen WGTS RNA
+// - Oncoanalyser WGTS DNA+RNA depends on the DNA and RNA oncoanalyser pipelines (+ upstream Dragen)
+// - RNASum depends on the DNA+RNA oncoanalyser pipeline and the RNA pipelines
+export const PROD_CLOUDFORMATION_STACKS_TO_MONITOR_BY_WORKFLOW_NAME: GitStacksToObserveByWorkflowName =
+  {
+    dragenTso500Ctdna: [...PROD_SHARED_CLOUDFORMATION_STACKS, ...PROD_CTDNA_CLOUDFORMATION_STACKS],
+    dragenWgtsDna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS,
+    ],
+    oncoanalyserWgtsDna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_DNA_CLOUDFORMATION_STACKS,
+    ],
+    sash: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_DNA_CLOUDFORMATION_STACKS,
+      ...PROD_SASH_CLOUDFORMATION_STACKS,
+    ],
+    dragenWgtsRna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_RNA_CLOUDFORMATION_STACKS,
+    ],
+    arribaWgtsRna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_ARRIBA_WGTS_RNA_CLOUDFORMATION_STACKS,
+    ],
+    oncoanalyserWgtsRna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_RNA_CLOUDFORMATION_STACKS,
+    ],
+    oncoanalyserWgtsDnaRna: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_DNA_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_DNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_DNA_RNA_CLOUDFORMATION_STACKS,
+    ],
+    rnasum: [
+      ...PROD_SHARED_CLOUDFORMATION_STACKS,
+      ...PROD_DRAGEN_WGTS_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_ONCOANALYSER_WGTS_DNA_RNA_CLOUDFORMATION_STACKS,
+      ...PROD_RNASUM_CLOUDFORMATION_STACKS,
+    ],
+  };
 
 /**
  * Validation parameters
@@ -478,10 +585,16 @@ export const PROD_CTDNA_TEST_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePr
 const DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX = 'dragen-wgts-dna';
 const ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX = 'oncoanalyser-wgts-dna';
 const SASH_WORKFLOW_MIDFIX = 'sash';
+const DRAGEN_WGTS_RNA_WORKFLOW_MIDFIX = 'dragen-wgts-rna';
+const ARRIBA_WGTS_RNA_WORKFLOW_MIDFIX = 'arriba-wgts-rna';
+const ONCOANALYSER_WGTS_RNA_WORKFLOW_MIDFIX = 'oncoanalyser-wgts-rna';
+const ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_MIDFIX = 'oncoanalyser-wgts-dna-rna';
+const RNASUM_WORKFLOW_MIDFIX = 'rnasum';
 
 // SAMPLES
 const HCC1395_NORMAL_LIBRARY_ID = 'L2301217';
 const HCC1395_TUMOR_LIBRARY_ID = 'L2301218';
+const HCC1395_TUMOR_RNA_LIBRARY_ID = 'L2500568';
 
 export const PROD_DRAGEN_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
   [
@@ -495,9 +608,9 @@ export const PROD_DRAGEN_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSam
             tumorLibraryId: HCC1395_TUMOR_LIBRARY_ID,
           },
           engineParameters: {
-            logsUriPrefix: `${HOFMANN_S3_PREFIX}/logs/${DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX}`,
-            cacheUriPrefix: `${HOFMANN_S3_PREFIX}/cache/${DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX}`,
-            outputUriPrefix: `${HOFMANN_S3_PREFIX}/output/${DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX}`,
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${DRAGEN_WGTS_DNA_WORKFLOW_MIDFIX}/`,
             projectId: HOFMANN_MAIN_PROJECT_ID,
           },
         },
@@ -517,9 +630,9 @@ export const PROD_ONCOANALYSER_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: T
             tumorLibraryId: HCC1395_TUMOR_LIBRARY_ID,
           },
           engineParameters: {
-            logsUriPrefix: `${HOFMANN_S3_PREFIX}/logs/${ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX}`,
-            cacheUriPrefix: `${HOFMANN_S3_PREFIX}/cache/${ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX}`,
-            outputUriPrefix: `${HOFMANN_S3_PREFIX}/output/${ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX}`,
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${ONCOANALYSER_WGTS_DNA_WORKFLOW_MIDFIX}/`,
             projectId: HOFMANN_MAIN_PROJECT_ID,
           },
         },
@@ -539,9 +652,128 @@ export const PROD_SASH_WGTS_DNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSampl
             tumorLibraryId: HCC1395_TUMOR_LIBRARY_ID,
           },
           engineParameters: {
-            logsUriPrefix: `${HOFMANN_S3_PREFIX}/logs/${SASH_WORKFLOW_MIDFIX}`,
-            cacheUriPrefix: `${HOFMANN_S3_PREFIX}/cache/${SASH_WORKFLOW_MIDFIX}`,
-            outputUriPrefix: `${HOFMANN_S3_PREFIX}/output/${SASH_WORKFLOW_MIDFIX}`,
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${SASH_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${SASH_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${SASH_WORKFLOW_MIDFIX}/`,
+            projectId: HOFMANN_MAIN_PROJECT_ID,
+          },
+        },
+      },
+    },
+  ];
+
+// WTS (RNA) - single library workflows
+export const PROD_DRAGEN_WGTS_RNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
+  [
+    {
+      libraryIdList: [HCC1395_TUMOR_RNA_LIBRARY_ID],
+      payload: {
+        version: PAYLOAD_VERSIONS_BY_NAME.PROD.dragenWgtsRna,
+        data: {
+          tags: {
+            libraryId: HCC1395_TUMOR_RNA_LIBRARY_ID,
+          },
+          engineParameters: {
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${DRAGEN_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${DRAGEN_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${DRAGEN_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            projectId: HOFMANN_MAIN_PROJECT_ID,
+          },
+        },
+      },
+    },
+  ];
+
+export const PROD_ARRIBA_WGTS_RNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
+  [
+    {
+      libraryIdList: [HCC1395_TUMOR_RNA_LIBRARY_ID],
+      payload: {
+        version: PAYLOAD_VERSIONS_BY_NAME.PROD.arribaWgtsRna,
+        data: {
+          tags: {
+            libraryId: HCC1395_TUMOR_RNA_LIBRARY_ID,
+          },
+          engineParameters: {
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${ARRIBA_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${ARRIBA_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${ARRIBA_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            projectId: HOFMANN_MAIN_PROJECT_ID,
+          },
+        },
+      },
+    },
+  ];
+
+export const PROD_ONCOANALYSER_WGTS_RNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
+  [
+    {
+      libraryIdList: [HCC1395_TUMOR_RNA_LIBRARY_ID],
+      payload: {
+        version: PAYLOAD_VERSIONS_BY_NAME.PROD.oncoanalyserWgtsRna,
+        data: {
+          tags: {
+            libraryId: HCC1395_TUMOR_RNA_LIBRARY_ID,
+          },
+          engineParameters: {
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${ONCOANALYSER_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${ONCOANALYSER_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${ONCOANALYSER_WGTS_RNA_WORKFLOW_MIDFIX}/`,
+            projectId: HOFMANN_MAIN_PROJECT_ID,
+          },
+        },
+      },
+    },
+  ];
+
+// WGTS (DNA + RNA) - combined library workflows
+export const PROD_ONCOANALYSER_WGTS_DNA_RNA_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
+  [
+    {
+      libraryIdList: [
+        HCC1395_TUMOR_LIBRARY_ID,
+        HCC1395_NORMAL_LIBRARY_ID,
+        HCC1395_TUMOR_RNA_LIBRARY_ID,
+      ],
+      payload: {
+        version: PAYLOAD_VERSIONS_BY_NAME.PROD.oncoanalyserWgtsDnaRna,
+        data: {
+          tags: {
+            tumorDnaLibraryId: HCC1395_TUMOR_LIBRARY_ID,
+            normalDnaLibraryId: HCC1395_NORMAL_LIBRARY_ID,
+            tumorRnaLibraryId: HCC1395_TUMOR_RNA_LIBRARY_ID,
+          },
+          engineParameters: {
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_MIDFIX}/`,
+            projectId: HOFMANN_MAIN_PROJECT_ID,
+          },
+        },
+      },
+    },
+  ];
+
+export const PROD_RNASUM_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePreDraftDataConfiguration[] =
+  [
+    {
+      libraryIdList: [
+        HCC1395_TUMOR_LIBRARY_ID,
+        HCC1395_NORMAL_LIBRARY_ID,
+        HCC1395_TUMOR_RNA_LIBRARY_ID,
+      ],
+      payload: {
+        version: PAYLOAD_VERSIONS_BY_NAME.PROD.rnasum,
+        data: {
+          tags: {
+            tumorDnaLibraryId: HCC1395_TUMOR_LIBRARY_ID,
+            normalDnaLibraryId: HCC1395_NORMAL_LIBRARY_ID,
+            tumorRnaLibraryId: HCC1395_TUMOR_RNA_LIBRARY_ID,
+          },
+          engineParameters: {
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${RNASUM_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${RNASUM_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${RNASUM_WORKFLOW_MIDFIX}/`,
             projectId: HOFMANN_MAIN_PROJECT_ID,
           },
         },

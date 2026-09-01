@@ -11,13 +11,13 @@ export type StateMachineName =
   // Analysis Builder
   | 'analysisBuilder'
   // Validation Builder
-  | 'runNataPreflightChecks';
+  | 'runPreflightChecks';
 
 export const stateMachineNameList: StateMachineName[] = [
   // Analysis Builder
   'analysisBuilder',
   // Validation Builder
-  'runNataPreflightChecks',
+  'runPreflightChecks',
 ];
 
 // Requirements interface for Step Functions
@@ -56,7 +56,7 @@ export const stepFunctionsRequirementsMap: Record<StateMachineName, StepFunction
     needsEventPutPermission: true,
     needsDistributedMapPermission: true,
   },
-  runNataPreflightChecks: {
+  runPreflightChecks: {
     needsEventPutPermission: true,
     needsSsmParameterAccess: true,
     prodOnly: true,
@@ -77,7 +77,7 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     'makeCtdnaPostAnalysisEventsList',
     'makeWgtsPostAnalysisEventsList',
   ],
-  runNataPreflightChecks: [
+  runPreflightChecks: [
     // Build up the current status manager state
     'getDeploymentStatusManagerState',
     // Generate the validation event drafts
@@ -85,6 +85,11 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     'generateDragenWgtsDnaValidationEvent',
     'generateOncoanalyserWgtsDnaValidationEvent',
     'generateSashValidationEvent',
+    'generateDragenWgtsRnaValidationEvent',
+    'generateArribaWgtsRnaValidationEvent',
+    'generateOncoanalyserWgtsRnaValidationEvent',
+    'generateOncoanalyserWgtsDnaRnaValidationEvent',
+    'generateRnasumValidationEvent',
     // Summarise the changes in comments to the workflow manager
     'summariseDeployStatusManagerChanges',
   ],

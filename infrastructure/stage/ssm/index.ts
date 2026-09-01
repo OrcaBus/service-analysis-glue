@@ -74,15 +74,22 @@ export function buildSsmParameters(scope: Construct, props: BuildSsmParameterPro
   }
 
   /**
-   * Add the git stacks to observe list (PROD only)
+   * Add the per-workflow git stacks to observe lists (PROD only)
    */
   if (
-    props.ssmParameterPaths.gitStacksToObserveList &&
-    props.ssmParameterValues.gitStacksToObserveList
+    props.ssmParameterPaths.gitStacksToObservePrefix &&
+    props.ssmParameterValues.gitStacksToObserveByWorkflowName
   ) {
-    new ssm.StringParameter(scope, 'git-stacks-to-observe', {
-      parameterName: props.ssmParameterPaths.gitStacksToObserveList,
-      stringValue: JSON.stringify(props.ssmParameterValues.gitStacksToObserveList),
-    });
+    for (const [key, value] of Object.entries(
+      props.ssmParameterValues.gitStacksToObserveByWorkflowName
+    )) {
+      new ssm.StringParameter(scope, `git-stacks-to-observe-${key}`, {
+        parameterName: path.join(
+          props.ssmParameterPaths.gitStacksToObservePrefix,
+          camelCaseToKebabCase(key)
+        ),
+        stringValue: JSON.stringify(value),
+      });
+    }
   }
 }

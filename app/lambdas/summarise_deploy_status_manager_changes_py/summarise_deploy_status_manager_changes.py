@@ -4,8 +4,12 @@
 Summarise deploy status manager changes.
 
 Given the s3 uris of the previous (old) and current (new) all-stacks summaries, read both
-summaries, compute the difference between them (restricted to the stacks we observe) and post
-comments describing the changes onto the validation workflow run.
+summaries, compute the difference between them (restricted to the stacks this workflow observes)
+and post comments describing the changes onto the validation workflow run.
+
+The set of stacks to observe is workflow-specific and is read from the SSM parameter whose name
+is passed in the event as 'gitStacksToObserveSsmParameterName'. This keeps the comments on each
+validation workflow run focused on the pipelines relevant to it.
 
 Comment formatting:
 - Deleted stacks: list the stack names as dot points.
@@ -16,7 +20,6 @@ Comment formatting:
 """
 
 # Standard imports
-from os import environ
 from urllib.parse import urlparse
 import json
 import typing
@@ -38,7 +41,6 @@ if typing.TYPE_CHECKING:
     from mypy_boto3_s3 import S3Client
 
 # Globals
-GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR = "GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME"
 DELETE_COMPLETE_STATUS = "DELETE_COMPLETE"
 
 # Get workflow env vars as values
@@ -137,7 +139,7 @@ def build_deleted_comment(stacks_deleted: List[StackEventResponseDict]) -> str:
     """
     List the deleted stack names as dot points.
     """
-    lines = ["The following stacks were deleted:"]
+    lines = ["The following stacks have been deleted since the last validation run:"]
     for stack in stacks_deleted:
         lines.append(f"- {stack['stackName']}")
     return "\n".join(lines)
@@ -147,7 +149,7 @@ def build_added_comment(stacks_added: List[StackEventResponseDict]) -> str:
     """
     For each added stack list the name, modification timestamp and git commit id (if provided).
     """
-    lines = ["The following stacks were added:"]
+    lines = ["The following stacks have been added since the last validation run:"]
     for stack in stacks_added:
         stack_line = (
             f"- {stack['stackName']} "
@@ -168,7 +170,7 @@ def build_modified_comment(
     For each modified stack list the old modification timestamp and git commit id, then the new
     modification timestamp and git commit id.
     """
-    lines = ["The following stacks were modified:"]
+    lines = ["The following stacks have been modified since the last validation run:"]
     for old_stack, new_stack in stacks_modified:
         lines.append(f"- {new_stack['stackName']}")
         lines.append(
@@ -184,8 +186,9 @@ def build_modified_comment(
 
 def handler(event, context):
     """
-    :param event: contains oldSummary (Optional[str] s3 uri), newSummary (str s3 uri) and
-        portalRunId (str)
+    :param event: contains oldSummary (Optional[str] s3 uri), newSummary (str s3 uri),
+        gitStacksToObserveSsmParameterName (str - name of the SSM parameter holding the list of
+        stacks this workflow should observe) and portalRunId (str)
     :param context:
     :return:
     """
@@ -193,6 +196,7 @@ def handler(event, context):
     # Inputs
     old_summary_uri: Optional[str] = event.get("oldSummary")
     new_summary_uri: str = event["newSummary"]
+    git_stacks_to_observe_ssm_parameter_name: str = event["gitStacksToObserveSsmParameterName"]
     portal_run_id: str = event["portalRunId"]
 
     # Get the workflow run from the portal run id
@@ -215,9 +219,9 @@ def handler(event, context):
     status_manager_state_old = read_summary_from_s3(old_summary_uri)
     status_manager_state_new = read_summary_from_s3(new_summary_uri)
 
-    # Get the list of stacks to observe
+    # Get the list of stacks to observe for this workflow
     stacks_to_observe_list: List[str] = json.loads(
-        get_ssm_value(environ[GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR])
+        get_ssm_value(git_stacks_to_observe_ssm_parameter_name)
     )
 
     # Compute the diff

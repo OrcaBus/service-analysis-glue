@@ -379,4 +379,30 @@ export type TestSamplePreDraftDataConfigurationsByWorkflowName = {
   dragenWgtsDna: TestSamplePreDraftDataConfiguration[];
   oncoanalyserWgtsDna: TestSamplePreDraftDataConfiguration[];
   sash: TestSamplePreDraftDataConfiguration[];
+  // RNA
+  dragenWgtsRna: TestSamplePreDraftDataConfiguration[];
+  arribaWgtsRna: TestSamplePreDraftDataConfiguration[];
+  oncoanalyserWgtsRna: TestSamplePreDraftDataConfiguration[];
+  // DNA / RNA
+  oncoanalyserWgtsDnaRna: TestSamplePreDraftDataConfiguration[];
+  rnasum: TestSamplePreDraftDataConfiguration[];
 };
+
+// The subset of validation workflows that run the deploy-status pre-flight checks and therefore
+// have a per-workflow list of cloudformation stacks to observe.
+export type ValidationWorkflowNameType =
+  // ctDNA
+  | 'dragenTso500Ctdna'
+  // DNA
+  | 'dragenWgtsDna'
+  | 'oncoanalyserWgtsDna'
+  | 'sash'
+  // RNA
+  | 'dragenWgtsRna'
+  | 'arribaWgtsRna'
+  | 'oncoanalyserWgtsRna'
+  // DNA / RNA
+  | 'oncoanalyserWgtsDnaRna'
+  | 'rnasum';
+
+export type GitStacksToObserveByWorkflowName = Record<ValidationWorkflowNameType, string[]>;

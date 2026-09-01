@@ -195,7 +195,10 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
   }
 
   // RNA
-  if (props.lambdaName === 'makeWtsAnalysisEventsList') {
+  if (
+    props.lambdaName === 'makeWtsAnalysisEventsList' ||
+    props.lambdaName === 'generateDragenWgtsRnaValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'DRAGEN_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -203,6 +206,11 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
         camelCaseToKebabCase(<WorkflowNameType>'dragenWgtsRna')
       )
     );
+  }
+  if (
+    props.lambdaName === 'makeWtsAnalysisEventsList' ||
+    props.lambdaName === 'generateArribaWgtsRnaValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'ARRIBA_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -210,6 +218,11 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
         camelCaseToKebabCase(<WorkflowNameType>'arribaWgtsRna')
       )
     );
+  }
+  if (
+    props.lambdaName === 'makeWtsAnalysisEventsList' ||
+    props.lambdaName === 'generateOncoanalyserWgtsRnaValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'ONCOANALYSER_WGTS_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -220,7 +233,10 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
   }
 
   // DNA/RNA
-  if (props.lambdaName === 'makeWgtsPostAnalysisEventsList') {
+  if (
+    props.lambdaName === 'makeWgtsPostAnalysisEventsList' ||
+    props.lambdaName === 'generateOncoanalyserWgtsDnaRnaValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -228,6 +244,11 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
         camelCaseToKebabCase(<WorkflowNameType>'oncoanalyserWgtsDnaRna')
       )
     );
+  }
+  if (
+    props.lambdaName === 'makeWgtsPostAnalysisEventsList' ||
+    props.lambdaName === 'generateRnasumValidationEvent'
+  ) {
     lambdaFunction.addEnvironment(
       'RNASUM_WORKFLOW_OBJECT_SSM_PARAMETER_NAME',
       path.join(
@@ -265,13 +286,6 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
       lambdaFunction.addEnvironment(
         'S3_DEPLOYMENT_STATUS_DUMP_PATH_PREFIX_SSM_PARAMETER_NAME',
         <string>props.ssmParameterPaths.s3DeploymentSnapshot
-      );
-    }
-
-    if (props.lambdaName === 'summariseDeployStatusManagerChanges') {
-      lambdaFunction.addEnvironment(
-        'GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME',
-        <string>props.ssmParameterPaths.gitStacksToObserveList
       );
     }
   }

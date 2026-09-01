@@ -37,7 +37,7 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
               (eventBridgeObject) => eventBridgeObject.ruleName === 'SrmSampleSheetStateChange'
             )?.ruleObject,
             stateMachineObj: props.stepFunctionObjects.find(
-              (sfnObject) => sfnObject.stateMachineName === 'runNataPreflightChecks'
+              (sfnObject) => sfnObject.stateMachineName === 'runPreflightChecks'
             )?.sfnObject,
           });
         }

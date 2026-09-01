@@ -25,6 +25,11 @@ export type LambdaName =
   | 'generateDragenWgtsDnaValidationEvent'
   | 'generateOncoanalyserWgtsDnaValidationEvent'
   | 'generateSashValidationEvent'
+  | 'generateDragenWgtsRnaValidationEvent'
+  | 'generateArribaWgtsRnaValidationEvent'
+  | 'generateOncoanalyserWgtsRnaValidationEvent'
+  | 'generateOncoanalyserWgtsDnaRnaValidationEvent'
+  | 'generateRnasumValidationEvent'
   | 'summariseDeployStatusManagerChanges';
 
 export const lambdaNameList: LambdaName[] = [
@@ -45,6 +50,11 @@ export const lambdaNameList: LambdaName[] = [
   'generateDragenWgtsDnaValidationEvent',
   'generateOncoanalyserWgtsDnaValidationEvent',
   'generateSashValidationEvent',
+  'generateDragenWgtsRnaValidationEvent',
+  'generateArribaWgtsRnaValidationEvent',
+  'generateOncoanalyserWgtsRnaValidationEvent',
+  'generateOncoanalyserWgtsDnaRnaValidationEvent',
+  'generateRnasumValidationEvent',
   'summariseDeployStatusManagerChanges',
 ];
 
@@ -134,6 +144,36 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     prodOnly: true,
   },
   generateSashValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateDragenWgtsRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateArribaWgtsRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateOncoanalyserWgtsRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateOncoanalyserWgtsDnaRnaValidationEvent: {
+    needsOrcabusApiTools: true,
+    needsAnalysisToolsLayer: true,
+    needsSsmParameterAccess: true,
+    prodOnly: true,
+  },
+  generateRnasumValidationEvent: {
     needsOrcabusApiTools: true,
     needsAnalysisToolsLayer: true,
     needsSsmParameterAccess: true,

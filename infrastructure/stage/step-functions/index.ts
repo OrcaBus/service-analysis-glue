@@ -81,6 +81,64 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
       <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
       'sash'
     );
+    definitionSubstitutions['__dragen_wgts_rna_test_samples_configuration_ssm_parameter_name__'] =
+      path.join(
+        <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+        'dragen-wgts-rna'
+      );
+    definitionSubstitutions['__arriba_wgts_rna_test_samples_configuration_ssm_parameter_name__'] =
+      path.join(
+        <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+        'arriba-wgts-rna'
+      );
+    definitionSubstitutions[
+      '__oncoanalyser_wgts_rna_test_samples_configuration_ssm_parameter_name__'
+    ] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'oncoanalyser-wgts-rna'
+    );
+    definitionSubstitutions[
+      '__oncoanalyser_wgts_dna_rna_test_samples_configuration_ssm_parameter_name__'
+    ] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'oncoanalyser-wgts-dna-rna'
+    );
+    definitionSubstitutions['__rnasum_test_samples_configuration_ssm_parameter_name__'] = path.join(
+      <string>props.ssmParameterPaths.preDraftDataConfigurationsPrefix,
+      'rnasum'
+    );
+
+    // Per-workflow git stacks to observe SSM parameter names.
+    // Each validation workflow only observes the stacks relevant to it, so the summarise lambda
+    // is pointed at a per-workflow parameter.
+    definitionSubstitutions['__ctdna_git_stacks_to_observe_ssm_parameter_name__'] = path.join(
+      <string>props.ssmParameterPaths.gitStacksToObservePrefix,
+      'dragen-tso500-ctdna'
+    );
+    definitionSubstitutions['__dragen_wgts_dna_git_stacks_to_observe_ssm_parameter_name__'] =
+      path.join(<string>props.ssmParameterPaths.gitStacksToObservePrefix, 'dragen-wgts-dna');
+    definitionSubstitutions['__oncoanalyser_wgts_dna_git_stacks_to_observe_ssm_parameter_name__'] =
+      path.join(<string>props.ssmParameterPaths.gitStacksToObservePrefix, 'oncoanalyser-wgts-dna');
+    definitionSubstitutions['__sash_git_stacks_to_observe_ssm_parameter_name__'] = path.join(
+      <string>props.ssmParameterPaths.gitStacksToObservePrefix,
+      'sash'
+    );
+    definitionSubstitutions['__dragen_wgts_rna_git_stacks_to_observe_ssm_parameter_name__'] =
+      path.join(<string>props.ssmParameterPaths.gitStacksToObservePrefix, 'dragen-wgts-rna');
+    definitionSubstitutions['__arriba_wgts_rna_git_stacks_to_observe_ssm_parameter_name__'] =
+      path.join(<string>props.ssmParameterPaths.gitStacksToObservePrefix, 'arriba-wgts-rna');
+    definitionSubstitutions['__oncoanalyser_wgts_rna_git_stacks_to_observe_ssm_parameter_name__'] =
+      path.join(<string>props.ssmParameterPaths.gitStacksToObservePrefix, 'oncoanalyser-wgts-rna');
+    definitionSubstitutions[
+      '__oncoanalyser_wgts_dna_rna_git_stacks_to_observe_ssm_parameter_name__'
+    ] = path.join(
+      <string>props.ssmParameterPaths.gitStacksToObservePrefix,
+      'oncoanalyser-wgts-dna-rna'
+    );
+    definitionSubstitutions['__rnasum_git_stacks_to_observe_ssm_parameter_name__'] = path.join(
+      <string>props.ssmParameterPaths.gitStacksToObservePrefix,
+      'rnasum'
+    );
   }
 
   return definitionSubstitutions;
