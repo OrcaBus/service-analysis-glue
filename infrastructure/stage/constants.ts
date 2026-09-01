@@ -463,9 +463,9 @@ export const PROD_CTDNA_TEST_SAMPLES_PRE_DRAFT_DATA_CONFIGURATIONS: TestSamplePr
             libraryId: SERA_CTDNA_COMP_1PCT_LIBRARY_ID,
           },
           engineParameters: {
-            logsUriPrefix: `${HOFMANN_S3_PREFIX}/logs/${CTDNA_WORKFLOW_MIDFIX}`,
-            cacheUriPrefix: `${HOFMANN_S3_PREFIX}/cache/${CTDNA_WORKFLOW_MIDFIX}`,
-            outputUriPrefix: `${HOFMANN_S3_PREFIX}/output/${CTDNA_WORKFLOW_MIDFIX}`,
+            logsUriPrefix: `${HOFMANN_S3_PREFIX}logs/${CTDNA_WORKFLOW_MIDFIX}/`,
+            cacheUriPrefix: `${HOFMANN_S3_PREFIX}cache/${CTDNA_WORKFLOW_MIDFIX}/`,
+            outputUriPrefix: `${HOFMANN_S3_PREFIX}output/${CTDNA_WORKFLOW_MIDFIX}/`,
             projectId: HOFMANN_MAIN_PROJECT_ID,
           },
         },
