@@ -141,6 +141,8 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
   },
   summariseDeployStatusManagerChanges: {
     needsOrcabusApiTools: true,
+    needsSsmParameterAccess: true,
+    needsS3Permissions: true,
     prodOnly: true,
   },
 };

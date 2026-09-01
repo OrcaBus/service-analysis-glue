@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 
 """
-Get the live cloudformation stacks and upload to S3
+Get the live cloudformation stacks and upload to S3.
+
+This lambda:
+1. Finds the most recent existing all-stacks summary in S3 (if any).
+2. Writes the current all-stacks summary to S3.
+3. Returns the S3 URIs of the previous and current summaries under the keys
+   "oldSummary" and "newSummary".
+
+The comparison / diff between these two summaries is performed downstream by the
+summarise_deploy_status_manager_changes lambda.
 """
 
 # Imports
@@ -12,8 +21,7 @@ import typing
 from datetime import datetime, UTC
 from pathlib import Path
 import json
-from typing import Optional, List, cast, Tuple, TypedDict
-from fastapi.encoders import jsonable_encoder
+from typing import Optional, List, TypedDict
 
 # Layer imports
 from orcabus_api_tools.deploy_status.models import StackEventResponseDict
@@ -22,7 +30,6 @@ from orcabus_api_tools.utils.aws_helpers import get_ssm_value
 
 # Globals
 S3_DEPLOYMENT_STATUS_DUMP_PATH_PREFIX_SSM_PARAMETER_NAME_ENV_VAR = "S3_DEPLOYMENT_STATUS_DUMP_PATH_PREFIX_SSM_PARAMETER_NAME"
-GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR = "GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME"
 
 # Type check imports
 if typing.TYPE_CHECKING:
@@ -32,11 +39,8 @@ if typing.TYPE_CHECKING:
 
 # Models
 class ResponseDict(TypedDict):
-    deleted: Optional[List[StackEventResponseDict]]
-    modified: Optional[List[Tuple[StackEventResponseDict, StackEventResponseDict]]]
-    added: Optional[List[StackEventResponseDict]]
-    prev_timestamp: Optional[datetime]
-    current_timestamp: Optional[datetime]
+    oldSummary: Optional[str]
+    newSummary: str
 
 
 # Functions
@@ -44,12 +48,13 @@ def get_s3_client() -> 'S3Client':
     return boto3.client('s3')
 
 
-def find_most_recent_deployment_status(bucket: str, prefix: str) -> Optional[Tuple[datetime, List[StackEventResponseDict]]]:
+def find_most_recent_deployment_status_uri(bucket: str, prefix: str) -> Optional[str]:
     """
-    Given a bucket and prefix, find the most recent file in the path
+    Given a bucket and prefix, find the most recent all_stacks_summary file in the path and
+    return its s3 uri.
     :param bucket:
     :param prefix:
-    :return:
+    :return: the s3 uri of the most recent summary, or None if none exists
     """
     s3_client = get_s3_client()
     response = s3_client.list_objects_v2(Bucket=bucket, Prefix=prefix)
@@ -68,163 +73,49 @@ def find_most_recent_deployment_status(bucket: str, prefix: str) -> Optional[Tup
                 reverse=True
             )
         ))
-
-        return (
-            latest_response_obj['LastModified'],
-            cast(
-                List[StackEventResponseDict],
-                json.loads(
-                    get_s3_client().get_object(
-                        Bucket=bucket,
-                        Key=latest_response_obj['Key']
-                    )['Body'].read()
-                )
-            )
-        )
     except StopIteration:
         return None
+
+    return str("s3://" + str(Path(bucket) / latest_response_obj['Key']))
+
 
 def dump_current_state_to_s3(
         current_timestamp: datetime,
         all_stacks_summary: List[StackEventResponseDict],
         s3_uri: str
-):
+) -> str:
+    """
+    Write the current all stacks summary to s3 and return the full s3 uri it was written to.
+    """
     # Get s3 path
     s3_deployment_status_dump_path_url_obj = urlparse(s3_uri)
     # urlparse leaves a leading '/' on the path (e.g. '/deployment-snapshots/').
     # S3 object keys must not start with '/', otherwise the key won't match the
     # IAM resource pattern (deployment-snapshots/*) and PutObject is denied.
     s3_key_prefix = s3_deployment_status_dump_path_url_obj.path.lstrip('/')
+    s3_key = str(
+        Path(s3_key_prefix) /
+        f'year={str(current_timestamp.year).zfill(4)}' /
+        f'month={str(current_timestamp.month).zfill(2)}' /
+        f'day={str(current_timestamp.day).zfill(2)}' /
+        f'all_stacks_summary_{int(current_timestamp.timestamp())}.json'
+    )
     get_s3_client().put_object(
         Bucket=s3_deployment_status_dump_path_url_obj.netloc,
-        Key=str(
-            Path(s3_key_prefix) /
-            f'year={str(current_timestamp.year).zfill(4)}' /
-            f'month={str(current_timestamp.month).zfill(2)}' /
-            f'day={str(current_timestamp.day).zfill(2)}' /
-            f'all_stacks_summary_{int(current_timestamp.timestamp())}.json'
-        ),
+        Key=s3_key,
         Body=json.dumps(
             all_stacks_summary,
             separators=(',', ':'),
         )
     )
 
-
-def compare_deployment_status_manager_state(
-    status_manager_state_old: List[StackEventResponseDict],
-    status_manager_state_new: List[StackEventResponseDict],
-    stacks_to_observe_list: List[str],
-):
-    """
-    For each object in the stack we want to show
-    - stacks that have changed,
-    - stacks that have been deleted
-    - stacks that have been added
-
-    :param status_manager_state_old:
-    :param status_manager_state_new:
-    :return:
-    """
-
-    # Initialise response dictionaries
-    stacks_deleted = []
-    stacks_modified = []
-    stacks_added = []
-
-    # Iterate over each stack of interest
-    for stack_name in stacks_to_observe_list:
-        # Is added?
-        if (
-            # Stack previously deleted or non-existent
-            (
-                    not any(map(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_old
-                    )) or
-                    next(filter(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_old
-                    ))['status'] in ['DELETE_COMPLETE']
-            ) and
-            # Stack now exists and not in a deleted state
-            (
-                    any(map(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_new
-                    )) and
-                    not next(filter(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_new
-                    ))['status'] in ['DELETE_COMPLETE']
-            )
-        ):
-            stacks_added.append(next(filter(
-                lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                status_manager_state_new
-            )))
-
-        # Is deleted?
-        elif (
-            # Stack previously existed
-            (
-                    any(map(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_old
-                    )) and
-                    not next(filter(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_old
-                    ))['status'] in ['DELETE_COMPLETE']
-            ) and
-            # Stack now no longer exists
-            (
-                    not any(map(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_new
-                    )) or
-                    next(filter(
-                        lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                        status_manager_state_new
-                    ))['status'] in ['DELETE_COMPLETE']
-            )
-        ):
-            stacks_deleted.append(next(filter(
-                lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                status_manager_state_old
-            )))
-
-        # Is changed?
-        elif (
-                not (
-                        next(filter(
-                            lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                            status_manager_state_old
-                        )).get('gitCommitId')
-                ) == (
-                        next(filter(
-                            lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                            status_manager_state_new
-                        )).get('gitCommitId')
-                )
-        ):
-            stacks_modified.append([
-                next(filter(
-                    lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                    status_manager_state_old
-                )),
-                next(filter(
-                    lambda stack_iter_: stack_iter_['StackName'] == stack_name,
-                    status_manager_state_new
-                ))
-            ])
-
-    return stacks_deleted, stacks_modified, stacks_added
+    return str("s3://" + str(Path(s3_deployment_status_dump_path_url_obj.netloc) / s3_key))
 
 
 def handler(event, context) -> ResponseDict:
     """
-    Get the live cloudformation stack git commit ids JSON and dump to S3
+    Get the live cloudformation stack summary JSON, dump it to S3 and return the s3 uris of the
+    previous (old) and current (new) summaries.
     :param event:
     :param context:
     :return:
@@ -236,59 +127,26 @@ def handler(event, context) -> ResponseDict:
     # Get current datetime object
     now = datetime.now(UTC)
 
-    # Write out all stacks summary deployment
+    # Get the s3 prefix to write to / read from
     s3_uri_prefix = get_ssm_value(environ[S3_DEPLOYMENT_STATUS_DUMP_PATH_PREFIX_SSM_PARAMETER_NAME_ENV_VAR])
     s3_uri_prefix_obj = urlparse(s3_uri_prefix)
 
-    # Get git stacks to object
-    stacks_to_observe_list = json.loads(get_ssm_value(environ[GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME_ENV_VAR]))
-
-    # Find most recent s3 file in path
+    # Find most recent s3 file in path (before we write the new one).
     # Strip the leading '/' from the parsed path so the list prefix matches the
     # object keys we write (which must not start with '/').
-    deployment_result = find_most_recent_deployment_status(
+    old_summary_uri = find_most_recent_deployment_status_uri(
         bucket=s3_uri_prefix_obj.netloc,
         prefix=s3_uri_prefix_obj.path.lstrip('/')
     )
-    if deployment_result is not None:
-        prev_timestamp, previous_status = deployment_result
-    else:
-        prev_timestamp = None
-        previous_status = None
 
     # Dump current state to s3
-    dump_current_state_to_s3(
+    new_summary_uri = dump_current_state_to_s3(
         current_timestamp=now,
         all_stacks_summary=all_stacks_summary,
         s3_uri=s3_uri_prefix
     )
-    if previous_status is None:
-        return (
-            cast(
-                ResponseDict,
-                jsonable_encoder({
-                    "deleted": None,
-                    "modified": None,
-                    "added": stacks_to_observe_list,
-                    "prevTimestamp": None,
-                    "currentTimestamp": now,
-                })
-            )
-        )
 
-    stacks_deleted, stacks_modified, stacks_added = compare_deployment_status_manager_state(
-        status_manager_state_old=previous_status,
-        status_manager_state_new=all_stacks_summary,
-        stacks_to_observe_list=stacks_to_observe_list
-    )
-
-    return cast(
-        ResponseDict,
-        jsonable_encoder({
-            "deleted": stacks_deleted,
-            "modified": stacks_modified,
-            "added": stacks_added,
-            "prevTimestamp": prev_timestamp,
-            "currentTimestamp": now,
-        })
-    )
+    return {
+        "oldSummary": old_summary_uri,
+        "newSummary": new_summary_uri,
+    }

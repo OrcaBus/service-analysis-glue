@@ -266,6 +266,9 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
         'S3_DEPLOYMENT_STATUS_DUMP_PATH_PREFIX_SSM_PARAMETER_NAME',
         <string>props.ssmParameterPaths.s3DeploymentSnapshot
       );
+    }
+
+    if (props.lambdaName === 'summariseDeployStatusManagerChanges') {
       lambdaFunction.addEnvironment(
         'GIT_STACKS_TO_OBSERVE_SSM_PARAMETER_NAME',
         <string>props.ssmParameterPaths.gitStacksToObserveList

@@ -25,11 +25,8 @@
         }
       ],
       "Assign": {
-        "deleted": "{% $states.result.Payload.deleted %}",
-        "modified": "{% $states.result.Payload.modified %}",
-        "added": "{% $states.result.Payload.added %}",
-        "prevTimestamp": "{% $states.result.Payload.prevTimestamp %}",
-        "currentTimestamp": "{% $states.result.Payload.currentTimestamp %}"
+        "oldSummary": "{% $states.result.Payload.oldSummary %}",
+        "newSummary": "{% $states.result.Payload.newSummary %}"
       },
       "Comment": "Get CloudFormation Status of current workflows and dump this to S3",
       "Next": "For each NATA Approved Workflow"
@@ -116,11 +113,8 @@
                     "Resource": "arn:aws:states:::lambda:invoke",
                     "Arguments": {
                       "Payload": {
-                        "deleted": "{% $deleted %}",
-                        "modified": "{% $modified %}",
-                        "added": "{% $added %}",
-                        "prevTimestamp": "{% $prevTimestamp %}",
-                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "oldSummary": "{% $oldSummary %}",
+                        "newSummary": "{% $newSummary %}",
                         "portalRunId": "{% $portalRunId %}"
                       },
                       "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
@@ -228,11 +222,8 @@
                     "Output": "{% $states.result.Payload %}",
                     "Arguments": {
                       "Payload": {
-                        "deleted": "{% $deleted %}",
-                        "modified": "{% $modified %}",
-                        "added": "{% $added %}",
-                        "prevTimestamp": "{% $prevTimestamp %}",
-                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "oldSummary": "{% $oldSummary %}",
+                        "newSummary": "{% $newSummary %}",
                         "portalRunId": "{% $portalRunId %}"
                       },
                       "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
@@ -334,11 +325,8 @@
                     "Output": "{% $states.result.Payload %}",
                     "Arguments": {
                       "Payload": {
-                        "deleted": "{% $deleted %}",
-                        "modified": "{% $modified %}",
-                        "added": "{% $added %}",
-                        "prevTimestamp": "{% $prevTimestamp %}",
-                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "oldSummary": "{% $oldSummary %}",
+                        "newSummary": "{% $newSummary %}",
                         "portalRunId": "{% $portalRunId %}"
                       },
                       "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
@@ -440,11 +428,8 @@
                     "Output": "{% $states.result.Payload %}",
                     "Arguments": {
                       "Payload": {
-                        "deleted": "{% $deleted %}",
-                        "modified": "{% $modified %}",
-                        "added": "{% $added %}",
-                        "prevTimestamp": "{% $prevTimestamp %}",
-                        "currentTimestamp": "{% $currentTimestamp %}",
+                        "oldSummary": "{% $oldSummary %}",
+                        "newSummary": "{% $newSummary %}",
                         "portalRunId": "{% $portalRunId %}"
                       },
                       "FunctionName": "${__summarise_deploy_status_manager_changes_lambda_function_arn__}"
