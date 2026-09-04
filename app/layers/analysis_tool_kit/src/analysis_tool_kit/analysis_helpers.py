@@ -80,6 +80,27 @@ def resolve_engine_parameter_uri_prefixes(
     return payload
 
 
+def _fastqs_to_readsets(fastq_obj_list: List[Fastq]) -> List[ReadSet]:
+    """
+    Map a list of Fastq objects to their ReadSet representations.
+    :param fastq_obj_list:
+    :return:
+    """
+    return list(map(
+        lambda fastq_id_iter_: cast(
+            ReadSet,
+            cast(object, {
+                "orcabusId": fastq_id_iter_['id'],
+                "rgid": ".".join([
+                    fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
+                    fastq_id_iter_['instrumentRunId']
+                ]),
+            })
+        ),
+        fastq_obj_list
+    ))
+
+
 def get_readsets_in_library(
         library_id: str,
         instrument_run_id: Optional[str] = None,
@@ -101,19 +122,7 @@ def get_readsets_in_library(
             fastq_obj_list
         ))
 
-    return list(map(
-        lambda fastq_id_iter_: cast(
-            ReadSet,
-            cast(object, {
-                "orcabusId": fastq_id_iter_['id'],
-                "rgid": ".".join([
-                    fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
-                    fastq_id_iter_['instrumentRunId']
-                ]),
-            })
-        ),
-        fastq_obj_list
-    ))
+    return _fastqs_to_readsets(fastq_obj_list)
 
 
 def get_readsets_in_libraries(library_id_list: List[str], instrument_run_id: Optional[str] = None) -> List[ReadSet]:
@@ -127,19 +136,7 @@ def get_readsets_in_libraries(library_id_list: List[str], instrument_run_id: Opt
             library_id_list=library_id_list
         )
 
-    return list(map(
-        lambda fastq_id_iter_: cast(
-            ReadSet,
-            cast(object, {
-                "orcabusId": fastq_id_iter_['id'],
-                "rgid": ".".join([
-                    fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
-                    fastq_id_iter_['instrumentRunId']
-                ]),
-            })
-        ),
-        fastq_obj_list
-    ))
+    return _fastqs_to_readsets(fastq_obj_list)
 
 
 def library_to_event_library(
