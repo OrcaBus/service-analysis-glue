@@ -101,7 +101,8 @@ def generate_bclconvert_interop_qc_draft(
     existing_workflow_runs = get_existing_workflow_runs(
         workflow_name=WORKFLOW_OBJECT_DICT['BCLCONVERT_INTEROP_QC']['name'],
         workflow_version=WORKFLOW_OBJECT_DICT['BCLCONVERT_INTEROP_QC']['version'],
-        libraries=libraries
+        libraries=libraries,
+        instrument_run_id=instrument_run_id,
     )
 
     if len(existing_workflow_runs) > 0:

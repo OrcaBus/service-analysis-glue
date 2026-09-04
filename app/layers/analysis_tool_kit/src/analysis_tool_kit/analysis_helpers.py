@@ -193,14 +193,17 @@ def get_existing_workflow_runs(
     workflow_name: str,
     workflow_version: str,
     libraries: List[Library],
+    instrument_run_id: Optional[str] = None,
 ) -> List[WorkflowRunDetail]:
     """
     Get the existing workflow runs for a given workflow name/version and library/readset list
     :param workflow_name:
     :param workflow_version:
     :param libraries:
+    :param instrument_run_id:
     :return:
     """
+    # Get workflow runs
     workflow_runs = get_workflow_runs_from_metadata(
         workflow_name=workflow_name,
         workflow_version=workflow_version,
@@ -211,12 +214,16 @@ def get_existing_workflow_runs(
         rgid_list=list(map(
             lambda readset_iter_: readset_iter_['rgid'],
             # Flatten the readsets from all libraries
-            flatten(
-                list(map(
-                    lambda library_obj_iter_: get_readsets_in_library(library_obj_iter_['libraryId']),
-                    libraries
-                ))
-            )
+            get_readsets_in_libraries(**dict(filter(
+                lambda kv_iter_: kv_iter_[1] is not None,
+                {
+                    "library_id_list": list(map(
+                        lambda library_obj_iter_: library_obj_iter_['libraryId'],
+                        libraries
+                    )),
+                    "instrument_run_id": instrument_run_id
+                }.items()
+            )))
         ))
     )
 
