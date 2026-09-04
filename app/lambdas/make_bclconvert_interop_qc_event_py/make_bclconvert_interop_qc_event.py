@@ -110,7 +110,6 @@ def generate_bclconvert_interop_qc_draft(
         )
         return None
 
-
     return add_bclconvert_interop_qc_draft_event(
         instrument_run_id=instrument_run_id,
         libraries=libraries
