@@ -162,10 +162,18 @@ def get_libraries_with_readsets(libraries: List[Library], instrument_run_id: Opt
     :param instrument_run_id:
     :return:
     """
-    fastq_obj_list = get_fastqs_in_libraries_and_instrument_run_id(
-        instrument_run_id=instrument_run_id,
-        library_id_list=[library['libraryId'] for library in libraries]
-    )
+    # Bulk-fetch the fastqs for all libraries once, then filter locally per library.
+    # When no instrument run id is provided, use the batched library-only query
+    # (rather than passing instrument_run_id=None as an API filter value).
+    if instrument_run_id is None:
+        fastq_obj_list = get_fastqs_in_library_list(
+            library_id_list=[library['libraryId'] for library in libraries]
+        )
+    else:
+        fastq_obj_list = get_fastqs_in_libraries_and_instrument_run_id(
+            instrument_run_id=instrument_run_id,
+            library_id_list=[library['libraryId'] for library in libraries]
+        )
 
     # Get all libraries with readsets
     libraries_with_readsets = list(map(
@@ -210,17 +218,15 @@ def get_existing_workflow_runs(
         )),
         rgid_list=list(map(
             lambda readset_iter_: readset_iter_['rgid'],
-            # Flatten the readsets from all libraries
-            get_readsets_in_libraries(**dict(filter(
-                lambda kv_iter_: kv_iter_[1] is not None,
-                {
-                    "library_id_list": list(map(
-                        lambda library_obj_iter_: library_obj_iter_['libraryId'],
-                        libraries
-                    )),
-                    "instrument_run_id": instrument_run_id
-                }.items()
-            )))
+            # Readsets across all libraries (get_readsets_in_libraries handles
+            # a None instrument_run_id internally).
+            get_readsets_in_libraries(
+                library_id_list=list(map(
+                    lambda library_obj_iter_: library_obj_iter_['libraryId'],
+                    libraries
+                )),
+                instrument_run_id=instrument_run_id,
+            )
         ))
     )
 
