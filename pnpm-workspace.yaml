@@ -1,4 +1,5 @@
 allowBuilds:
+  '@parcel/watcher': true
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - '@aws-cdk/cloud-assembly-schema@53.25.0'
@@ -7,3 +8,4 @@ minimumReleaseAgeExclude:
   - aws-cdk@2.1123.0
   - ts-jest@29.4.10
   - '@orcabus/platform-cdk-constructs@1.9.2'
+  - '@orcabus/platform-cdk-constructs@1.9.5'
