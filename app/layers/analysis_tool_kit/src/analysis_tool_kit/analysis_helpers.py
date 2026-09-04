@@ -11,6 +11,8 @@ from operator import concat
 from typing import List, Any, cast, Unpack, Literal, Optional
 
 # Layer imports
+from orcabus_api_tools.fastq.models import Fastq
+from orcabus_api_tools.fastq import get_fastqs_in_library_list
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.workflow import (
     create_portal_run_id,
@@ -78,15 +80,51 @@ def resolve_engine_parameter_uri_prefixes(
     return payload
 
 
-def get_readsets_in_library(library_id: str, instrument_run_id: Optional[str] = None) -> List[ReadSet]:
+def get_readsets_in_library(
+        library_id: str,
+        instrument_run_id: Optional[str] = None,
+        fastq_obj_list: Optional[List[Fastq]] = None,
+) -> List[ReadSet]:
+    if fastq_obj_list is None:
+        if instrument_run_id is None:
+            fastq_obj_list = get_fastqs_in_library(
+                library_id=library_id
+            )
+        else:
+            fastq_obj_list = get_fastqs_in_libraries_and_instrument_run_id(
+                instrument_run_id=instrument_run_id,
+                library_id_list=[library_id]
+            )
+    else:
+        fastq_obj_list = list(filter(
+            lambda fastq_obj: fastq_obj['library']['libraryId'] == library_id,
+            fastq_obj_list
+        ))
+
+    return list(map(
+        lambda fastq_id_iter_: cast(
+            ReadSet,
+            cast(object, {
+                "orcabusId": fastq_id_iter_['id'],
+                "rgid": ".".join([
+                    fastq_id_iter_['index'], str(fastq_id_iter_['lane']),
+                    fastq_id_iter_['instrumentRunId']
+                ]),
+            })
+        ),
+        fastq_obj_list
+    ))
+
+
+def get_readsets_in_libraries(library_id_list: List[str], instrument_run_id: Optional[str] = None) -> List[ReadSet]:
     if instrument_run_id is None:
-        fastq_obj_list = get_fastqs_in_library(
-            library_id=library_id
+        fastq_obj_list = get_fastqs_in_library_list(
+            library_id_list=library_id_list
         )
     else:
         fastq_obj_list = get_fastqs_in_libraries_and_instrument_run_id(
             instrument_run_id=instrument_run_id,
-            library_id_list=[library_id]
+            library_id_list=library_id_list
         )
 
     return list(map(
@@ -104,13 +142,18 @@ def get_readsets_in_library(library_id: str, instrument_run_id: Optional[str] = 
     ))
 
 
-def library_to_event_library(library: Library, instrument_run_id: Optional[str] = None) -> EventLibrary:
+def library_to_event_library(
+        library: Library,
+        instrument_run_id: Optional[str] = None,
+        fastq_obj_list: Optional[List[Fastq]] = None,
+) -> EventLibrary:
     return {
         "orcabusId": library['orcabusId'],
         "libraryId": library['libraryId'],
         "readsets": get_readsets_in_library(
             library['libraryId'],
-            instrument_run_id=instrument_run_id
+            instrument_run_id=instrument_run_id,
+            fastq_obj_list=fastq_obj_list,
         ),
     }
 
@@ -122,12 +165,18 @@ def get_libraries_with_readsets(libraries: List[Library], instrument_run_id: Opt
     :param instrument_run_id:
     :return:
     """
+    fastq_obj_list = get_fastqs_in_libraries_and_instrument_run_id(
+        instrument_run_id=instrument_run_id,
+        library_id_list=[library['libraryId'] for library in libraries]
+    )
+
     # Get all libraries with readsets
     libraries_with_readsets = list(map(
         lambda library_obj_iter_: (
             library_to_event_library(
                 library_obj_iter_,
-                instrument_run_id=instrument_run_id
+                instrument_run_id=instrument_run_id,
+                fastq_obj_list=fastq_obj_list,
             )
         ),
         libraries
