@@ -8,14 +8,18 @@ import { LambdaName, LambdaObject } from '../lambdas/interfaces';
  * Step Function Interfaces
  */
 export type StateMachineName =
-  // Analysis Builder
-  | 'analysisBuilder'
+  // Analysis Builders
+  | 'wgtsAnalysisBuilder'
+  | 'cttsoAnalysisBuilder'
+  | 'bclconvertInteropQcAnalysisBuilder'
   // Validation Builder
   | 'runPreflightChecks';
 
 export const stateMachineNameList: StateMachineName[] = [
-  // Analysis Builder
-  'analysisBuilder',
+  // Analysis Builders
+  'wgtsAnalysisBuilder',
+  'cttsoAnalysisBuilder',
+  'bclconvertInteropQcAnalysisBuilder',
   // Validation Builder
   'runPreflightChecks',
 ];
@@ -52,9 +56,16 @@ export type WireUpPermissionsProps = BuildStepFunctionProps & StepFunctionObject
 export type BuildStepFunctionsProps = Omit<BuildStepFunctionProps, 'stateMachineName'>;
 
 export const stepFunctionsRequirementsMap: Record<StateMachineName, StepFunctionRequirements> = {
-  analysisBuilder: {
+  wgtsAnalysisBuilder: {
     needsEventPutPermission: true,
     needsDistributedMapPermission: true,
+  },
+  cttsoAnalysisBuilder: {
+    needsEventPutPermission: true,
+    needsDistributedMapPermission: true,
+  },
+  bclconvertInteropQcAnalysisBuilder: {
+    needsEventPutPermission: true,
   },
   runPreflightChecks: {
     needsEventPutPermission: true,
@@ -64,18 +75,28 @@ export const stepFunctionsRequirementsMap: Record<StateMachineName, StepFunction
 };
 
 export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = {
-  analysisBuilder: [
+  wgtsAnalysisBuilder: [
     // Metadata gatherers
-    'getLibrariesFromInstrumentRunIdAndSubjectId',
     'getSubjectsFromInstrumentRunId',
+    'getLibrariesFromInstrumentRunIdAndSubjectId',
     // Event Detail Makers
-    'makeBclconvertInteropQcEvent',
-    'makeCtdnaAnalysisEventsList',
     'makeWgsAnalysisEventsList',
     'makeWtsAnalysisEventsList',
     // Post Event Detail Makers
-    'makeCtdnaPostAnalysisEventsList',
     'makeWgtsPostAnalysisEventsList',
+  ],
+  cttsoAnalysisBuilder: [
+    // Metadata gatherers
+    'getSubjectsFromInstrumentRunId',
+    'getLibrariesFromInstrumentRunIdAndSubjectId',
+    // Event Detail Makers
+    'makeCtdnaAnalysisEventsList',
+    // Post Event Detail Makers
+    'makeCtdnaPostAnalysisEventsList',
+  ],
+  bclconvertInteropQcAnalysisBuilder: [
+    // Event Detail Makers
+    'makeBclconvertInteropQcEvent',
   ],
   runPreflightChecks: [
     // Build up the current status manager state

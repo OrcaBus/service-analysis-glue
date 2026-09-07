@@ -19,13 +19,38 @@ function ruleToSfnTarget(props: AddSfnAsEventBridgeTargetProps) {
 export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
   for (const eventBridgeTargetsName of eventBridgeTargetsNameList) {
     switch (eventBridgeTargetsName) {
-      case 'readSetAddedToAnalysisBuilderSfnTarget': {
+      case 'fastqSetCreatedToWgtsAnalysisBuilderSfnTarget': {
         ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
           eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
-            (eventBridgeObject) => eventBridgeObject.ruleName === 'fastqGlueFastqSetCreated'
+            (eventBridgeObject) =>
+              eventBridgeObject.ruleName === 'fastqSetCreatedToWgtsAnalysisBuilder'
           )?.ruleObject,
           stateMachineObj: props.stepFunctionObjects.find(
-            (sfnObject) => sfnObject.stateMachineName === 'analysisBuilder'
+            (sfnObject) => sfnObject.stateMachineName === 'wgtsAnalysisBuilder'
+          )?.sfnObject,
+        });
+        break;
+      }
+      case 'fastqSetCreatedToCttsoAnalysisBuilderSfnTarget': {
+        ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
+          eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
+            (eventBridgeObject) =>
+              eventBridgeObject.ruleName === 'fastqSetCreatedToCttsoAnalysisBuilder'
+          )?.ruleObject,
+          stateMachineObj: props.stepFunctionObjects.find(
+            (sfnObject) => sfnObject.stateMachineName === 'cttsoAnalysisBuilder'
+          )?.sfnObject,
+        });
+        break;
+      }
+      case 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilderSfnTarget': {
+        ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
+          eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
+            (eventBridgeObject) =>
+              eventBridgeObject.ruleName === 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilder'
+          )?.ruleObject,
+          stateMachineObj: props.stepFunctionObjects.find(
+            (sfnObject) => sfnObject.stateMachineName === 'bclconvertInteropQcAnalysisBuilder'
           )?.sfnObject,
         });
         break;
