@@ -39,8 +39,13 @@ function buildSrmSampleSheetStateChangeEventPattern(): EventPattern {
 }
 
 function buildEventRule(scope: Construct, props: EventBridgeRuleProps): Rule {
+  // EventBridge rule names must be <= 64 characters. The logical ruleName is used
+  // internally as the construct id / lookup key, but the physical rule name drops
+  // the redundant `fastqSetCreatedTo` prefix (the event pattern already scopes it)
+  // to keep the STACK_PREFIX-prefixed physical name within the 64 character limit.
+  const physicalRuleName = props.ruleName.replace(/^fastqSetCreatedTo/, '');
   return new events.Rule(scope, props.ruleName, {
-    ruleName: `${STACK_PREFIX}-${props.ruleName}`,
+    ruleName: `${STACK_PREFIX}-${physicalRuleName}`,
     eventPattern: props.eventPattern,
     eventBus: props.eventBus,
   });
@@ -63,7 +68,9 @@ export function buildAllEventRules(
   // Iterate over the eventBridgeNameList and create the event rules
   for (const ruleName of eventBridgeRuleNameList) {
     switch (ruleName) {
-      case 'fastqGlueFastqSetCreated': {
+      case 'fastqSetCreatedToWgtsAnalysisBuilder':
+      case 'fastqSetCreatedToCttsoAnalysisBuilder':
+      case 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilder': {
         eventBridgeRuleObjects.push({
           ruleName: ruleName,
           ruleObject: buildFastqSetsCreatedRule(scope, {

@@ -7,13 +7,17 @@ export type EventBridgeRuleName =
   // SRM SampleSheet Change
   | 'SrmSampleSheetStateChange'
   // Post-fastq sets created
-  | 'fastqGlueFastqSetCreated';
+  | 'fastqSetCreatedToWgtsAnalysisBuilder'
+  | 'fastqSetCreatedToCttsoAnalysisBuilder'
+  | 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilder';
 
 export const eventBridgeRuleNameList: EventBridgeRuleName[] = [
   // SRM updated, run validations
   'SrmSampleSheetStateChange',
   // Post-fastq sets created
-  'fastqGlueFastqSetCreated',
+  'fastqSetCreatedToWgtsAnalysisBuilder',
+  'fastqSetCreatedToCttsoAnalysisBuilder',
+  'fastqSetCreatedToBclconvertInteropQcAnalysisBuilder',
 ];
 
 export interface EventBridgeRuleProps {

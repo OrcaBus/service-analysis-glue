@@ -1,0 +1,329 @@
+{
+  "Comment": "A description of my state machine",
+  "StartAt": "Save vars",
+  "States": {
+    "Save vars": {
+      "Type": "Pass",
+      "Next": "Get TSO Subjects List on Sequencing Run",
+      "Assign": {
+        "instrumentRunId": "{% $states.input.instrumentRunId %}"
+      }
+    },
+    "Get TSO Subjects List on Sequencing Run": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": {
+        "subjectIdList": "{% $states.result.Payload.subjectIdList %}"
+      },
+      "Arguments": {
+        "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
+        "Payload": {
+          "instrumentRunId": "{% $instrumentRunId %}",
+          "sampleTypeList": "{% ['${__ctdna_sample_type__}'] %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "For each subject id (batched) (ctDNA)"
+    },
+    "For each subject id (batched) (ctDNA)": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Save vars (batched) (ctDNA)",
+        "States": {
+          "Save vars (batched) (ctDNA)": {
+            "Type": "Pass",
+            "Next": "For each subject id (ctDNA)",
+            "Assign": {
+              "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+              "subjectIdListMapIter": "{% $states.input.Items %}"
+            }
+          },
+          "For each subject id (ctDNA)": {
+            "Type": "Map",
+            "ItemProcessor": {
+              "ProcessorConfig": {
+                "Mode": "INLINE"
+              },
+              "StartAt": "Get ctDNA libraries from subject id and instrument run id",
+              "States": {
+                "Get ctDNA libraries from subject id and instrument run id": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": {
+                    "libraryIdList": "{% $states.result.Payload.libraryIdList %}"
+                  },
+                  "Arguments": {
+                    "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
+                    "Payload": {
+                      "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                      "subjectId": "{% $states.input.subjectId %}",
+                      "sampleTypeList": "{% ['${__ctdna_sample_type__}'] %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException",
+                        "States.TaskFailed"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "Make ctDNA Analysis Events List"
+                },
+                "Make ctDNA Analysis Events List": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": {
+                    "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                  },
+                  "Arguments": {
+                    "FunctionName": "${__make_ctdna_analysis_events_list_lambda_function_arn__}",
+                    "Payload": {
+                      "libraryIdList": "{% $states.input.libraryIdList %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "For each Draft Event (ctDNA)"
+                },
+                "For each Draft Event (ctDNA)": {
+                  "Type": "Map",
+                  "ItemProcessor": {
+                    "ProcessorConfig": {
+                      "Mode": "INLINE"
+                    },
+                    "StartAt": "Generate ctDNA Draft Events",
+                    "States": {
+                      "Generate ctDNA Draft Events": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::events:putEvents",
+                        "Arguments": {
+                          "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                        },
+                        "End": true
+                      }
+                    }
+                  },
+                  "End": true,
+                  "Items": "{% $states.input.eventDetailList %}"
+                }
+              }
+            },
+            "End": true,
+            "Items": "{% $subjectIdListMapIter %}",
+            "ItemSelector": {
+              "subjectId": "{% $states.context.Map.Item.Value %}",
+              "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+            },
+            "Output": {}
+          }
+        }
+      },
+      "Next": "Get TSO Subjects List on Sequencing Run (post)",
+      "Label": "ForeachsubjectidbatchedctDNA",
+      "MaxConcurrency": 1,
+      "Items": "{% $states.input.subjectIdList %}",
+      "ItemBatcher": {
+        "BatchInput": {
+          "instrumentRunId": "{% $instrumentRunId %}"
+        },
+        "MaxItemsPerBatch": 10
+      },
+      "Output": {}
+    },
+    "Get TSO Subjects List on Sequencing Run (post)": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": {
+        "subjectIdList": "{% $states.result.Payload.subjectIdList %}"
+      },
+      "Arguments": {
+        "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
+        "Payload": {
+          "instrumentRunId": "{% $instrumentRunId %}",
+          "sampleTypeList": "{% ['${__ctdna_sample_type__}'] %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "For each subject id (batched) (ctDNA) (post)"
+    },
+    "For each subject id (batched) (ctDNA) (post)": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Save vars (batched) (ctDNA) (post)",
+        "States": {
+          "Save vars (batched) (ctDNA) (post)": {
+            "Type": "Pass",
+            "Next": "For each subject ID (ctDNA) (post)",
+            "Assign": {
+              "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+              "subjectIdListMapIter": "{% $states.input.Items %}"
+            }
+          },
+          "For each subject ID (ctDNA) (post)": {
+            "Type": "Map",
+            "ItemProcessor": {
+              "ProcessorConfig": {
+                "Mode": "INLINE"
+              },
+              "StartAt": "Get ctDNA libraries from subject id and instrument run id (post)",
+              "States": {
+                "Get ctDNA libraries from subject id and instrument run id (post)": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": "{% $states.result.Payload %}",
+                  "Arguments": {
+                    "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
+                    "Payload": {
+                      "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                      "subjectId": "{% $states.input.subjectId %}",
+                      "sampleTypeList": "{% ['${__ctdna_sample_type__}'] %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "Make TSO500 ctDNA Analysis Events List (post)"
+                },
+                "Make TSO500 ctDNA Analysis Events List (post)": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": {
+                    "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                  },
+                  "Arguments": {
+                    "FunctionName": "${__make_ctdna_post_analysis_events_list_lambda_function_arn__}",
+                    "Payload": {
+                      "libraryIdList": "{% $states.input.libraryIdList %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "For each Draft Event (ctDNA) (post)"
+                },
+                "For each Draft Event (ctDNA) (post)": {
+                  "Type": "Map",
+                  "ItemProcessor": {
+                    "ProcessorConfig": {
+                      "Mode": "INLINE"
+                    },
+                    "StartAt": "Generate ctDNA Draft Event (post)",
+                    "States": {
+                      "Generate ctDNA Draft Event (post)": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::events:putEvents",
+                        "Arguments": {
+                          "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                        },
+                        "End": true
+                      }
+                    }
+                  },
+                  "End": true,
+                  "Items": "{% $states.input.eventDetailList %}"
+                }
+              }
+            },
+            "End": true,
+            "Items": "{% $subjectIdListMapIter %}",
+            "ItemSelector": {
+              "subjectId": "{% $states.context.Map.Item.Value %}",
+              "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+            },
+            "Output": {}
+          }
+        }
+      },
+      "End": true,
+      "Label": "ForeachsubjectidbatchedctDNApost",
+      "MaxConcurrency": 1,
+      "ItemBatcher": {
+        "BatchInput": {
+          "instrumentRunId": "{% $instrumentRunId %}"
+        },
+        "MaxItemsPerBatch": 10
+      },
+      "Items": "{% $states.input.subjectIdList %}",
+      "Output": {}
+    }
+  },
+  "QueryLanguage": "JSONata"
+}

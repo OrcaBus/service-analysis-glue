@@ -8,11 +8,16 @@ import { StepFunctionObject } from '../step-functions/interfaces';
  */
 export type EventBridgeTargetName =
   // Event Rules
-  'readSetAddedToAnalysisBuilderSfnTarget' | 'srmSampleSheetChangeToPreFlightValidationSfnTarget';
+  | 'fastqSetCreatedToWgtsAnalysisBuilderSfnTarget'
+  | 'fastqSetCreatedToCttsoAnalysisBuilderSfnTarget'
+  | 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilderSfnTarget'
+  | 'srmSampleSheetChangeToPreFlightValidationSfnTarget';
 
 export const eventBridgeTargetsNameList: EventBridgeTargetName[] = [
   // Event Rules
-  'readSetAddedToAnalysisBuilderSfnTarget',
+  'fastqSetCreatedToWgtsAnalysisBuilderSfnTarget',
+  'fastqSetCreatedToCttsoAnalysisBuilderSfnTarget',
+  'fastqSetCreatedToBclconvertInteropQcAnalysisBuilderSfnTarget',
   'srmSampleSheetChangeToPreFlightValidationSfnTarget',
 ];
 

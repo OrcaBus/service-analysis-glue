@@ -1,0 +1,510 @@
+{
+  "Comment": "WGTS analysis builder state machine (WGS + WTS primary drafts, followed by WGTS post-analysis drafts)",
+  "StartAt": "Save vars",
+  "States": {
+    "Save vars": {
+      "Type": "Pass",
+      "Next": "Split by Sample Type",
+      "Assign": {
+        "instrumentRunId": "{% $states.input.instrumentRunId %}"
+      }
+    },
+    "Split by Sample Type": {
+      "Type": "Parallel",
+      "Next": "Get WGTS Subjects List on Sequencing Run",
+      "Branches": [
+        {
+          "StartAt": "Get wgs subjects list on sequencing run",
+          "States": {
+            "Get wgs subjects list on sequencing run": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Arguments": {
+                "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
+                "Payload": {
+                  "instrumentRunId": "{% $instrumentRunId %}",
+                  "sampleTypeList": "{% ['${__wgs_sample_type__}'] %}"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException",
+                    "States.TaskFailed"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "For each subject id (batched) (WGS)",
+              "Output": {
+                "subjectIdList": "{% $states.result.Payload.subjectIdList %}"
+              }
+            },
+            "For each subject id (batched) (WGS)": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "Save vars (batched) (WGS)",
+                "States": {
+                  "Save vars (batched) (WGS)": {
+                    "Type": "Pass",
+                    "Next": "For each subject id (WGS)",
+                    "Assign": {
+                      "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+                      "subjectIdListMapIter": "{% $states.input.Items %}"
+                    }
+                  },
+                  "For each subject id (WGS)": {
+                    "Type": "Map",
+                    "ItemProcessor": {
+                      "ProcessorConfig": {
+                        "Mode": "INLINE"
+                      },
+                      "StartAt": "Get WGS libraries from subject id and instrument run id",
+                      "States": {
+                        "Get WGS libraries from subject id and instrument run id": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Arguments": {
+                            "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
+                            "Payload": {
+                              "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                              "subjectId": "{% $states.input.subjectId %}",
+                              "sampleTypeList": "{% ['${__wgs_sample_type__}'] %}"
+                            }
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException",
+                                "States.TaskFailed"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "Next": "Make WGS Analysis Events list",
+                          "Output": {
+                            "libraryIdList": "{% $states.result.Payload.libraryIdList %}"
+                          }
+                        },
+                        "Make WGS Analysis Events list": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Arguments": {
+                            "FunctionName": "${__make_wgs_analysis_events_list_lambda_function_arn__}",
+                            "Payload": {
+                              "libraryIdList": "{% $states.input.libraryIdList %}"
+                            }
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "Next": "For each Draft event (WGS)",
+                          "Output": {
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                          }
+                        },
+                        "For each Draft event (WGS)": {
+                          "Type": "Map",
+                          "ItemProcessor": {
+                            "ProcessorConfig": {
+                              "Mode": "INLINE"
+                            },
+                            "StartAt": "Generate WGS Drafts",
+                            "States": {
+                              "Generate WGS Drafts": {
+                                "Type": "Task",
+                                "Resource": "arn:aws:states:::events:putEvents",
+                                "Arguments": {
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                                },
+                                "End": true
+                              }
+                            }
+                          },
+                          "End": true,
+                          "Items": "{% $states.input.eventDetailList %}"
+                        }
+                      }
+                    },
+                    "End": true,
+                    "Items": "{% $subjectIdListMapIter %}",
+                    "ItemSelector": {
+                      "subjectId": "{% $states.context.Map.Item.Value %}",
+                      "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+                    },
+                    "MaxConcurrency": 1,
+                    "Output": {}
+                  }
+                }
+              },
+              "End": true,
+              "Label": "ForeachsubjectidbatchedWGS",
+              "MaxConcurrency": 1,
+              "Items": "{% $states.input.subjectIdList %}",
+              "ItemBatcher": {
+                "MaxItemsPerBatch": 10,
+                "BatchInput": {
+                  "instrumentRunId": "{% $instrumentRunId %}"
+                }
+              },
+              "Output": {}
+            }
+          }
+        },
+        {
+          "StartAt": "Get WTS Subjects list on sequencing run",
+          "States": {
+            "Get WTS Subjects list on sequencing run": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::lambda:invoke",
+              "Arguments": {
+                "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
+                "Payload": {
+                  "instrumentRunId": "{% $instrumentRunId %}",
+                  "sampleTypeList": "{% ['${__wts_sample_type__}'] %}"
+                }
+              },
+              "Retry": [
+                {
+                  "ErrorEquals": [
+                    "Lambda.ServiceException",
+                    "Lambda.AWSLambdaException",
+                    "Lambda.SdkClientException",
+                    "Lambda.TooManyRequestsException",
+                    "States.TaskFailed"
+                  ],
+                  "IntervalSeconds": 1,
+                  "MaxAttempts": 3,
+                  "BackoffRate": 2,
+                  "JitterStrategy": "FULL"
+                }
+              ],
+              "Next": "For each subject id (batched) (WTS)",
+              "Output": {
+                "subjectIdList": "{% $states.result.Payload.subjectIdList %}"
+              }
+            },
+            "For each subject id (batched) (WTS)": {
+              "Type": "Map",
+              "ItemProcessor": {
+                "ProcessorConfig": {
+                  "Mode": "DISTRIBUTED",
+                  "ExecutionType": "STANDARD"
+                },
+                "StartAt": "Save vars (batched) (WTS)",
+                "States": {
+                  "Save vars (batched) (WTS)": {
+                    "Type": "Pass",
+                    "Next": "For each subject id (WTS)",
+                    "Assign": {
+                      "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+                      "subjectIdListMapIter": "{% $states.input.Items %}"
+                    }
+                  },
+                  "For each subject id (WTS)": {
+                    "Type": "Map",
+                    "ItemProcessor": {
+                      "ProcessorConfig": {
+                        "Mode": "INLINE"
+                      },
+                      "StartAt": "Get WTS libraries from subject id and instrument run id",
+                      "States": {
+                        "Get WTS libraries from subject id and instrument run id": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": {
+                            "libraryIdList": "{% $states.result.Payload.libraryIdList %}"
+                          },
+                          "Arguments": {
+                            "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
+                            "Payload": {
+                              "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                              "subjectId": "{% $states.input.subjectId %}",
+                              "sampleTypeList": "{% ['${__wts_sample_type__}'] %}"
+                            }
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException",
+                                "States.TaskFailed"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "Next": "Make WTS Analysis Events List"
+                        },
+                        "Make WTS Analysis Events List": {
+                          "Type": "Task",
+                          "Resource": "arn:aws:states:::lambda:invoke",
+                          "Output": {
+                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                          },
+                          "Arguments": {
+                            "FunctionName": "${__make_wts_analysis_events_list_lambda_function_arn__}",
+                            "Payload": {
+                              "libraryIdList": "{% $states.input.libraryIdList %}"
+                            }
+                          },
+                          "Retry": [
+                            {
+                              "ErrorEquals": [
+                                "Lambda.ServiceException",
+                                "Lambda.AWSLambdaException",
+                                "Lambda.SdkClientException",
+                                "Lambda.TooManyRequestsException"
+                              ],
+                              "IntervalSeconds": 1,
+                              "MaxAttempts": 3,
+                              "BackoffRate": 2,
+                              "JitterStrategy": "FULL"
+                            }
+                          ],
+                          "Next": "For each Draft Event (WTS)"
+                        },
+                        "For each Draft Event (WTS)": {
+                          "Type": "Map",
+                          "ItemProcessor": {
+                            "ProcessorConfig": {
+                              "Mode": "INLINE"
+                            },
+                            "StartAt": "Generate WTS Drafts",
+                            "States": {
+                              "Generate WTS Drafts": {
+                                "Type": "Task",
+                                "Resource": "arn:aws:states:::events:putEvents",
+                                "Arguments": {
+                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                                },
+                                "End": true
+                              }
+                            }
+                          },
+                          "End": true,
+                          "Items": "{% $states.input.eventDetailList %}"
+                        }
+                      }
+                    },
+                    "End": true,
+                    "Items": "{% $subjectIdListMapIter %}",
+                    "ItemSelector": {
+                      "subjectId": "{% $states.context.Map.Item.Value %}",
+                      "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+                    },
+                    "Output": {}
+                  }
+                }
+              },
+              "End": true,
+              "Label": "ForeachsubjectidbatchedWTS",
+              "MaxConcurrency": 1,
+              "Items": "{% $states.input.subjectIdList %}",
+              "ItemBatcher": {
+                "BatchInput": {
+                  "instrumentRunId": "{% $instrumentRunId %}"
+                },
+                "MaxItemsPerBatch": 10
+              },
+              "Output": {}
+            }
+          }
+        }
+      ],
+      "Output": {}
+    },
+    "Get WGTS Subjects List on Sequencing Run": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::lambda:invoke",
+      "Output": {
+        "subjectIdList": "{% $states.result.Payload.subjectIdList %}"
+      },
+      "Arguments": {
+        "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
+        "Payload": {
+          "instrumentRunId": "{% $instrumentRunId %}",
+          "sampleTypeList": "{% ['${__wgs_sample_type__}', '${__wts_sample_type__}'] %}"
+        }
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Lambda.ServiceException",
+            "Lambda.AWSLambdaException",
+            "Lambda.SdkClientException",
+            "Lambda.TooManyRequestsException",
+            "States.TaskFailed"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Next": "For each subject id (batched) (WGTS)"
+    },
+    "For each subject id (batched) (WGTS)": {
+      "Type": "Map",
+      "ItemProcessor": {
+        "ProcessorConfig": {
+          "Mode": "DISTRIBUTED",
+          "ExecutionType": "STANDARD"
+        },
+        "StartAt": "Set vars (batched) (WGTS)",
+        "States": {
+          "Set vars (batched) (WGTS)": {
+            "Type": "Pass",
+            "Next": "For each subject ID (WGTS) (Post)",
+            "Assign": {
+              "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+              "subjectIdListMapIter": "{% $states.input.Items %}"
+            }
+          },
+          "For each subject ID (WGTS) (Post)": {
+            "Type": "Map",
+            "ItemProcessor": {
+              "ProcessorConfig": {
+                "Mode": "INLINE"
+              },
+              "StartAt": "Get WGTS libraries from subject id and instrument run id",
+              "States": {
+                "Get WGTS libraries from subject id and instrument run id": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": {
+                    "libraryIdList": "{% $states.result.Payload.libraryIdList %}"
+                  },
+                  "Arguments": {
+                    "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
+                    "Payload": {
+                      "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                      "subjectId": "{% $states.input.subjectId %}",
+                      "sampleTypeList": "{% ['${__wgs_sample_type__}', '${__wts_sample_type__}'] %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException",
+                        "States.TaskFailed"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "Make WGTS Analysis Events List"
+                },
+                "Make WGTS Analysis Events List": {
+                  "Type": "Task",
+                  "Resource": "arn:aws:states:::lambda:invoke",
+                  "Output": {
+                    "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                  },
+                  "Arguments": {
+                    "FunctionName": "${__make_wgts_post_analysis_events_list_lambda_function_arn__}",
+                    "Payload": {
+                      "libraryIdList": "{% $states.input.libraryIdList %}"
+                    }
+                  },
+                  "Retry": [
+                    {
+                      "ErrorEquals": [
+                        "Lambda.ServiceException",
+                        "Lambda.AWSLambdaException",
+                        "Lambda.SdkClientException",
+                        "Lambda.TooManyRequestsException"
+                      ],
+                      "IntervalSeconds": 1,
+                      "MaxAttempts": 3,
+                      "BackoffRate": 2,
+                      "JitterStrategy": "FULL"
+                    }
+                  ],
+                  "Next": "For each Draft Event (WGTS) (post)"
+                },
+                "For each Draft Event (WGTS) (post)": {
+                  "Type": "Map",
+                  "ItemProcessor": {
+                    "ProcessorConfig": {
+                      "Mode": "INLINE"
+                    },
+                    "StartAt": "Generate WGTS Draft Event",
+                    "States": {
+                      "Generate WGTS Draft Event": {
+                        "Type": "Task",
+                        "Resource": "arn:aws:states:::events:putEvents",
+                        "Arguments": {
+                          "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                        },
+                        "End": true
+                      }
+                    }
+                  },
+                  "End": true,
+                  "Items": "{% $states.input.eventDetailList %}"
+                }
+              }
+            },
+            "End": true,
+            "MaxConcurrency": 1,
+            "Items": "{% $subjectIdListMapIter %}",
+            "ItemSelector": {
+              "subjectId": "{% $states.context.Map.Item.Value %}",
+              "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+            },
+            "Output": {}
+          }
+        }
+      },
+      "End": true,
+      "Label": "ForeachsubjectidbatchedWGTS",
+      "ItemBatcher": {
+        "BatchInput": {
+          "instrumentRunId": "{% $instrumentRunId %}"
+        },
+        "MaxItemsPerBatch": 10
+      },
+      "MaxConcurrency": 1,
+      "Items": "{% $states.input.subjectIdList %}",
+      "Output": {}
+    }
+  },
+  "QueryLanguage": "JSONata"
+}
