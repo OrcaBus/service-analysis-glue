@@ -126,21 +126,22 @@ def get_all_libraries_in_case(case_obj: Case) -> List[str]:
     ))
 
 
-def get_rnasum_reference_list_from_redcap_payload(
-        redcap_payload: Dict[str, str]
+def get_rnasum_reference_list(
+        case_obj: Case
 ) -> List[RnasumDatasetType]:
-    rnasum_data_set_type_list = []
-    for redcap_key, redcap_value in redcap_payload.items():
-        if (
-                redcap_key.startswith(RNASUM_REFERENCE_COLUMN_PREFIX) and
-                redcap_value.isnumeric() and
-                int(redcap_value) == 1
-        ):
-            # Move to uppercase and expand PAAD prefix to PAAD-
-            dataset_name = re.sub(rf"^{RNASUM_REFERENCE_COLUMN_PREFIX}__", "", redcap_key).upper()
-            dataset_name = re.sub("^PAAD", "PAAD-", dataset_name)
-            rnasum_data_set_type_list.append(cast(RnasumDatasetType, dataset_name))
-    return rnasum_data_set_type_list
+
+    # Get reference list
+    rnasum_reference_list = case_obj.get('rnasumReferences', None)
+
+    if rnasum_reference_list is None:
+        return []
+    return list(map(
+        lambda rnasum_reference: cast(
+            RnasumDatasetType,
+            re.sub("^PAAD", "PAAD-", rnasum_reference.upper())
+        ),
+        rnasum_reference_list
+    ))
 
 
 def get_all_case_response_objects(case_list: List[Case]) -> List[CaseResponseObject]:
@@ -153,8 +154,8 @@ def get_all_case_response_objects(case_list: List[Case]) -> List[CaseResponseObj
         lambda case_obj: {
             "libraryIdList": get_all_libraries_in_case(case_obj),
             "caseOrcabusId": case_obj['orcabusId'],
-            "rnasumDatasetList": get_rnasum_reference_list_from_redcap_payload(
-                case_obj.get('redcapPayload', {})
+            "rnasumDatasetList": get_rnasum_reference_list(
+                case_obj
             )
         },
         case_list
