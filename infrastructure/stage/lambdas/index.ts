@@ -259,6 +259,14 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
         camelCaseToKebabCase(<WorkflowNameType>'rnasum')
       )
     );
+
+    lambdaFunction.addEnvironment(
+      'RNASUM_PAYLOAD_VERSION_SSM_PARAMETER_NAME',
+      path.join(
+        props.ssmParameterPaths.payloadVersionsPrefix,
+        camelCaseToKebabCase(<WorkflowNameType>'rnasum')
+      )
+    );
   }
 
   // Needs S3 Permissions
