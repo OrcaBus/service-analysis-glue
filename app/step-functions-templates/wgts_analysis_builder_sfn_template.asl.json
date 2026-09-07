@@ -97,19 +97,17 @@
                               "JitterStrategy": "FULL"
                             }
                           ],
-                          "Next": "Make WGS Analysis Events list",
+                          "Next": "Get case objects from library list (WGS)",
                           "Output": {
                             "libraryIdList": "{% $states.result.Payload.libraryIdList %}"
                           }
                         },
-                        "Make WGS Analysis Events list": {
+                        "Get case objects from library list (WGS)": {
                           "Type": "Task",
                           "Resource": "arn:aws:states:::lambda:invoke",
                           "Arguments": {
-                            "FunctionName": "${__make_wgs_analysis_events_list_lambda_function_arn__}",
-                            "Payload": {
-                              "libraryIdList": "{% $states.input.libraryIdList %}"
-                            }
+                            "Payload": "{% $states.input %}",
+                            "FunctionName": "${__pair_cases_with_libraries_lambda_function_arn__}"
                           },
                           "Retry": [
                             {
@@ -125,31 +123,132 @@
                               "JitterStrategy": "FULL"
                             }
                           ],
-                          "Next": "For each Draft event (WGS)",
+                          "Next": "For each case (WGS)",
                           "Output": {
-                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                            "caseList": "{% $states.result.Payload.caseList %}"
                           }
                         },
-                        "For each Draft event (WGS)": {
+                        "For each case (WGS)": {
                           "Type": "Map",
                           "ItemProcessor": {
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "Generate WGS Drafts",
+                            "StartAt": "Case vars",
                             "States": {
-                              "Generate WGS Drafts": {
+                              "Case vars": {
+                                "Type": "Pass",
+                                "Next": "Make WGS Analysis Events list",
+                                "Assign": {
+                                  "caseOrcabusIdIter": "{% $states.input.caseOrcabusId ? $states.input.caseOrcabusId : null %}"
+                                }
+                              },
+                              "Make WGS Analysis Events list": {
                                 "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
+                                "Resource": "arn:aws:states:::lambda:invoke",
                                 "Arguments": {
-                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                                  "FunctionName": "${__make_wgs_analysis_events_list_lambda_function_arn__}",
+                                  "Payload": {
+                                    "libraryIdList": "{% $states.input.libraryIdList %}"
+                                  }
                                 },
-                                "End": true
+                                "Retry": [
+                                  {
+                                    "ErrorEquals": [
+                                      "Lambda.ServiceException",
+                                      "Lambda.AWSLambdaException",
+                                      "Lambda.SdkClientException",
+                                      "Lambda.TooManyRequestsException"
+                                    ],
+                                    "IntervalSeconds": 1,
+                                    "MaxAttempts": 3,
+                                    "BackoffRate": 2,
+                                    "JitterStrategy": "FULL"
+                                  }
+                                ],
+                                "Output": {
+                                  "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
+                                },
+                                "Next": "For each Draft event (WGS)"
+                              },
+                              "For each Draft event (WGS)": {
+                                "Type": "Map",
+                                "ItemProcessor": {
+                                  "ProcessorConfig": {
+                                    "Mode": "INLINE"
+                                  },
+                                  "StartAt": "Draft Event Vars",
+                                  "States": {
+                                    "Draft Event Vars": {
+                                      "Type": "Pass",
+                                      "Next": "Generate WGS Drafts",
+                                      "Assign": {
+                                        "portalRunIdIter": "{% $states.input.portalRunId %}"
+                                      }
+                                    },
+                                    "Generate WGS Drafts": {
+                                      "Type": "Task",
+                                      "Resource": "arn:aws:states:::events:putEvents",
+                                      "Arguments": {
+                                        "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                                      },
+                                      "Next": "Case linked? (WGS)"
+                                    },
+                                    "Case linked? (WGS)": {
+                                      "Type": "Choice",
+                                      "Choices": [
+                                        {
+                                          "Condition": "{% $caseOrcabusIdIter != null %}",
+                                          "Next": "Wait 10 Seconds (WGS)"
+                                        }
+                                      ],
+                                      "Default": "No Case to Link (WGS)"
+                                    },
+                                    "No Case to Link (WGS)": {
+                                      "Type": "Pass",
+                                      "End": true
+                                    },
+                                    "Wait 10 Seconds (WGS)": {
+                                      "Type": "Wait",
+                                      "Seconds": 5,
+                                      "Next": "Link Workflow Run to Case (WGS)"
+                                    },
+                                    "Link Workflow Run to Case (WGS)": {
+                                      "Type": "Task",
+                                      "Resource": "arn:aws:states:::lambda:invoke",
+                                      "Output": "{% $states.result.Payload %}",
+                                      "Arguments": {
+                                        "Payload": {
+                                          "portalRunId": "{% $portalRunIdIter %}",
+                                          "caseOrcabusId": "{% $caseOrcabusIdIter %}"
+                                        },
+                                        "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
+                                      },
+                                      "Retry": [
+                                        {
+                                          "ErrorEquals": [
+                                            "Lambda.ServiceException",
+                                            "Lambda.AWSLambdaException",
+                                            "Lambda.SdkClientException",
+                                            "Lambda.TooManyRequestsException"
+                                          ],
+                                          "IntervalSeconds": 1,
+                                          "MaxAttempts": 3,
+                                          "BackoffRate": 2,
+                                          "JitterStrategy": "FULL"
+                                        }
+                                      ],
+                                      "End": true
+                                    }
+                                  }
+                                },
+                                "End": true,
+                                "Items": "{% $states.input.eventDetailList %}"
                               }
                             }
                           },
                           "End": true,
-                          "Items": "{% $states.input.eventDetailList %}"
+                          "Items": "{% $states.input.caseList %}"
                         }
                       }
                     },
@@ -265,19 +364,14 @@
                               "JitterStrategy": "FULL"
                             }
                           ],
-                          "Next": "Make WTS Analysis Events List"
+                          "Next": "Get case objects from library list (WTS)"
                         },
-                        "Make WTS Analysis Events List": {
+                        "Get case objects from library list (WTS)": {
                           "Type": "Task",
                           "Resource": "arn:aws:states:::lambda:invoke",
-                          "Output": {
-                            "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
-                          },
                           "Arguments": {
-                            "FunctionName": "${__make_wts_analysis_events_list_lambda_function_arn__}",
-                            "Payload": {
-                              "libraryIdList": "{% $states.input.libraryIdList %}"
-                            }
+                            "Payload": "{% $states.input %}",
+                            "FunctionName": "${__pair_cases_with_libraries_lambda_function_arn__}"
                           },
                           "Retry": [
                             {
@@ -293,28 +387,132 @@
                               "JitterStrategy": "FULL"
                             }
                           ],
-                          "Next": "For each Draft Event (WTS)"
+                          "Next": "For each case (WTS)",
+                          "Output": {
+                            "caseList": "{% $states.result.Payload.caseList %}"
+                          }
                         },
-                        "For each Draft Event (WTS)": {
+                        "For each case (WTS)": {
                           "Type": "Map",
                           "ItemProcessor": {
                             "ProcessorConfig": {
                               "Mode": "INLINE"
                             },
-                            "StartAt": "Generate WTS Drafts",
+                            "StartAt": "Case vars (WTS)",
                             "States": {
-                              "Generate WTS Drafts": {
+                              "Case vars (WTS)": {
+                                "Type": "Pass",
+                                "Next": "Make WTS Analysis Events List",
+                                "Assign": {
+                                  "caseOrcabusIdIter": "{% $states.input.caseOrcabusId ? $states.input.caseOrcabusId : null %}"
+                                }
+                              },
+                              "Make WTS Analysis Events List": {
                                 "Type": "Task",
-                                "Resource": "arn:aws:states:::events:putEvents",
-                                "Arguments": {
-                                  "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                                "Resource": "arn:aws:states:::lambda:invoke",
+                                "Output": {
+                                  "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                                 },
-                                "End": true
+                                "Arguments": {
+                                  "FunctionName": "${__make_wts_analysis_events_list_lambda_function_arn__}",
+                                  "Payload": {
+                                    "libraryIdList": "{% $states.input.libraryIdList %}"
+                                  }
+                                },
+                                "Retry": [
+                                  {
+                                    "ErrorEquals": [
+                                      "Lambda.ServiceException",
+                                      "Lambda.AWSLambdaException",
+                                      "Lambda.SdkClientException",
+                                      "Lambda.TooManyRequestsException"
+                                    ],
+                                    "IntervalSeconds": 1,
+                                    "MaxAttempts": 3,
+                                    "BackoffRate": 2,
+                                    "JitterStrategy": "FULL"
+                                  }
+                                ],
+                                "Next": "For each Draft Event (WTS)"
+                              },
+                              "For each Draft Event (WTS)": {
+                                "Type": "Map",
+                                "ItemProcessor": {
+                                  "ProcessorConfig": {
+                                    "Mode": "INLINE"
+                                  },
+                                  "StartAt": "Draft Event Vars (WTS)",
+                                  "States": {
+                                    "Draft Event Vars (WTS)": {
+                                      "Type": "Pass",
+                                      "Next": "Generate WTS Drafts",
+                                      "Assign": {
+                                        "portalRunIdIter": "{% $states.input.portalRunId %}"
+                                      }
+                                    },
+                                    "Generate WTS Drafts": {
+                                      "Type": "Task",
+                                      "Resource": "arn:aws:states:::events:putEvents",
+                                      "Arguments": {
+                                        "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                                      },
+                                      "Next": "Case linked? (WTS)"
+                                    },
+                                    "Case linked? (WTS)": {
+                                      "Type": "Choice",
+                                      "Choices": [
+                                        {
+                                          "Condition": "{% $caseOrcabusIdIter != null %}",
+                                          "Next": "Wait N Seconds (WTS)"
+                                        }
+                                      ],
+                                      "Default": "No Case to Link (WTS)"
+                                    },
+                                    "No Case to Link (WTS)": {
+                                      "Type": "Pass",
+                                      "End": true
+                                    },
+                                    "Wait N Seconds (WTS)": {
+                                      "Type": "Wait",
+                                      "Seconds": 5,
+                                      "Next": "Link Workflow Run to Case (WTS)"
+                                    },
+                                    "Link Workflow Run to Case (WTS)": {
+                                      "Type": "Task",
+                                      "Resource": "arn:aws:states:::lambda:invoke",
+                                      "Output": "{% $states.result.Payload %}",
+                                      "Arguments": {
+                                        "Payload": {
+                                          "portalRunId": "{% $portalRunIdIter %}",
+                                          "caseOrcabusId": "{% $caseOrcabusIdIter %}"
+                                        },
+                                        "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
+                                      },
+                                      "Retry": [
+                                        {
+                                          "ErrorEquals": [
+                                            "Lambda.ServiceException",
+                                            "Lambda.AWSLambdaException",
+                                            "Lambda.SdkClientException",
+                                            "Lambda.TooManyRequestsException"
+                                          ],
+                                          "IntervalSeconds": 1,
+                                          "MaxAttempts": 3,
+                                          "BackoffRate": 2,
+                                          "JitterStrategy": "FULL"
+                                        }
+                                      ],
+                                      "End": true
+                                    }
+                                  }
+                                },
+                                "End": true,
+                                "Items": "{% $states.input.eventDetailList %}"
                               }
                             }
                           },
                           "End": true,
-                          "Items": "{% $states.input.eventDetailList %}"
+                          "Items": "{% $states.input.caseList %}"
                         }
                       }
                     },
@@ -429,19 +627,14 @@
                       "JitterStrategy": "FULL"
                     }
                   ],
-                  "Next": "Make WGTS Analysis Events List"
+                  "Next": "Get case objects from library list (WGTS Post)"
                 },
-                "Make WGTS Analysis Events List": {
+                "Get case objects from library list (WGTS Post)": {
                   "Type": "Task",
                   "Resource": "arn:aws:states:::lambda:invoke",
-                  "Output": {
-                    "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
-                  },
                   "Arguments": {
-                    "FunctionName": "${__make_wgts_post_analysis_events_list_lambda_function_arn__}",
-                    "Payload": {
-                      "libraryIdList": "{% $states.input.libraryIdList %}"
-                    }
+                    "Payload": "{% $states.input %}",
+                    "FunctionName": "${__pair_cases_with_libraries_lambda_function_arn__}"
                   },
                   "Retry": [
                     {
@@ -457,28 +650,133 @@
                       "JitterStrategy": "FULL"
                     }
                   ],
-                  "Next": "For each Draft Event (WGTS) (post)"
+                  "Next": "For each case (WGTS Post)",
+                  "Output": {
+                    "caseList": "{% $states.result.Payload.caseList %}"
+                  }
                 },
-                "For each Draft Event (WGTS) (post)": {
+                "For each case (WGTS Post)": {
                   "Type": "Map",
                   "ItemProcessor": {
                     "ProcessorConfig": {
                       "Mode": "INLINE"
                     },
-                    "StartAt": "Generate WGTS Draft Event",
+                    "StartAt": "Case vars (WGTS Post)",
                     "States": {
-                      "Generate WGTS Draft Event": {
+                      "Case vars (WGTS Post)": {
+                        "Type": "Pass",
+                        "Next": "Make WGTS Analysis Events List",
+                        "Assign": {
+                          "caseOrcabusIdIter": "{% $states.input.caseOrcabusId ? $states.input.caseOrcabusId : null %}"
+                        }
+                      },
+                      "Make WGTS Analysis Events List": {
                         "Type": "Task",
-                        "Resource": "arn:aws:states:::events:putEvents",
-                        "Arguments": {
-                          "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Output": {
+                          "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                         },
-                        "End": true
+                        "Arguments": {
+                          "FunctionName": "${__make_wgts_post_analysis_events_list_lambda_function_arn__}",
+                          "Payload": {
+                            "libraryIdList": "{% $states.input.libraryIdList %}",
+                            "rnasumDatasetList": "{% $states.input.rnasumDatasetList ? $states.input.rnasumDatasetList : null %}"
+                          }
+                        },
+                        "Retry": [
+                          {
+                            "ErrorEquals": [
+                              "Lambda.ServiceException",
+                              "Lambda.AWSLambdaException",
+                              "Lambda.SdkClientException",
+                              "Lambda.TooManyRequestsException"
+                            ],
+                            "IntervalSeconds": 1,
+                            "MaxAttempts": 3,
+                            "BackoffRate": 2,
+                            "JitterStrategy": "FULL"
+                          }
+                        ],
+                        "Next": "For each Draft Event (WGTS) (post)"
+                      },
+                      "For each Draft Event (WGTS) (post)": {
+                        "Type": "Map",
+                        "ItemProcessor": {
+                          "ProcessorConfig": {
+                            "Mode": "INLINE"
+                          },
+                          "StartAt": "Draft Event Vars (WGTS Post)",
+                          "States": {
+                            "Draft Event Vars (WGTS Post)": {
+                              "Type": "Pass",
+                              "Next": "Generate WGTS Draft Event",
+                              "Assign": {
+                                "portalRunIdIter": "{% $states.input.portalRunId %}"
+                              }
+                            },
+                            "Generate WGTS Draft Event": {
+                              "Type": "Task",
+                              "Resource": "arn:aws:states:::events:putEvents",
+                              "Arguments": {
+                                "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                              },
+                              "Next": "Case linked? (WGTS Post)"
+                            },
+                            "Case linked? (WGTS Post)": {
+                              "Type": "Choice",
+                              "Choices": [
+                                {
+                                  "Condition": "{% $caseOrcabusIdIter != null %}",
+                                  "Next": "Wait N Seconds (WGTS Post)"
+                                }
+                              ],
+                              "Default": "No Case to Link (WGTS Post)"
+                            },
+                            "No Case to Link (WGTS Post)": {
+                              "Type": "Pass",
+                              "End": true
+                            },
+                            "Wait N Seconds (WGTS Post)": {
+                              "Type": "Wait",
+                              "Seconds": 5,
+                              "Next": "Link Workflow Run to Case (WGTS Post)"
+                            },
+                            "Link Workflow Run to Case (WGTS Post)": {
+                              "Type": "Task",
+                              "Resource": "arn:aws:states:::lambda:invoke",
+                              "Output": "{% $states.result.Payload %}",
+                              "Arguments": {
+                                "Payload": {
+                                  "portalRunId": "{% $portalRunIdIter %}",
+                                  "caseOrcabusId": "{% $caseOrcabusIdIter %}"
+                                },
+                                "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
+                              },
+                              "Retry": [
+                                {
+                                  "ErrorEquals": [
+                                    "Lambda.ServiceException",
+                                    "Lambda.AWSLambdaException",
+                                    "Lambda.SdkClientException",
+                                    "Lambda.TooManyRequestsException"
+                                  ],
+                                  "IntervalSeconds": 1,
+                                  "MaxAttempts": 3,
+                                  "BackoffRate": 2,
+                                  "JitterStrategy": "FULL"
+                                }
+                              ],
+                              "End": true
+                            }
+                          }
+                        },
+                        "End": true,
+                        "Items": "{% $states.input.eventDetailList %}"
                       }
                     }
                   },
                   "End": true,
-                  "Items": "{% $states.input.eventDetailList %}"
+                  "Items": "{% $states.input.caseList %}"
                 }
               }
             },

@@ -84,6 +84,9 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     'makeWtsAnalysisEventsList',
     // Post Event Detail Makers
     'makeWgtsPostAnalysisEventsList',
+    // Case pairing
+    'pairCasesWithLibraries',
+    'linkWorkflowRunToCase',
   ],
   cttsoAnalysisBuilder: [
     // Metadata gatherers
@@ -93,6 +96,9 @@ export const stepFunctionToLambdasMap: Record<StateMachineName, LambdaName[]> = 
     'makeCtdnaAnalysisEventsList',
     // Post Event Detail Makers
     'makeCtdnaPostAnalysisEventsList',
+    // Case pairing
+    'pairCasesWithLibraries',
+    'linkWorkflowRunToCase',
   ],
   bclconvertInteropQcAnalysisBuilder: [
     // Event Detail Makers

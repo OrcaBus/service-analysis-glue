@@ -93,19 +93,14 @@
                       "JitterStrategy": "FULL"
                     }
                   ],
-                  "Next": "Make ctDNA Analysis Events List"
+                  "Next": "Get case objects from library list (ctDNA)"
                 },
-                "Make ctDNA Analysis Events List": {
+                "Get case objects from library list (ctDNA)": {
                   "Type": "Task",
                   "Resource": "arn:aws:states:::lambda:invoke",
-                  "Output": {
-                    "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
-                  },
                   "Arguments": {
-                    "FunctionName": "${__make_ctdna_analysis_events_list_lambda_function_arn__}",
-                    "Payload": {
-                      "libraryIdList": "{% $states.input.libraryIdList %}"
-                    }
+                    "Payload": "{% $states.input %}",
+                    "FunctionName": "${__pair_cases_with_libraries_lambda_function_arn__}"
                   },
                   "Retry": [
                     {
@@ -121,28 +116,132 @@
                       "JitterStrategy": "FULL"
                     }
                   ],
-                  "Next": "For each Draft Event (ctDNA)"
+                  "Next": "For each case (ctDNA)",
+                  "Output": {
+                    "caseList": "{% $states.result.Payload.caseList %}"
+                  }
                 },
-                "For each Draft Event (ctDNA)": {
+                "For each case (ctDNA)": {
                   "Type": "Map",
                   "ItemProcessor": {
                     "ProcessorConfig": {
                       "Mode": "INLINE"
                     },
-                    "StartAt": "Generate ctDNA Draft Events",
+                    "StartAt": "Case vars",
                     "States": {
-                      "Generate ctDNA Draft Events": {
+                      "Case vars": {
+                        "Type": "Pass",
+                        "Next": "Make ctDNA Analysis Events List",
+                        "Assign": {
+                          "caseOrcabusIdIter": "{% $states.input.caseOrcabusId ? $states.input.caseOrcabusId : null %}"
+                        }
+                      },
+                      "Make ctDNA Analysis Events List": {
                         "Type": "Task",
-                        "Resource": "arn:aws:states:::events:putEvents",
-                        "Arguments": {
-                          "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Output": {
+                          "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                         },
-                        "End": true
+                        "Arguments": {
+                          "FunctionName": "${__make_ctdna_analysis_events_list_lambda_function_arn__}",
+                          "Payload": {
+                            "libraryIdList": "{% $states.input.libraryIdList %}"
+                          }
+                        },
+                        "Retry": [
+                          {
+                            "ErrorEquals": [
+                              "Lambda.ServiceException",
+                              "Lambda.AWSLambdaException",
+                              "Lambda.SdkClientException",
+                              "Lambda.TooManyRequestsException"
+                            ],
+                            "IntervalSeconds": 1,
+                            "MaxAttempts": 3,
+                            "BackoffRate": 2,
+                            "JitterStrategy": "FULL"
+                          }
+                        ],
+                        "Next": "For each Draft Event (ctDNA)"
+                      },
+                      "For each Draft Event (ctDNA)": {
+                        "Type": "Map",
+                        "ItemProcessor": {
+                          "ProcessorConfig": {
+                            "Mode": "INLINE"
+                          },
+                          "StartAt": "Draft Event Vars",
+                          "States": {
+                            "Draft Event Vars": {
+                              "Type": "Pass",
+                              "Next": "Generate ctDNA Draft Events",
+                              "Assign": {
+                                "portalRunIdIter": "{% $states.input.portalRunId %}"
+                              }
+                            },
+                            "Generate ctDNA Draft Events": {
+                              "Type": "Task",
+                              "Resource": "arn:aws:states:::events:putEvents",
+                              "Arguments": {
+                                "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                              },
+                              "Next": "Case linked? (ctDNA)"
+                            },
+                            "Case linked? (ctDNA)": {
+                              "Type": "Choice",
+                              "Choices": [
+                                {
+                                  "Condition": "{% $caseOrcabusIdIter != null %}",
+                                  "Next": "Wait N Seconds (ctDNA)"
+                                }
+                              ],
+                              "Default": "No Case to Link (ctDNA)"
+                            },
+                            "No Case to Link (ctDNA)": {
+                              "Type": "Pass",
+                              "End": true
+                            },
+                            "Wait N Seconds (ctDNA)": {
+                              "Type": "Wait",
+                              "Seconds": 5,
+                              "Next": "Link Workflow Run to Case (ctDNA)"
+                            },
+                            "Link Workflow Run to Case (ctDNA)": {
+                              "Type": "Task",
+                              "Resource": "arn:aws:states:::lambda:invoke",
+                              "Output": "{% $states.result.Payload %}",
+                              "Arguments": {
+                                "Payload": {
+                                  "portalRunId": "{% $portalRunIdIter %}",
+                                  "caseOrcabusId": "{% $caseOrcabusIdIter %}"
+                                },
+                                "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
+                              },
+                              "Retry": [
+                                {
+                                  "ErrorEquals": [
+                                    "Lambda.ServiceException",
+                                    "Lambda.AWSLambdaException",
+                                    "Lambda.SdkClientException",
+                                    "Lambda.TooManyRequestsException"
+                                  ],
+                                  "IntervalSeconds": 1,
+                                  "MaxAttempts": 3,
+                                  "BackoffRate": 2,
+                                  "JitterStrategy": "FULL"
+                                }
+                              ],
+                              "End": true
+                            }
+                          }
+                        },
+                        "End": true,
+                        "Items": "{% $states.input.eventDetailList %}"
                       }
                     }
                   },
                   "End": true,
-                  "Items": "{% $states.input.eventDetailList %}"
+                  "Items": "{% $states.input.caseList %}"
                 }
               }
             },
@@ -226,7 +325,9 @@
                 "Get ctDNA libraries from subject id and instrument run id (post)": {
                   "Type": "Task",
                   "Resource": "arn:aws:states:::lambda:invoke",
-                  "Output": "{% $states.result.Payload %}",
+                  "Output": {
+                    "libraryIdList": "{% $states.result.Payload.libraryIdList %}"
+                  },
                   "Arguments": {
                     "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
                     "Payload": {
@@ -249,19 +350,14 @@
                       "JitterStrategy": "FULL"
                     }
                   ],
-                  "Next": "Make TSO500 ctDNA Analysis Events List (post)"
+                  "Next": "Get case objects from library list (ctDNA Post)"
                 },
-                "Make TSO500 ctDNA Analysis Events List (post)": {
+                "Get case objects from library list (ctDNA Post)": {
                   "Type": "Task",
                   "Resource": "arn:aws:states:::lambda:invoke",
-                  "Output": {
-                    "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
-                  },
                   "Arguments": {
-                    "FunctionName": "${__make_ctdna_post_analysis_events_list_lambda_function_arn__}",
-                    "Payload": {
-                      "libraryIdList": "{% $states.input.libraryIdList %}"
-                    }
+                    "Payload": "{% $states.input %}",
+                    "FunctionName": "${__pair_cases_with_libraries_lambda_function_arn__}"
                   },
                   "Retry": [
                     {
@@ -277,28 +373,132 @@
                       "JitterStrategy": "FULL"
                     }
                   ],
-                  "Next": "For each Draft Event (ctDNA) (post)"
+                  "Next": "For each case (ctDNA Post)",
+                  "Output": {
+                    "caseList": "{% $states.result.Payload.caseList %}"
+                  }
                 },
-                "For each Draft Event (ctDNA) (post)": {
+                "For each case (ctDNA Post)": {
                   "Type": "Map",
                   "ItemProcessor": {
                     "ProcessorConfig": {
                       "Mode": "INLINE"
                     },
-                    "StartAt": "Generate ctDNA Draft Event (post)",
+                    "StartAt": "Case vars (ctDNA Post)",
                     "States": {
-                      "Generate ctDNA Draft Event (post)": {
+                      "Case vars (ctDNA Post)": {
+                        "Type": "Pass",
+                        "Next": "Make TSO500 ctDNA Analysis Events List (post)",
+                        "Assign": {
+                          "caseOrcabusIdIter": "{% $states.input.caseOrcabusId ? $states.input.caseOrcabusId : null %}"
+                        }
+                      },
+                      "Make TSO500 ctDNA Analysis Events List (post)": {
                         "Type": "Task",
-                        "Resource": "arn:aws:states:::events:putEvents",
-                        "Arguments": {
-                          "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                        "Resource": "arn:aws:states:::lambda:invoke",
+                        "Output": {
+                          "eventDetailList": "{% [\n  $states.result.Payload.eventDetailList ~>\n  $filter(function($v){$v})\n] %}"
                         },
-                        "End": true
+                        "Arguments": {
+                          "FunctionName": "${__make_ctdna_post_analysis_events_list_lambda_function_arn__}",
+                          "Payload": {
+                            "libraryIdList": "{% $states.input.libraryIdList %}"
+                          }
+                        },
+                        "Retry": [
+                          {
+                            "ErrorEquals": [
+                              "Lambda.ServiceException",
+                              "Lambda.AWSLambdaException",
+                              "Lambda.SdkClientException",
+                              "Lambda.TooManyRequestsException"
+                            ],
+                            "IntervalSeconds": 1,
+                            "MaxAttempts": 3,
+                            "BackoffRate": 2,
+                            "JitterStrategy": "FULL"
+                          }
+                        ],
+                        "Next": "For each Draft Event (ctDNA) (post)"
+                      },
+                      "For each Draft Event (ctDNA) (post)": {
+                        "Type": "Map",
+                        "ItemProcessor": {
+                          "ProcessorConfig": {
+                            "Mode": "INLINE"
+                          },
+                          "StartAt": "Draft Event Vars (ctDNA Post)",
+                          "States": {
+                            "Draft Event Vars (ctDNA Post)": {
+                              "Type": "Pass",
+                              "Next": "Generate ctDNA Draft Event (post)",
+                              "Assign": {
+                                "portalRunIdIter": "{% $states.input.portalRunId %}"
+                              }
+                            },
+                            "Generate ctDNA Draft Event (post)": {
+                              "Type": "Task",
+                              "Resource": "arn:aws:states:::events:putEvents",
+                              "Arguments": {
+                                "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
+                              },
+                              "Next": "Case linked? (ctDNA Post)"
+                            },
+                            "Case linked? (ctDNA Post)": {
+                              "Type": "Choice",
+                              "Choices": [
+                                {
+                                  "Condition": "{% $caseOrcabusIdIter != null %}",
+                                  "Next": "Wait N Seconds (ctDNA Post)"
+                                }
+                              ],
+                              "Default": "No Case to Link (ctDNA Post)"
+                            },
+                            "No Case to Link (ctDNA Post)": {
+                              "Type": "Pass",
+                              "End": true
+                            },
+                            "Wait N Seconds (ctDNA Post)": {
+                              "Type": "Wait",
+                              "Seconds": 5,
+                              "Next": "Link Workflow Run to Case (ctDNA Post)"
+                            },
+                            "Link Workflow Run to Case (ctDNA Post)": {
+                              "Type": "Task",
+                              "Resource": "arn:aws:states:::lambda:invoke",
+                              "Output": "{% $states.result.Payload %}",
+                              "Arguments": {
+                                "Payload": {
+                                  "portalRunId": "{% $portalRunIdIter %}",
+                                  "caseOrcabusId": "{% $caseOrcabusIdIter %}"
+                                },
+                                "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
+                              },
+                              "Retry": [
+                                {
+                                  "ErrorEquals": [
+                                    "Lambda.ServiceException",
+                                    "Lambda.AWSLambdaException",
+                                    "Lambda.SdkClientException",
+                                    "Lambda.TooManyRequestsException"
+                                  ],
+                                  "IntervalSeconds": 1,
+                                  "MaxAttempts": 3,
+                                  "BackoffRate": 2,
+                                  "JitterStrategy": "FULL"
+                                }
+                              ],
+                              "End": true
+                            }
+                          }
+                        },
+                        "End": true,
+                        "Items": "{% $states.input.eventDetailList %}"
                       }
                     }
                   },
                   "End": true,
-                  "Items": "{% $states.input.eventDetailList %}"
+                  "Items": "{% $states.input.caseList %}"
                 }
               }
             },

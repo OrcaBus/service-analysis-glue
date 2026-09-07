@@ -31,7 +31,10 @@ export type LambdaName =
   | 'generateOncoanalyserWgtsRnaValidationEvent'
   | 'generateOncoanalyserWgtsDnaRnaValidationEvent'
   | 'generateRnasumValidationEvent'
-  | 'summariseDeployStatusManagerChanges';
+  | 'summariseDeployStatusManagerChanges'
+  // Case pairing
+  | 'pairCasesWithLibraries'
+  | 'linkWorkflowRunToCase';
 
 export const lambdaNameList: LambdaName[] = [
   // Metadata gatherers
@@ -58,6 +61,9 @@ export const lambdaNameList: LambdaName[] = [
   'generateOncoanalyserWgtsDnaRnaValidationEvent',
   'generateRnasumValidationEvent',
   'summariseDeployStatusManagerChanges',
+  // Case pairing
+  'pairCasesWithLibraries',
+  'linkWorkflowRunToCase',
 ];
 
 // Requirements interface for Lambda functions
@@ -192,6 +198,13 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsSsmParameterAccess: true,
     needsS3Permissions: true,
     prodOnly: true,
+  },
+  // Case pairing
+  pairCasesWithLibraries: {
+    needsOrcabusApiTools: true,
+  },
+  linkWorkflowRunToCase: {
+    needsOrcabusApiTools: true,
   },
 };
 

@@ -13,9 +13,9 @@ We do not expect the case for there to be multiple tumors and multiple normals f
 # Standard imports
 import json
 from os import environ
-from typing import List, Dict, Literal, Optional, Union
+from typing import List, Dict, Literal, Optional, Union, cast, Any
 import logging
-from copy import deepcopy
+from copy import deepcopy, copy
 
 # Layer imports
 from orcabus_api_tools.metadata import (
@@ -31,6 +31,8 @@ from analysis_tool_kit import (
     Workflow, EventLibrary,
 )
 from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
+from analysis_tool_kit.models import Payload
+from workflow import get_latest_payload_from_workflow_run
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
@@ -39,6 +41,9 @@ WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
 WORKFLOW_OBJECTS_DICT: Dict[WorkflowName, Workflow] = {
     "ONCOANALYSER_WGTS_DNA_RNA": json.loads(get_ssm_value(environ['ONCOANALYSER_WGTS_DNA_RNA_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
     "RNASUM": json.loads(get_ssm_value(environ['RNASUM_WORKFLOW_OBJECT_SSM_PARAMETER_NAME'])),
+}
+PAYLOAD_VERSION_DICT: Dict[WorkflowName, str] = {
+    "RNASUM": get_ssm_value(environ['RNASUM_PAYLOAD_VERSION_SSM_PARAMETER_NAME']),
 }
 
 # Draft status
@@ -85,7 +90,8 @@ def add_oncoanalyser_wgts_dna_rna_draft_event(
 
 def add_rnasum_draft_event(
         libraries: List[Library],
-) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
+        rnasum_dataset_list: List[str],
+) -> List[Dict[str, Union[Dict[str, Any], str, Workflow, list[EventLibrary]]]]:
     """
     Add the rnasum draft event
     :param libraries:
@@ -98,25 +104,75 @@ def add_rnasum_draft_event(
         libraries=libraries
     )
 
-    if len(existing_workflow_runs) > 0:
-        logger.warning(
-            "Existing RNASUM workflow runs found for library: %s" % libraries[0]['libraryId']
-        )
-        return None
+    # Get rnasum data set list to run
+    rnasum_dataset_list = copy(rnasum_dataset_list)
+    existing_dataset_list = []
 
+    # If we have no dataset list but our existing workflow runs are > 0
+    # This is default legacy behaviour
+    if len(rnasum_dataset_list) == 0:
+        if len(existing_workflow_runs) > 0:
+            return []
+        # No existing runs, but no datasets, return one dataset-less event
+        return [
+            add_workflow_draft_event_detail(
+                libraries=libraries,
+                **WORKFLOW_OBJECTS_DICT['RNASUM'],
+            )
+        ]
 
-    return add_workflow_draft_event_detail(
-        libraries=libraries,
-        **WORKFLOW_OBJECTS_DICT['RNASUM'],
-    )
+    # Check for existing workflow runs
+    for existing_workflow_run_iter_ in existing_workflow_runs:
+        latest_payload = get_latest_payload_from_workflow_run(existing_workflow_run_iter_['orcabusId'])
+        if latest_payload is None:
+            continue
+        dataset_name = latest_payload.get("data", {}).get("inputs", {}).get("dataset", "")
+        if (
+                dataset_name and
+                dataset_name in rnasum_dataset_list and
+                dataset_name not in existing_dataset_list
+        ):
+            existing_dataset_list.append(dataset_name)
+
+    # Remove workflow runs with the same dataset
+    rnasum_dataset_list = list(filter(
+        lambda dataset_iter_: dataset_iter_ not in existing_dataset_list,
+        rnasum_dataset_list
+    ))
+
+    if len(rnasum_dataset_list) == 0:
+        return []
+
+    return list(map(
+        lambda dataset_iter_: add_workflow_draft_event_detail(
+            libraries=libraries,
+            payload=cast(
+                Payload,
+                cast(
+                    object,
+                    {
+                        "version": PAYLOAD_VERSION_DICT['RNASUM'],
+                        "data": {
+                            "inputs": {
+                                "dataset": dataset_iter_
+                            }
+                        }
+                    }
+                )
+            ),
+            **WORKFLOW_OBJECTS_DICT['RNASUM']
+        ),
+        rnasum_dataset_list
+    ))
 
 
 def generate_wgts_post_processing_draft_lists(
         libraries: List[Library],
+        rnasum_dataset_list: List[str]
 ) -> List[Union[Dict[str, Union[str, Workflow, list[EventLibrary]]], None]]:
     return [
         add_oncoanalyser_wgts_dna_rna_draft_event(libraries),
-        add_rnasum_draft_event(libraries),
+        *add_rnasum_draft_event(libraries, rnasum_dataset_list),
     ]
 
 
@@ -132,6 +188,9 @@ def handler(event, context):
 
     # Get the library id list
     library_id_list = event.get("libraryIdList", [])
+    rnasum_dataset_list = event.get("rnasumDatasetList", None)
+    if rnasum_dataset_list is None:
+        rnasum_dataset_list = []
 
     # Get the libraries as library objects
     libraries_list: List[Library] = get_libraries_list_from_library_id_list(
@@ -318,7 +377,10 @@ def handler(event, context):
 
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_post_processing_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(
+                    libraries=library_list,
+                    rnasum_dataset_list=rnasum_dataset_list,
+                )
             )
 
         return {
@@ -382,7 +444,10 @@ def handler(event, context):
 
                 # Add the wgs dna draft event
                 events_list.extend(
-                    generate_wgts_post_processing_draft_lists(library_list)
+                    generate_wgts_post_processing_draft_lists(
+                        libraries=library_list,
+                        rnasum_dataset_list=rnasum_dataset_list,
+                    )
                 )
 
             return {
@@ -460,7 +525,10 @@ def handler(event, context):
 
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_post_processing_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(
+                    libraries=library_list,
+                    rnasum_dataset_list=rnasum_dataset_list,
+                )
             )
 
             return {
@@ -534,7 +602,10 @@ def handler(event, context):
             library_list = [tumor_dna_library_iter, normal_dna_library, tumor_rna_library]
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_post_processing_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(
+                    libraries=library_list,
+                    rnasum_dataset_list=rnasum_dataset_list,
+                )
             )
 
         return {
@@ -587,7 +658,10 @@ def handler(event, context):
             library_list = [tumor_dna_library_iter, normal_dna_library, tumor_rna_library_iter]
             # Add the wgs dna draft event
             events_list.extend(
-                generate_wgts_post_processing_draft_lists(library_list)
+                generate_wgts_post_processing_draft_lists(
+                    libraries=library_list,
+                    rnasum_dataset_list=rnasum_dataset_list,
+                )
             )
 
     return {
