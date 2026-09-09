@@ -24,7 +24,9 @@ from orcabus_api_tools.metadata import (
 )
 from orcabus_api_tools.metadata.models import Library
 from orcabus_api_tools.utils.aws_helpers import get_ssm_value
+from orcabus_api_tools.workflow import get_latest_payload_from_workflow_run
 
+# Local layer imports
 from analysis_tool_kit import (
     add_workflow_draft_event_detail,
     get_existing_workflow_runs,
@@ -32,7 +34,6 @@ from analysis_tool_kit import (
 )
 from analysis_tool_kit.analysis_helpers import get_libraries_with_readsets
 from analysis_tool_kit.models import Payload
-from workflow import get_latest_payload_from_workflow_run
 
 # Type hints
 WorkflowName = Literal['ONCOANALYSER_WGTS_DNA_RNA', 'RNASUM']
