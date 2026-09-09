@@ -169,13 +169,14 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
         library_id_list
     ))
 
-    # Append libraries not in any case response object list
-    case_response_object_list.append(cast(
-        CaseResponseObject,
-        cast(object, {
-            "libraryIdList": library_id_list_not_in_case_response_object_list
-        })
-    ))
+    if len(library_id_list_not_in_case_response_object_list) > 0:
+        # Append libraries not in any case response object list
+        case_response_object_list.append(cast(
+            CaseResponseObject,
+            cast(object, {
+                "libraryIdList": library_id_list_not_in_case_response_object_list
+            })
+        ))
 
     return {
         "caseList": case_response_object_list
