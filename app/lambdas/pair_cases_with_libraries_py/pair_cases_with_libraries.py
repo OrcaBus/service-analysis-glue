@@ -38,44 +38,15 @@ from orcabus_api_tools.case.models import Case
 # Globals and types
 RNASUM_REFERENCE_COLUMN_PREFIX = "rnasumReference"
 RnasumDatasetType = Literal[
-  'Acc',
-  'Gbm',
-  'Lgg',
-  'Ucs',
-  'Uvm',
-  'Blca',
-  'Brca',
-  'Cesc',
-  'Chol',
-  'Coad',
-  'Dlbc',
-  'Esca',
-  'Hnsc',
-  'Kich',
-  'Kirc',
-  'Kirp',
-  'Laml',
-  'Lihc',
-  'Luad',
-  'Lusc',
-  'Meso',
-  'Paad',
-  'Pcpg',
-  'Prad',
-  'Read',
-  'Sarc',
-  'Skcm',
-  'Stad',
-  'Tgct',
-  'Thca',
-  'Thym',
-  'Ucec',
-  'Pancan',
-  'BlcaNet',
-  'PaadAcc',
-  'PaadNet',
-  'PaadIpmn',
-  'LuadLcnec',
+  # PRIMARY_DATASETS_OPTION \
+  "BRCA", "THCA", "HNSC", "LGG", "KIRC", "LUSC", "LUAD", "PRAD", "STAD", "LIHC", "COAD", "KIRP",
+  "BLCA", "OV", "SARC", "PCPG", "CESC", "UCEC", "PAAD", "TGCT", "LAML", "ESCA", "GBM", "THYM",
+  "SKCM", "READ", "UVM", "ACC", "MESO", "KICH", "UCS", "DLBC", "CHOL",
+  # EXTENDED_DATASETS_OPTION
+  "LUAD-LCNEC", "BLCA-NET",
+  "PAAD-IPMN", "PAAD-NET", "PAAD-ACC",
+  # PAN_CANCER_DATASETS_OPTION
+  "PANCAN"
 ]
 
 
@@ -123,7 +94,9 @@ def get_all_libraries_in_case(case_obj: Case) -> List[str]:
     ))
 
 
-def get_rnasum_reference_list_from_redcap_payload(redcap_payload: Dict[str, str]) -> List[RnasumDatasetType]:
+def get_rnasum_reference_list_from_redcap_payload(
+        redcap_payload: Dict[str, str]
+) -> List[RnasumDatasetType]:
     rnasum_data_set_type_list = []
     for redcap_key, redcap_value in redcap_payload.items():
         if (
@@ -131,7 +104,9 @@ def get_rnasum_reference_list_from_redcap_payload(redcap_payload: Dict[str, str]
                 redcap_value.isnumeric() and
                 int(redcap_value) == 1
         ):
-            dataset_name = re.sub(rf"^{RNASUM_REFERENCE_COLUMN_PREFIX}__", "", redcap_key)
+            # Move to uppercase and expand PAAD prefix to PAAD-
+            dataset_name = re.sub(rf"^{RNASUM_REFERENCE_COLUMN_PREFIX}__", "", redcap_key).upper()
+            dataset_name = re.sub("^PAAD", "PAAD-", dataset_name)
             rnasum_data_set_type_list.append(cast(RnasumDatasetType, dataset_name))
     return rnasum_data_set_type_list
 
