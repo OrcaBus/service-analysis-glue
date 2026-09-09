@@ -51,6 +51,36 @@ RnasumDatasetType = Literal[
   "PANCAN"
 ]
 
+# Case status
+CaseStatusType = Literal[
+    "request_received",  # Request Received
+    "wgts_tumour_sample_received",  # WGTS Tumour Sample Received
+    "wgts_germline_sample_received",  # WGTS Germline Sample Received
+    "cttso_sample_received",  # CTTSO Sample Received
+    "all_sample_received",  # All Sample Received
+    "library_partially_failed",  # Library Partially Failed
+    "sequencing_started",  # Sequencing Started
+    "sequencing_completed",  # Sequencing Completed
+    "bioinformatics_started",  # Bioinformatics Started
+    "bioinformatics_completed",  # Bioinformatics Completed
+    "curation_started",  # Curation Started
+    "curation_completed",  # Curation Completed
+    "locked",  # Locked
+    "unlocked",  # Unlocked
+    "failed",  # Failed
+    "completed",  # Completed
+    "archived",  # Archived
+]
+
+
+CASE_STATUS_BLOCKED: List[CaseStatusType] = [
+    "locked",
+    "failed",
+    "curation_completed",
+    "completed",
+    "archived"
+]
+
 
 class CaseResponseObject(TypedDict):
     caseOrcabusId: NotRequired[str]
@@ -157,6 +187,12 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
     # Reduce duplicates
     case_list = list({(case['orcabusId']): case for case in case_list}.values())
 
+    # Remove cases where case status is not open
+    case_list = list(filter(
+        lambda case_iter_: case_iter_["caseStatus"] not in CASE_STATUS_BLOCKED,
+        case_list
+    ))
+
     # Get case response objects
     case_response_object_list: List[CaseResponseObject] = get_all_case_response_objects(case_list)
 
@@ -169,8 +205,9 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
         library_id_list
     ))
 
+    # Append libraries not in any case response object list
+    # But we don't want an object of empty lists
     if len(library_id_list_not_in_case_response_object_list) > 0:
-        # Append libraries not in any case response object list
         case_response_object_list.append(cast(
             CaseResponseObject,
             cast(object, {
