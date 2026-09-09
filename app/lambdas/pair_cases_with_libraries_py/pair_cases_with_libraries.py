@@ -120,8 +120,10 @@ def get_all_case_response_objects(case_list: List[Case]) -> List[CaseResponseObj
     return list(map(
         lambda case_obj: {
             "libraryIdList": get_all_libraries_in_case(case_obj),
-            "caseOrcabusId": case_obj['caseOrcabusId'],
-            "rnasumDatasetList": get_rnasum_reference_list_from_redcap_payload(case_obj.get('redcapPayload', {}))
+            "caseOrcabusId": case_obj['orcabusId'],
+            "rnasumDatasetList": get_rnasum_reference_list_from_redcap_payload(
+                case_obj.get('redcapPayload', {})
+            )
         },
         case_list
     ))
