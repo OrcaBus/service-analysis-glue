@@ -28,6 +28,8 @@ For each set of libraries find the following cases and return the following even
 """
 
 # Standard imports
+from operator import concat
+from functools import reduce
 from typing import List, TypedDict, NotRequired, Literal, Dict, cast
 import re
 
@@ -140,13 +142,23 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
     library_id_list = event.get("libraryIdList", [])
 
     # Get cases
-    all_cases: List[Case] = list_cases()
+    case_list = reduce(
+        concat,
+        list(map(
+            lambda library_id_iter_: list_cases(
+                params={
+                    "libraryId": library_id_iter_,
+                }
+            ),
+            library_id_list
+        ))
+    )
 
-    # Get cases for this library list
-    filtered_case_list = filter_cases_by_library_list(all_cases, library_id_list)
+    # Reduce duplicates
+    case_list = list({(case['orcabusId']): case for case in case_list}.values())
 
     # Get case response objects
-    case_response_object_list: List[CaseResponseObject] = get_all_case_response_objects(filtered_case_list)
+    case_response_object_list: List[CaseResponseObject] = get_all_case_response_objects(case_list)
 
     # Find libraries in library_id_list that are not in any of the case response object list
     library_id_list_not_in_case_response_object_list: List[str] = list(filter(
