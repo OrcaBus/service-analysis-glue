@@ -192,52 +192,6 @@
                                       "Arguments": {
                                         "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                       },
-                                      "Next": "Case linked? (WGS)"
-                                    },
-                                    "Case linked? (WGS)": {
-                                      "Type": "Choice",
-                                      "Choices": [
-                                        {
-                                          "Condition": "{% $caseOrcabusIdIter != null %}",
-                                          "Next": "Wait 10 Seconds (WGS)"
-                                        }
-                                      ],
-                                      "Default": "No Case to Link (WGS)"
-                                    },
-                                    "No Case to Link (WGS)": {
-                                      "Type": "Pass",
-                                      "End": true
-                                    },
-                                    "Wait 10 Seconds (WGS)": {
-                                      "Type": "Wait",
-                                      "Seconds": 5,
-                                      "Next": "Link Workflow Run to Case (WGS)"
-                                    },
-                                    "Link Workflow Run to Case (WGS)": {
-                                      "Type": "Task",
-                                      "Resource": "arn:aws:states:::lambda:invoke",
-                                      "Output": "{% $states.result.Payload %}",
-                                      "Arguments": {
-                                        "Payload": {
-                                          "portalRunId": "{% $portalRunIdIter %}",
-                                          "caseOrcabusId": "{% $caseOrcabusIdIter %}"
-                                        },
-                                        "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
-                                      },
-                                      "Retry": [
-                                        {
-                                          "ErrorEquals": [
-                                            "Lambda.ServiceException",
-                                            "Lambda.AWSLambdaException",
-                                            "Lambda.SdkClientException",
-                                            "Lambda.TooManyRequestsException"
-                                          ],
-                                          "IntervalSeconds": 1,
-                                          "MaxAttempts": 3,
-                                          "BackoffRate": 2,
-                                          "JitterStrategy": "FULL"
-                                        }
-                                      ],
                                       "End": true
                                     }
                                   }
@@ -456,52 +410,6 @@
                                       "Arguments": {
                                         "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                                       },
-                                      "Next": "Case linked? (WTS)"
-                                    },
-                                    "Case linked? (WTS)": {
-                                      "Type": "Choice",
-                                      "Choices": [
-                                        {
-                                          "Condition": "{% $caseOrcabusIdIter != null %}",
-                                          "Next": "Wait N Seconds (WTS)"
-                                        }
-                                      ],
-                                      "Default": "No Case to Link (WTS)"
-                                    },
-                                    "No Case to Link (WTS)": {
-                                      "Type": "Pass",
-                                      "End": true
-                                    },
-                                    "Wait N Seconds (WTS)": {
-                                      "Type": "Wait",
-                                      "Seconds": 5,
-                                      "Next": "Link Workflow Run to Case (WTS)"
-                                    },
-                                    "Link Workflow Run to Case (WTS)": {
-                                      "Type": "Task",
-                                      "Resource": "arn:aws:states:::lambda:invoke",
-                                      "Output": "{% $states.result.Payload %}",
-                                      "Arguments": {
-                                        "Payload": {
-                                          "portalRunId": "{% $portalRunIdIter %}",
-                                          "caseOrcabusId": "{% $caseOrcabusIdIter %}"
-                                        },
-                                        "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
-                                      },
-                                      "Retry": [
-                                        {
-                                          "ErrorEquals": [
-                                            "Lambda.ServiceException",
-                                            "Lambda.AWSLambdaException",
-                                            "Lambda.SdkClientException",
-                                            "Lambda.TooManyRequestsException"
-                                          ],
-                                          "IntervalSeconds": 1,
-                                          "MaxAttempts": 3,
-                                          "BackoffRate": 2,
-                                          "JitterStrategy": "FULL"
-                                        }
-                                      ],
                                       "End": true
                                     }
                                   }
@@ -720,52 +628,6 @@
                               "Arguments": {
                                 "Entries": "{% [\n  {\n    \"EventBusName\": \"${__event_bus_name__}\",\n    \"DetailType\": \"${__workflow_run_update_detail_type__}\",\n    \"Source\": \"${__stack_source__}\",\n    \"Detail\": $states.input\n  }\n] %}"
                               },
-                              "Next": "Case linked? (WGTS Post)"
-                            },
-                            "Case linked? (WGTS Post)": {
-                              "Type": "Choice",
-                              "Choices": [
-                                {
-                                  "Condition": "{% $caseOrcabusIdIter != null %}",
-                                  "Next": "Wait N Seconds (WGTS Post)"
-                                }
-                              ],
-                              "Default": "No Case to Link (WGTS Post)"
-                            },
-                            "No Case to Link (WGTS Post)": {
-                              "Type": "Pass",
-                              "End": true
-                            },
-                            "Wait N Seconds (WGTS Post)": {
-                              "Type": "Wait",
-                              "Seconds": 5,
-                              "Next": "Link Workflow Run to Case (WGTS Post)"
-                            },
-                            "Link Workflow Run to Case (WGTS Post)": {
-                              "Type": "Task",
-                              "Resource": "arn:aws:states:::lambda:invoke",
-                              "Output": "{% $states.result.Payload %}",
-                              "Arguments": {
-                                "Payload": {
-                                  "portalRunId": "{% $portalRunIdIter %}",
-                                  "caseOrcabusId": "{% $caseOrcabusIdIter %}"
-                                },
-                                "FunctionName": "${__link_workflow_run_to_case_lambda_function_arn__}"
-                              },
-                              "Retry": [
-                                {
-                                  "ErrorEquals": [
-                                    "Lambda.ServiceException",
-                                    "Lambda.AWSLambdaException",
-                                    "Lambda.SdkClientException",
-                                    "Lambda.TooManyRequestsException"
-                                  ],
-                                  "IntervalSeconds": 1,
-                                  "MaxAttempts": 3,
-                                  "BackoffRate": 2,
-                                  "JitterStrategy": "FULL"
-                                }
-                              ],
                               "End": true
                             }
                           }

@@ -33,8 +33,7 @@ export type LambdaName =
   | 'generateRnasumValidationEvent'
   | 'summariseDeployStatusManagerChanges'
   // Case pairing
-  | 'pairCasesWithLibraries'
-  | 'linkWorkflowRunToCase';
+  | 'pairCasesWithLibraries';
 
 export const lambdaNameList: LambdaName[] = [
   // Metadata gatherers
@@ -63,7 +62,6 @@ export const lambdaNameList: LambdaName[] = [
   'summariseDeployStatusManagerChanges',
   // Case pairing
   'pairCasesWithLibraries',
-  'linkWorkflowRunToCase',
 ];
 
 // Requirements interface for Lambda functions
@@ -201,9 +199,6 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
   },
   // Case pairing
   pairCasesWithLibraries: {
-    needsOrcabusApiTools: true,
-  },
-  linkWorkflowRunToCase: {
     needsOrcabusApiTools: true,
   },
 };
