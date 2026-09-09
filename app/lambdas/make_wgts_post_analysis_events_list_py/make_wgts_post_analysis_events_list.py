@@ -142,6 +142,9 @@ def add_rnasum_draft_event(
     ))
 
     if len(rnasum_dataset_list) == 0:
+        logger.warning(
+            "Existing RNASUM workflow runs found for library: %s" % libraries[0]['libraryId']
+        )
         return []
 
     return list(map(
