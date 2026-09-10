@@ -172,7 +172,7 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
     library_id_list = event.get("libraryIdList", [])
 
     # Get cases
-    case_list = reduce(
+    case_list: List[Case] = cast(List[Case], reduce(
         concat,
         list(map(
             lambda library_id_iter_: list_cases(
@@ -182,14 +182,14 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
             ),
             library_id_list
         ))
-    )
+    ))
 
     # Reduce duplicates
-    case_list = list({(case['orcabusId']): case for case in case_list}.values())
+    case_list: List[Case] = list({(case['orcabusId']): case for case in case_list}.values())
 
     # Remove cases where case status is not open
     case_list = list(filter(
-        lambda case_iter_: case_iter_["caseStatus"] not in CASE_STATUS_BLOCKED,
+        lambda case_iter_: case_iter_["latestState"]['status'] not in CASE_STATUS_BLOCKED,
         case_list
     ))
 
