@@ -62,6 +62,34 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def wgts_post_subject_filter(library: Library, subject_orcabus_id: str) -> bool:
+    return (
+        library['subject']['orcabusId'] == subject_orcabus_id and
+        library['type'] in ['WGS', 'WTS'] and
+        library['phenotype'] in ['tumor', 'normal'] and
+        bool(get_libraries_with_readsets([library])) and
+        library['workflow'] in WGTS_WORKFLOW_NAMES
+    )
+
+
+def build_all_subject_libraries(
+        libraries_list: List[Library],
+        subject_orcabus_id: str,
+        expand_library_search: bool,
+) -> List[Library]:
+    # Expanded path: subject-wide search across all runs (current behaviour)
+    # Restricted path: only the libraries supplied in the lambda input
+    source_libraries = get_all_libraries() if expand_library_search else libraries_list
+    return list(filter(
+        lambda library_iter_: wgts_post_subject_filter(library_iter_, subject_orcabus_id),
+        sorted(
+            source_libraries,
+            key=lambda library_iter__: library_iter__['orcabusId'],
+            reverse=True,
+        )
+    ))
+
+
 def add_oncoanalyser_wgts_dna_rna_draft_event(
         libraries: List[Library],
 ) -> Optional[Dict[str, Union[str, Workflow, list[EventLibrary]]]]:
@@ -195,6 +223,8 @@ def handler(event, context):
     rnasum_dataset_list = event.get("rnasumDatasetList", None)
     if rnasum_dataset_list is None:
         rnasum_dataset_list = []
+    # Default True preserves existing behaviour for callers that do not set the key
+    expand_library_search = event.get("expandLibrarySearch", True)
 
     # Get the libraries as library objects
     libraries_list: List[Library] = get_libraries_list_from_library_id_list(
@@ -281,20 +311,11 @@ def handler(event, context):
     # Get all subject libraries
     # We sort by orcabusId descending so that the latest library is first
     # This assumes that orcabusIds are assigned in increasing order over time
-    all_subject_libraries = list(filter(
-        lambda library_iter_: (
-            library_iter_['subject']['orcabusId'] == subject_orcabus_id and
-            library_iter_['type'] in ['WGS', 'WTS'] and
-            library_iter_['phenotype'] in ['tumor', 'normal'] and
-            get_libraries_with_readsets([library_iter_]) and
-            library_iter_['workflow'] in WGTS_WORKFLOW_NAMES
-        ),
-        sorted(
-            get_all_libraries(),
-            key=lambda library_iter__: library_iter__['orcabusId'],
-            reverse=True
-        )
-    ))
+    all_subject_libraries = build_all_subject_libraries(
+        libraries_list=libraries_list,
+        subject_orcabus_id=subject_orcabus_id,
+        expand_library_search=expand_library_search,
+    )
 
     # Confirm theres at least one one normal WGS and one tumor WGS and one tumor WTS for the subject
     # Across all runs
