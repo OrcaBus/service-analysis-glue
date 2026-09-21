@@ -149,7 +149,8 @@
                                 "Arguments": {
                                   "FunctionName": "${__make_wgs_analysis_events_list_lambda_function_arn__}",
                                   "Payload": {
-                                    "libraryIdList": "{% $states.input.libraryIdList %}"
+                                    "libraryIdList": "{% $states.input.libraryIdList %}",
+                                    "expandLibrarySearch": "{% $caseOrcabusIdIter ? false : true %}"
                                   }
                                 },
                                 "Retry": [
@@ -588,7 +589,8 @@
                           "FunctionName": "${__make_wgts_post_analysis_events_list_lambda_function_arn__}",
                           "Payload": {
                             "libraryIdList": "{% $states.input.libraryIdList %}",
-                            "rnasumDatasetList": "{% $states.input.rnasumDatasetList ? $states.input.rnasumDatasetList : null %}"
+                            "rnasumDatasetList": "{% $states.input.rnasumDatasetList ? $states.input.rnasumDatasetList : null %}",
+                            "expandLibrarySearch": "{% $caseOrcabusIdIter ? false : true %}"
                           }
                         },
                         "Retry": [

@@ -165,6 +165,49 @@ def generate_wgs_draft_lists(
     ]
 
 
+def wgs_subject_filter(library: Library, subject_orcabus_id: str) -> bool:
+    """
+    WGS Subject_Filter_Set predicate.
+    :param library:
+    :param subject_orcabus_id:
+    :return:
+    """
+    return (
+            library['subject']['orcabusId'] == subject_orcabus_id and
+            library['type'] == 'WGS' and
+            bool(get_libraries_with_readsets([library])) and
+            library['workflow'] in WGTS_WORKFLOW_NAMES
+    )
+
+
+def build_all_subject_libraries(
+        libraries_list: List[Library],
+        subject_orcabus_id: str,
+        expand_library_search: bool,
+) -> List[Library]:
+    """
+    Build the candidate pool of subject libraries.
+
+    When expand_library_search is True, source the subject-wide universe via
+    get_all_libraries() (current behaviour). When False, restrict the pool to
+    the lambda's own input libraries. In both cases, sort by orcabusId
+    descending (latest first) and apply the WGS Subject_Filter_Set.
+    :param libraries_list:
+    :param subject_orcabus_id:
+    :param expand_library_search:
+    :return:
+    """
+    source_libraries = get_all_libraries() if expand_library_search else libraries_list
+    return list(filter(
+        lambda library_iter_: wgs_subject_filter(library_iter_, subject_orcabus_id),
+        sorted(
+            source_libraries,
+            key=lambda library_iter__: library_iter__['orcabusId'],
+            reverse=True
+        )
+    ))
+
+
 def handler(event, context):
     """
     Get the library id list
@@ -177,6 +220,9 @@ def handler(event, context):
 
     # Get the library id list
     library_id_list = event.get("libraryIdList", [])
+
+    # Default True preserves existing behaviour for callers that do not set the key
+    expand_library_search = event.get("expandLibrarySearch", True)
 
     # Get the libraries as library objects
     libraries_list: List[Library] = get_libraries_list_from_library_id_list(
@@ -289,19 +335,11 @@ def handler(event, context):
     # Get all subject libraries
     # We sort by orcabusId descending so that the latest library is first
     # This assumes that orcabusIds are assigned in increasing order over time
-    all_subject_libraries = list(filter(
-        lambda library_iter_: (
-                library_iter_['subject']['orcabusId'] == subject_orcabus_id and
-                library_iter_['type'] == 'WGS' and
-                get_libraries_with_readsets([library_iter_]) and
-                library_iter_['workflow'] in WGTS_WORKFLOW_NAMES
-        ),
-        sorted(
-            get_all_libraries(),
-            key=lambda library_iter__: library_iter__['orcabusId'],
-            reverse=True
-        )
-    ))
+    all_subject_libraries = build_all_subject_libraries(
+        libraries_list=libraries_list,
+        subject_orcabus_id=subject_orcabus_id,
+        expand_library_search=expand_library_search,
+    )
 
     # Confirm theres at least one one normal and one tumor library for the subject
     # Across all runs
