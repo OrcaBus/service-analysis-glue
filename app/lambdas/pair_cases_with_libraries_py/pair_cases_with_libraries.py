@@ -35,12 +35,12 @@ import re
 
 # Layer imports
 from orcabus_api_tools.case import list_cases
-from orcabus_api_tools.case.models import Case
+from orcabus_api_tools.case.models import StatusType, CaseDetail
 
 # Globals and types
 RNASUM_REFERENCE_COLUMN_PREFIX = "rnasumReference"
 RnasumDatasetType = Literal[
-  # PRIMARY_DATASETS_OPTION \
+  # PRIMARY_DATASETS_OPTION
   "BRCA", "THCA", "HNSC", "LGG", "KIRC", "LUSC", "LUAD", "PRAD", "STAD", "LIHC", "COAD", "KIRP",
   "BLCA", "OV", "SARC", "PCPG", "CESC", "UCEC", "PAAD", "TGCT", "LAML", "ESCA", "GBM", "THYM",
   "SKCM", "READ", "UVM", "ACC", "MESO", "KICH", "UCS", "DLBC", "CHOL",
@@ -51,34 +51,12 @@ RnasumDatasetType = Literal[
   "PANCAN"
 ]
 
-# Case status
-CaseStatusType = Literal[
-    "request_received",  # Request Received
-    "wgts_tumour_sample_received",  # WGTS Tumour Sample Received
-    "wgts_germline_sample_received",  # WGTS Germline Sample Received
-    "cttso_sample_received",  # CTTSO Sample Received
-    "all_sample_received",  # All Sample Received
-    "library_partially_failed",  # Library Partially Failed
-    "sequencing_started",  # Sequencing Started
-    "sequencing_completed",  # Sequencing Completed
-    "bioinformatics_started",  # Bioinformatics Started
-    "bioinformatics_completed",  # Bioinformatics Completed
-    "curation_started",  # Curation Started
-    "curation_completed",  # Curation Completed
-    "locked",  # Locked
-    "unlocked",  # Unlocked
-    "failed",  # Failed
-    "completed",  # Completed
-    "archived",  # Archived
-]
-
-
-CASE_STATUS_BLOCKED: List[CaseStatusType] = [
+CASE_STATUS_BLOCKED: List[StatusType] = [
     "locked",
     "failed",
     "curation_completed",
     "completed",
-    "archived"
+    "archived",
 ]
 
 
@@ -88,7 +66,7 @@ class CaseResponseObject(TypedDict):
     rnasumDatasetList: NotRequired[List[RnasumDatasetType]]
 
 
-def filter_cases_by_library_list(case_list: List[Case], library_id_list: List[str]) -> List[Case]:
+def filter_cases_by_library_list(case_list: List[CaseDetail], library_id_list: List[str]) -> List[CaseDetail]:
     """
     Return only the cases where a library in the library_id_list is present in the case.
     :param case_list:
@@ -104,7 +82,7 @@ def filter_cases_by_library_list(case_list: List[Case], library_id_list: List[st
     ))
 
 
-def get_all_libraries_in_case(case_obj: Case) -> List[str]:
+def get_all_libraries_in_case(case_obj: CaseDetail) -> List[str]:
     """
     Under case.externalEntitySet
     Find all libraries where:
@@ -127,7 +105,7 @@ def get_all_libraries_in_case(case_obj: Case) -> List[str]:
 
 
 def get_rnasum_reference_list(
-        case_obj: Case
+        case_obj: CaseDetail
 ) -> List[RnasumDatasetType]:
 
     # Get reference list
@@ -144,7 +122,7 @@ def get_rnasum_reference_list(
     ))
 
 
-def get_all_case_response_objects(case_list: List[Case]) -> List[CaseResponseObject]:
+def get_all_case_response_objects(case_list: List[CaseDetail]) -> List[CaseResponseObject]:
     """
     Get all libraries in all cases
     :param case_list:
@@ -173,7 +151,7 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
     library_id_list = event.get("libraryIdList", [])
 
     # Get cases
-    case_list: List[Case] = cast(List[Case], reduce(
+    case_list: List[CaseDetail] = cast(List[CaseDetail], reduce(
         concat,
         list(map(
             lambda library_id_iter_: list_cases(
@@ -186,7 +164,7 @@ def handler(event, context) -> Dict[Literal['caseList'], List[CaseResponseObject
     ))
 
     # Reduce duplicates
-    case_list: List[Case] = list({(case['orcabusId']): case for case in case_list}.values())
+    case_list: List[CaseDetail] = list({(case['orcabusId']): case for case in case_list}.values())
 
     # Remove cases where case status is not open
     case_list = list(filter(
