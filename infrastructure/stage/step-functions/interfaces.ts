@@ -32,6 +32,8 @@ export interface StepFunctionRequirements {
   needsEventPutPermission?: boolean;
   // SSM Stuff
   needsSsmParameterAccess?: boolean;
+  // Grants scheduler:GetSchedule + scheduler:UpdateSchedule on the preflight schedule
+  needsSchedulerSelfDisablePermission?: boolean;
   // SFN Account Specific?
   prodOnly?: boolean;
 }
@@ -70,6 +72,7 @@ export const stepFunctionsRequirementsMap: Record<StateMachineName, StepFunction
   runPreflightChecks: {
     needsEventPutPermission: true,
     needsSsmParameterAccess: true,
+    needsSchedulerSelfDisablePermission: true,
     prodOnly: true,
   },
 };

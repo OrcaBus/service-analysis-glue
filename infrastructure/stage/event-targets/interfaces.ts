@@ -10,15 +10,13 @@ export type EventBridgeTargetName =
   // Event Rules
   | 'fastqSetCreatedToWgtsAnalysisBuilderSfnTarget'
   | 'fastqSetCreatedToCttsoAnalysisBuilderSfnTarget'
-  | 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilderSfnTarget'
-  | 'srmSampleSheetChangeToPreFlightValidationSfnTarget';
+  | 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilderSfnTarget';
 
 export const eventBridgeTargetsNameList: EventBridgeTargetName[] = [
   // Event Rules
   'fastqSetCreatedToWgtsAnalysisBuilderSfnTarget',
   'fastqSetCreatedToCttsoAnalysisBuilderSfnTarget',
   'fastqSetCreatedToBclconvertInteropQcAnalysisBuilderSfnTarget',
-  'srmSampleSheetChangeToPreFlightValidationSfnTarget',
 ];
 
 export interface AddSfnAsEventBridgeTargetProps {

@@ -4,16 +4,12 @@ import { EventPattern, IEventBus, Rule } from 'aws-cdk-lib/aws-events';
  * EventBridge Rules Interfaces
  */
 export type EventBridgeRuleName =
-  // SRM SampleSheet Change
-  | 'SrmSampleSheetStateChange'
   // Post-fastq sets created
   | 'fastqSetCreatedToWgtsAnalysisBuilder'
   | 'fastqSetCreatedToCttsoAnalysisBuilder'
   | 'fastqSetCreatedToBclconvertInteropQcAnalysisBuilder';
 
 export const eventBridgeRuleNameList: EventBridgeRuleName[] = [
-  // SRM updated, run validations
-  'SrmSampleSheetStateChange',
   // Post-fastq sets created
   'fastqSetCreatedToWgtsAnalysisBuilder',
   'fastqSetCreatedToCttsoAnalysisBuilder',

@@ -55,19 +55,6 @@ export function buildAllEventBridgeTargets(props: EventBridgeTargetsProps) {
         });
         break;
       }
-      case 'srmSampleSheetChangeToPreFlightValidationSfnTarget': {
-        if (props.prodOnly) {
-          ruleToSfnTarget(<AddSfnAsEventBridgeTargetProps>{
-            eventBridgeRuleObj: props.eventBridgeRuleObjects.find(
-              (eventBridgeObject) => eventBridgeObject.ruleName === 'SrmSampleSheetStateChange'
-            )?.ruleObject,
-            stateMachineObj: props.stepFunctionObjects.find(
-              (sfnObject) => sfnObject.stateMachineName === 'runPreflightChecks'
-            )?.sfnObject,
-          });
-        }
-        break;
-      }
     }
   }
 }
