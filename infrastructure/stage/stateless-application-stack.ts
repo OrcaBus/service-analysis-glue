@@ -8,6 +8,7 @@ import { StatelessApplicationStackConfig } from './interfaces';
 import { buildAllEventRules } from './event-rules';
 import { buildAllEventBridgeTargets } from './event-targets';
 import { buildAllLambdas, buildAnalysisToolsLayer } from './lambdas';
+import { buildAllSchedules } from './schedules';
 
 export type StatelessApplicationStackProps = cdk.StackProps & StatelessApplicationStackConfig;
 
@@ -64,6 +65,12 @@ export class StatelessApplicationStack extends GitStack {
       eventBridgeRuleObjects: eventRules,
       stepFunctionObjects: stateMachines,
       prodOnly: props.stageName === 'PROD',
+    });
+
+    // Prod-only preflight schedule
+    buildAllSchedules(this, {
+      stepFunctionObjects: stateMachines,
+      isProdAccount: props.stageName === 'PROD',
     });
   }
 }

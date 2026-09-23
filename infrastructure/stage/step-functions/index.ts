@@ -150,6 +150,17 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
     );
   }
 
+  // Scheduler self-disable substitutions (Requirement 3.4)
+  // The schedule name and ARN are deterministic from STACK_PREFIX and account/region, so they
+  // can be injected without a construct reference (avoiding a stack ordering dependency on
+  // buildAllSchedules).
+  if (sfnRequirements.needsSchedulerSelfDisablePermission && props.isProdAccount) {
+    const scheduleName = `${STACK_PREFIX}-run-preflight-checks-schedule`;
+    definitionSubstitutions['__preflight_schedule_name__'] = scheduleName;
+    definitionSubstitutions['__preflight_schedule_arn__'] =
+      `arn:aws:scheduler:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schedule/default/${scheduleName}`;
+  }
+
   return definitionSubstitutions;
 }
 
@@ -257,6 +268,42 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
             'It is not possible to scope this down further without causing circular dependencies.',
         },
       ]
+    );
+  }
+
+  /* Scheduler self-disable permissions (Requirements 3.1, 3.2, 3.3) */
+  if (sfnRequirements.needsSchedulerSelfDisablePermission && props.isProdAccount) {
+    const scheduleArn = `arn:aws:scheduler:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schedule/default/${STACK_PREFIX}-run-preflight-checks-schedule`;
+
+    props.sfnObject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['scheduler:GetSchedule', 'scheduler:UpdateSchedule'],
+        resources: [scheduleArn], // scoped to the single schedule ARN (Req 3.1, 3.2)
+      })
+    );
+
+    // UpdateSchedule requires iam:PassRole for the schedule's execution role
+    props.sfnObject.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['iam:PassRole'],
+        resources: [`arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/*runPreflightChecksScheduleRole*`],
+        conditions: {
+          StringLike: { 'iam:PassedToService': 'scheduler.amazonaws.com' },
+        },
+      })
+    );
+
+    NagSuppressions.addResourceSuppressions(
+      props.sfnObject,
+      [
+        {
+          id: 'AwsSolutions-IAM5',
+          reason:
+            'scheduler:GetSchedule/UpdateSchedule are scoped to the single preflight schedule ARN; ' +
+            'iam:PassRole is constrained to the scheduler service via a condition',
+        },
+      ],
+      true
     );
   }
 }

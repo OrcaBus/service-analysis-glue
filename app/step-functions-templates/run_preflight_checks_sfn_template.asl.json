@@ -29,6 +29,59 @@
         "newSummary": "{% $states.result.Payload.newSummary %}"
       },
       "Comment": "Get CloudFormation Status of current workflows and dump this to S3",
+      "Next": "Get Preflight Schedule"
+    },
+    "Get Preflight Schedule": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:scheduler:getSchedule",
+      "Arguments": {
+        "Name": "${__preflight_schedule_name__}"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Scheduler.SchedulerException",
+            "Scheduler.SdkClientException",
+            "Scheduler.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Assign": {
+        "scheduleDefinition": "{% $states.result %}"
+      },
+      "Comment": "Retrieve the full current definition of the preflight schedule before disabling it",
+      "Next": "Disable Preflight Schedule"
+    },
+    "Disable Preflight Schedule": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::aws-sdk:scheduler:updateSchedule",
+      "Arguments": {
+        "Name": "{% $scheduleDefinition.Name %}",
+        "ScheduleExpression": "{% $scheduleDefinition.ScheduleExpression %}",
+        "ScheduleExpressionTimezone": "{% $scheduleDefinition.ScheduleExpressionTimezone %}",
+        "FlexibleTimeWindow": "{% $scheduleDefinition.FlexibleTimeWindow %}",
+        "GroupName": "{% $scheduleDefinition.GroupName %}",
+        "Target": "{% $scheduleDefinition.Target %}",
+        "State": "DISABLED"
+      },
+      "Retry": [
+        {
+          "ErrorEquals": [
+            "Scheduler.SchedulerException",
+            "Scheduler.SdkClientException",
+            "Scheduler.TooManyRequestsException"
+          ],
+          "IntervalSeconds": 1,
+          "MaxAttempts": 3,
+          "BackoffRate": 2,
+          "JitterStrategy": "FULL"
+        }
+      ],
+      "Comment": "Re-apply the retrieved schedule definition with State=DISABLED so no overlapping run can fire",
       "Next": "For ctDNA / WGS / WTS workflows"
     },
     "For ctDNA / WGS / WTS workflows": {
