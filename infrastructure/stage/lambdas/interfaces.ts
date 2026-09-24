@@ -98,6 +98,8 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
     needsAnalysisToolsLayer: true,
+    needsLongerTimeout: true,
+    needsMoreMemory: true,
   },
   makeWgsAnalysisEventsList: {
     needsOrcabusApiTools: true,
@@ -110,12 +112,16 @@ export const lambdaRequirementsMap: Record<LambdaName, LambdaRequirements> = {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
     needsAnalysisToolsLayer: true,
+    needsLongerTimeout: true,
+    needsMoreMemory: true,
   },
   // Post Event Detail Makers
   makeCtdnaPostAnalysisEventsList: {
     needsOrcabusApiTools: true,
     needsSsmParameterAccess: true,
     needsAnalysisToolsLayer: true,
+    needsLongerTimeout: true,
+    needsMoreMemory: true,
   },
   makeWgtsPostAnalysisEventsList: {
     needsOrcabusApiTools: true,
