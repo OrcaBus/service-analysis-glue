@@ -165,7 +165,7 @@ def handler(event, context):
 
     # Check for negative control
     negative_control_libraries = list(filter(
-        lambda library_iter_: library_iter_['phenotype'].startswith('negative'),
+        lambda library_iter_: library_iter_.get('phenotype', 'tumor').startswith('negative'),
         libraries_list
     ))
 
