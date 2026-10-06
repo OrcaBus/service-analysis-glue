@@ -216,7 +216,7 @@
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
                       "instrumentRunId": "{% $instrumentRunIdMapIter %}",
-                      "sequenceRunId": "{% $instrumentRunIdMapIter %}"
+                      "sequenceRunId": "{% $sequenceRunIdMapIter %}"
                     },
                     "MaxConcurrency": 1,
                     "Output": {}

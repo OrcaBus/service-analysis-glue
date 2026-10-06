@@ -13,3 +13,6 @@ cdk.out
 # IDE
 .idea
 .DS_Store
+
+# Agent review/scratch output
+.agents/

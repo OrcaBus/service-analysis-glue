@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
 """
-Given an insturment run id, list the instrument run ids given a sample type
+Given an instrument run id, list the instrument run ids given a sample type
 
 Inputs:
   * sampleType
   * instrumentRunId
+  * sequenceRunId
 
 """
 
@@ -17,7 +18,7 @@ from orcabus_api_tools.sequence import get_library_id_list_from_instrument_run_i
 def handler(event, context):
     # Get inputs
     instrument_run_id = event['instrumentRunId']
-    sequence_run_id = event['sequenceRunId']
+    sequence_run_id = event.get('sequenceRunId')
     sample_type_list = event['sampleTypeList']
 
     # Get libraries
