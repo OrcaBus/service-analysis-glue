@@ -6,7 +6,8 @@
       "Type": "Pass",
       "Next": "Split by Sample Type",
       "Assign": {
-        "instrumentRunId": "{% $states.input.instrumentRunId %}"
+        "instrumentRunId": "{% $states.input.instrumentRunId %}",
+        "sequenceRunId": "{% $states.input.sequenceRunId %}"
       }
     },
     "Split by Sample Type": {
@@ -23,6 +24,7 @@
                 "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
                 "Payload": {
                   "instrumentRunId": "{% $instrumentRunId %}",
+                  "sequenceRunId": "{% $sequenceRunId %}",
                   "sampleTypeList": "{% ['${__wgs_sample_type__}'] %}"
                 }
               },
@@ -60,6 +62,7 @@
                     "Next": "For each subject id (WGS)",
                     "Assign": {
                       "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+                      "sequenceRunIdMapIter": "{% $states.input.BatchInput.sequenceRunId %}",
                       "subjectIdListMapIter": "{% $states.input.Items %}"
                     }
                   },
@@ -78,6 +81,7 @@
                             "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
                             "Payload": {
                               "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                              "sequenceRunId": "{% $states.input.sequenceRunId %}",
                               "subjectId": "{% $states.input.subjectId %}",
                               "sampleTypeList": "{% ['${__wgs_sample_type__}'] %}"
                             }
@@ -211,7 +215,8 @@
                     "Items": "{% $subjectIdListMapIter %}",
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
-                      "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+                      "instrumentRunId": "{% $instrumentRunIdMapIter %}",
+                      "sequenceRunId": "{% $sequenceRunIdMapIter %}"
                     },
                     "MaxConcurrency": 1,
                     "Output": {}
@@ -225,7 +230,8 @@
               "ItemBatcher": {
                 "MaxItemsPerBatch": 10,
                 "BatchInput": {
-                  "instrumentRunId": "{% $instrumentRunId %}"
+                  "instrumentRunId": "{% $instrumentRunId %}",
+                  "sequenceRunId": "{% $sequenceRunId %}"
                 }
               },
               "Output": {}
@@ -242,6 +248,7 @@
                 "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
                 "Payload": {
                   "instrumentRunId": "{% $instrumentRunId %}",
+                  "sequenceRunId": "{% $sequenceRunId %}",
                   "sampleTypeList": "{% ['${__wts_sample_type__}'] %}"
                 }
               },
@@ -279,6 +286,7 @@
                     "Next": "For each subject id (WTS)",
                     "Assign": {
                       "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+                      "sequenceRunIdMapIter": "{% $states.input.BatchInput.sequenceRunId %}",
                       "subjectIdListMapIter": "{% $states.input.Items %}"
                     }
                   },
@@ -300,6 +308,7 @@
                             "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
                             "Payload": {
                               "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                              "sequenceRunId": "{% $states.input.sequenceRunId %}",
                               "subjectId": "{% $states.input.subjectId %}",
                               "sampleTypeList": "{% ['${__wts_sample_type__}'] %}"
                             }
@@ -429,7 +438,8 @@
                     "Items": "{% $subjectIdListMapIter %}",
                     "ItemSelector": {
                       "subjectId": "{% $states.context.Map.Item.Value %}",
-                      "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+                      "instrumentRunId": "{% $instrumentRunIdMapIter %}",
+                      "sequenceRunId": "{% $sequenceRunIdMapIter %}"
                     },
                     "Output": {}
                   }
@@ -441,7 +451,8 @@
               "Items": "{% $states.input.subjectIdList %}",
               "ItemBatcher": {
                 "BatchInput": {
-                  "instrumentRunId": "{% $instrumentRunId %}"
+                  "instrumentRunId": "{% $instrumentRunId %}",
+                  "sequenceRunId": "{% $sequenceRunId %}"
                 },
                 "MaxItemsPerBatch": 10
               },
@@ -462,6 +473,7 @@
         "FunctionName": "${__get_subjects_from_instrument_run_id_lambda_function_arn__}",
         "Payload": {
           "instrumentRunId": "{% $instrumentRunId %}",
+          "sequenceRunId": "{% $sequenceRunId %}",
           "sampleTypeList": "{% ['${__wgs_sample_type__}', '${__wts_sample_type__}'] %}"
         }
       },
@@ -496,6 +508,7 @@
             "Next": "For each subject ID (WGTS) (Post)",
             "Assign": {
               "instrumentRunIdMapIter": "{% $states.input.BatchInput.instrumentRunId %}",
+              "sequenceRunIdMapIter": "{% $states.input.BatchInput.sequenceRunId %}",
               "subjectIdListMapIter": "{% $states.input.Items %}"
             }
           },
@@ -517,6 +530,7 @@
                     "FunctionName": "${__get_libraries_from_instrument_run_id_and_subject_id_lambda_function_arn__}",
                     "Payload": {
                       "instrumentRunId": "{% $states.input.instrumentRunId %}",
+                      "sequenceRunId": "{% $states.input.sequenceRunId %}",
                       "subjectId": "{% $states.input.subjectId %}",
                       "sampleTypeList": "{% ['${__wgs_sample_type__}', '${__wts_sample_type__}'] %}"
                     }
@@ -649,7 +663,8 @@
             "Items": "{% $subjectIdListMapIter %}",
             "ItemSelector": {
               "subjectId": "{% $states.context.Map.Item.Value %}",
-              "instrumentRunId": "{% $instrumentRunIdMapIter %}"
+              "instrumentRunId": "{% $instrumentRunIdMapIter %}",
+              "sequenceRunId": "{% $sequenceRunIdMapIter %}"
             },
             "Output": {}
           }
@@ -659,7 +674,8 @@
       "Label": "ForeachsubjectidbatchedWGTS",
       "ItemBatcher": {
         "BatchInput": {
-          "instrumentRunId": "{% $instrumentRunId %}"
+          "instrumentRunId": "{% $instrumentRunId %}",
+          "sequenceRunId": "{% $sequenceRunId %}"
         },
         "MaxItemsPerBatch": 10
       },
