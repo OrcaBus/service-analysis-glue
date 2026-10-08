@@ -6,7 +6,8 @@
       "Type": "Pass",
       "Next": "Get BCLConvert InterOp Event",
       "Assign": {
-        "instrumentRunId": "{% $states.input.instrumentRunId %}"
+        "instrumentRunId": "{% $states.input.instrumentRunId %}",
+        "sequenceRunId": "{% $states.input.sequenceRunId %}"
       }
     },
     "Get BCLConvert InterOp Event": {
@@ -18,7 +19,8 @@
       "Arguments": {
         "FunctionName": "${__make_bclconvert_interop_qc_event_lambda_function_arn__}",
         "Payload": {
-          "instrumentRunId": "{% $instrumentRunId %}"
+          "instrumentRunId": "{% $instrumentRunId %}",
+          "sequenceRunId": "{% $sequenceRunId %}"
         }
       },
       "Retry": [

@@ -127,11 +127,13 @@ def handler(event, context):
 
     # Get the library id list
     instrument_run_id = event.get("instrumentRunId")
+    sequence_run_id = event.get("sequenceRunId")
 
     # Get the libraries as library objects
     library_id_list = get_library_id_list_in_sequence(
         get_sequence_object_from_instrument_run_id(
-            instrument_run_id=instrument_run_id
+            instrument_run_id=instrument_run_id,
+            sequence_run_id=sequence_run_id,
         )['orcabusId']
     )
 
