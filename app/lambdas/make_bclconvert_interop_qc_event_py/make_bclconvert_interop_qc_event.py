@@ -48,6 +48,7 @@ logger = logging.getLogger(__name__)
 
 def add_bclconvert_interop_qc_draft_event(
         instrument_run_id: str,
+        sequence_run_id: str,
         libraries: List[Library],
 ):
     """
@@ -74,10 +75,11 @@ def add_bclconvert_interop_qc_draft_event(
             "data": {
                 "tags": {
                     "instrumentRunId": instrument_run_id,
+                    "sequenceRunId": sequence_run_id,
                     "libraryIdList": list(map(
                         lambda library_obj_iter_: library_obj_iter_['libraryId'],
                         libraries
-                    ))
+                    )),
                 }
             }
         }
@@ -88,6 +90,7 @@ def add_bclconvert_interop_qc_draft_event(
 
 def generate_bclconvert_interop_qc_draft(
         instrument_run_id: str,
+        sequence_run_id: str,
         libraries: List[Library],
 ) -> Optional[Dict[str, Any]]:
 
@@ -113,6 +116,7 @@ def generate_bclconvert_interop_qc_draft(
 
     return add_bclconvert_interop_qc_draft_event(
         instrument_run_id=instrument_run_id,
+        sequence_run_id=sequence_run_id,
         libraries=libraries
     )
 
@@ -127,11 +131,13 @@ def handler(event, context):
 
     # Get the library id list
     instrument_run_id = event.get("instrumentRunId")
+    sequence_run_id = event.get("sequenceRunId")
 
     # Get the libraries as library objects
     library_id_list = get_library_id_list_in_sequence(
         get_sequence_object_from_instrument_run_id(
-            instrument_run_id=instrument_run_id
+            instrument_run_id=instrument_run_id,
+            sequence_run_id=sequence_run_id,
         )['orcabusId']
     )
 
@@ -145,6 +151,7 @@ def handler(event, context):
             [
                 generate_bclconvert_interop_qc_draft(
                     instrument_run_id,
+                    sequence_run_id,
                     libraries_list
                 )
             ]
