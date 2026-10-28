@@ -15,6 +15,8 @@ import * as sfn from 'aws-cdk-lib/aws-stepfunctions';
 import path from 'path';
 import {
   EVENT_SOURCE,
+  PREFLIGHT_SCHEDULE_NAME,
+  PREFLIGHT_SCHEDULE_ROLE_NAME,
   STACK_PREFIX,
   STEP_FUNCTIONS_DIR,
   WORKFLOW_RUN_STATE_CHANGE_DETAIL_TYPE,
@@ -151,14 +153,13 @@ function createStateMachineDefinitionSubstitutions(props: BuildStepFunctionProps
   }
 
   // Scheduler self-disable substitutions (Requirement 3.4)
-  // The schedule name and ARN are deterministic from STACK_PREFIX and account/region, so they
-  // can be injected without a construct reference (avoiding a stack ordering dependency on
+  // The schedule name and ARN are deterministic from PREFLIGHT_SCHEDULE_NAME and account/region,
+  // so they can be injected without a construct reference (avoiding a stack ordering dependency on
   // buildAllSchedules).
   if (sfnRequirements.needsSchedulerSelfDisablePermission && props.isProdAccount) {
-    const scheduleName = `${STACK_PREFIX}-run-preflight-checks-schedule`;
-    definitionSubstitutions['__preflight_schedule_name__'] = scheduleName;
+    definitionSubstitutions['__preflight_schedule_name__'] = PREFLIGHT_SCHEDULE_NAME;
     definitionSubstitutions['__preflight_schedule_arn__'] =
-      `arn:aws:scheduler:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schedule/default/${scheduleName}`;
+      `arn:aws:scheduler:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schedule/default/${PREFLIGHT_SCHEDULE_NAME}`;
   }
 
   return definitionSubstitutions;
@@ -273,7 +274,11 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
 
   /* Scheduler self-disable permissions (Requirements 3.1, 3.2, 3.3) */
   if (sfnRequirements.needsSchedulerSelfDisablePermission && props.isProdAccount) {
-    const scheduleArn = `arn:aws:scheduler:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schedule/default/${STACK_PREFIX}-run-preflight-checks-schedule`;
+    const scheduleArn = `arn:aws:scheduler:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:schedule/default/${PREFLIGHT_SCHEDULE_NAME}`;
+    // The schedule's execution role is created with an explicit physical name
+    // (PREFLIGHT_SCHEDULE_ROLE_NAME) in buildAllSchedules, so its ARN is deterministic at synth
+    // time and can be referenced here without a construct dependency or a name wildcard.
+    const scheduleRoleArn = `arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/${PREFLIGHT_SCHEDULE_ROLE_NAME}`;
 
     props.sfnObject.addToRolePolicy(
       new iam.PolicyStatement({
@@ -286,7 +291,7 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
     props.sfnObject.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['iam:PassRole'],
-        resources: [`arn:aws:iam::${cdk.Aws.ACCOUNT_ID}:role/*runPreflightChecksScheduleRole*`],
+        resources: [scheduleRoleArn], // scoped to the exact scheduler execution role ARN
         conditions: {
           StringLike: { 'iam:PassedToService': 'scheduler.amazonaws.com' },
         },
@@ -300,7 +305,8 @@ function wireUpStateMachinePermissions(scope: Construct, props: WireUpPermission
           id: 'AwsSolutions-IAM5',
           reason:
             'scheduler:GetSchedule/UpdateSchedule are scoped to the single preflight schedule ARN; ' +
-            'iam:PassRole is constrained to the scheduler service via a condition',
+            'iam:PassRole is scoped to the exact scheduler execution role ARN and further ' +
+            'constrained to the scheduler service via a condition',
         },
       ],
       true

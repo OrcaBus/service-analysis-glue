@@ -19,6 +19,17 @@ export const STEP_FUNCTIONS_DIR = path.join(APP_ROOT, 'step-functions-templates'
 /* Stack constants */
 export const STACK_PREFIX = 'orca-analysis-glue';
 
+/* Scheduler constants */
+// Name of the weekly preflight-checks schedule. Deterministic from STACK_PREFIX so both the
+// schedule construct and the state machine's self-disable permissions can reference it without
+// a cross-construct dependency.
+export const PREFLIGHT_SCHEDULE_NAME = `${STACK_PREFIX}-run-preflight-checks-schedule`;
+// Explicit physical name for the schedule's execution role. Setting this makes the role ARN
+// deterministic at synth time, so the state machine can scope its iam:PassRole statement to the
+// exact ARN (instead of a truncation-tolerant wildcard) without creating a circular dependency
+// between the role and the state machine constructs.
+export const PREFLIGHT_SCHEDULE_ROLE_NAME = `${STACK_PREFIX}-preflight-schedule-role`;
+
 /* Workflow constants */
 export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, WorkflowsObjectType> = {
   BETA: {
