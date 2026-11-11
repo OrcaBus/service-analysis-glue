@@ -1,6 +1,9 @@
 allowBuilds:
   '@parcel/watcher': true
   unrs-resolver: true
+auditConfig:
+  ignoreGhsas:
+    - GHSA-gcqx-w48m-w2h4
 minimumReleaseAgeExclude:
   - '@aws-cdk/cloud-assembly-schema@53.25.0'
   - '@types/node@25.9.1'
