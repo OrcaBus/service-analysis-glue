@@ -110,12 +110,12 @@ export type BclconvertInteropQcWorkflowObjectType = Workflow &
         validationState: 'VALIDATED';
       }
     | {
-        // https://github.com/umccr/cwl-ica/releases/tag/bclconvert-interop-qc%2F1.9.0--1.33__20260401225123
+        // https://github.com/umccr/cwl-ica/releases#release-bclconvert-interop-qc/1.9.0--1.33__20261022083942
         name: 'bclconvert-interop-qc';
         version: '1.9.0--1.33';
-        codeVersion: '56670e1';
+        codeVersion: 'c6d199d';
         executionEngine: 'ICA';
-        executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7';
+        executionEnginePipelineId: '37a5e977-94de-4b8e-abb7-1354fb62b2fc';
         validationState: 'VALIDATED';
       }
   );
