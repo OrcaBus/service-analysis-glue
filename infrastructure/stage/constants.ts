@@ -66,9 +66,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     oncoanalyserWgtsDna: {
       name: 'oncoanalyser-wgts-dna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     sash: {
@@ -91,18 +91,18 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     oncoanalyserWgtsRna: {
       name: 'oncoanalyser-wgts-rna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     // DNA / RNA
     oncoanalyserWgtsDnaRna: {
       name: 'oncoanalyser-wgts-dna-rna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     rnasum: {
@@ -159,9 +159,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     oncoanalyserWgtsDna: {
       name: 'oncoanalyser-wgts-dna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     sash: {
@@ -184,18 +184,18 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     oncoanalyserWgtsRna: {
       name: 'oncoanalyser-wgts-rna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     // DNA / RNA
     oncoanalyserWgtsDnaRna: {
       name: 'oncoanalyser-wgts-dna-rna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     rnasum: {
@@ -252,9 +252,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     oncoanalyserWgtsDna: {
       name: 'oncoanalyser-wgts-dna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     sash: {
@@ -277,18 +277,18 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     oncoanalyserWgtsRna: {
       name: 'oncoanalyser-wgts-rna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     // DNA / RNA
     oncoanalyserWgtsDnaRna: {
       name: 'oncoanalyser-wgts-dna-rna',
       version: '2.2.0',
-      codeVersion: 'b94cbc7',
+      codeVersion: 'b94cbc7--d5e786e',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0',
+      executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75',
       validationState: 'VALIDATED',
     },
     rnasum: {
