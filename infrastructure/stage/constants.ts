@@ -26,9 +26,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     bclconvertInteropQc: {
       name: 'bclconvert-interop-qc',
       version: '1.9.0--1.33',
-      codeVersion: '56670e1',
+      codeVersion: 'c6d199d',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7',
+      executionEnginePipelineId: '37a5e977-94de-4b8e-abb7-1354fb62b2fc',
       validationState: 'VALIDATED',
     },
     // ctDNA
@@ -119,9 +119,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     bclconvertInteropQc: {
       name: 'bclconvert-interop-qc',
       version: '1.9.0--1.33',
-      codeVersion: '56670e1',
+      codeVersion: 'c6d199d',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7',
+      executionEnginePipelineId: '37a5e977-94de-4b8e-abb7-1354fb62b2fc',
       validationState: 'VALIDATED',
     },
     // ctDNA
@@ -212,9 +212,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     bclconvertInteropQc: {
       name: 'bclconvert-interop-qc',
       version: '1.9.0--1.33',
-      codeVersion: '56670e1',
+      codeVersion: 'c6d199d',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '9bbd1a1d-1f7f-42dd-84c0-936ae17688b7',
+      executionEnginePipelineId: '37a5e977-94de-4b8e-abb7-1354fb62b2fc',
       validationState: 'VALIDATED',
     },
     // ctDNA
