@@ -197,11 +197,12 @@ export type DragenWgtsDnaPayloadVersionType = '2025.06.04';
 export type OncoanalyserWgtsDnaWorkflowObjectType = Workflow &
   (
     | {
+        // https://github.com/umccr/nf-ica/releases/tag/oncoanalyser/2.2.0__20261108235324
         name: 'oncoanalyser-wgts-dna';
         version: '2.2.0';
-        codeVersion: 'b94cbc7';
+        codeVersion: 'b94cbc7--d5e786e';
         executionEngine: 'ICA';
-        executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
+        executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75';
         validationState: 'VALIDATED';
       }
     | {
@@ -271,11 +272,12 @@ export type ArribaPayloadVersionType = '2025.08.05';
 export type OncoanalyserWgtsRnaWorkflowObjectType = Workflow &
   (
     | {
+        // https://github.com/umccr/nf-ica/releases/tag/oncoanalyser/2.2.0__20261108235324
         name: 'oncoanalyser-wgts-rna';
         version: '2.2.0';
-        codeVersion: 'b94cbc7';
+        codeVersion: 'b94cbc7--d5e786e';
         executionEngine: 'ICA';
-        executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
+        executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75';
         validationState: 'VALIDATED';
       }
     | {
@@ -295,11 +297,12 @@ export type OncoanalyserWgtsRnaPayloadVersionType = '2025.08.05' | '2026.05.12';
 export type OncoanalyserWgtsDnaRnaWorkflowObjectType = Workflow &
   (
     | {
+        // https://github.com/umccr/nf-ica/releases/tag/oncoanalyser/2.2.0__20261108235324
         name: 'oncoanalyser-wgts-dna-rna';
         version: '2.2.0';
-        codeVersion: 'b94cbc7';
+        codeVersion: 'b94cbc7--d5e786e';
         executionEngine: 'ICA';
-        executionEnginePipelineId: '40b8005e-1473-4257-9949-cc8b42750cf0';
+        executionEnginePipelineId: 'f60b426f-231a-48a6-b669-4fb586f82f75';
         validationState: 'VALIDATED';
       }
     | {
