@@ -64,23 +64,6 @@ export type WorkflowNameType =
   | 'oncoanalyserWgtsDnaRna'
   | 'rnasum';
 
-export const WORKFLOW_NAMES_LIST: WorkflowNameType[] = [
-  // ctDNA
-  'dragenTso500Ctdna',
-  'pieriandxTso500Ctdna',
-  // DNA
-  'dragenWgtsDna',
-  'oncoanalyserWgtsDna',
-  'sash',
-  // RNA
-  'dragenWgtsRna',
-  'arribaWgtsRna',
-  'oncoanalyserWgtsRna',
-  // DNA / RNA
-  'oncoanalyserWgtsDnaRna',
-  'rnasum',
-];
-
 // We will also hard-code the execution engines and pipeline ids here too
 type ExecutionEngineName = 'Unknown' | 'ICA' | 'SEQERA' | 'AWS_BATCH' | 'AWS_ECS' | 'AWS_EKS';
 
