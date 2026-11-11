@@ -74,9 +74,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     sash: {
       name: 'sash',
       version: '0.6.4',
-      codeVersion: '4946aa8',
+      codeVersion: '4946aa8--cf72c06',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '51f0d1dc-be92-4a5e-9a8a-ad8d44a6431c',
+      executionEnginePipelineId: '08c2c5f4-41f5-4a6b-9be8-be51f95f8a98',
       validationState: 'VALIDATED',
     },
     // RNA
@@ -167,9 +167,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     sash: {
       name: 'sash',
       version: '0.6.4',
-      codeVersion: '4946aa8',
+      codeVersion: '4946aa8--cf72c06',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '51f0d1dc-be92-4a5e-9a8a-ad8d44a6431c',
+      executionEnginePipelineId: '08c2c5f4-41f5-4a6b-9be8-be51f95f8a98',
       validationState: 'VALIDATED',
     },
     // RNA
@@ -260,9 +260,9 @@ export const CURRENT_WORKFLOW_OBJECTS_BY_WORKFLOW_NAME: Record<StageName, Workfl
     sash: {
       name: 'sash',
       version: '0.6.4',
-      codeVersion: '4946aa8',
+      codeVersion: '4946aa8--cf72c06',
       executionEngine: 'ICA',
-      executionEnginePipelineId: '51f0d1dc-be92-4a5e-9a8a-ad8d44a6431c',
+      executionEnginePipelineId: '08c2c5f4-41f5-4a6b-9be8-be51f95f8a98',
       validationState: 'VALIDATED',
     },
     // RNA
