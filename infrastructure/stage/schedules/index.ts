@@ -4,7 +4,7 @@ import * as scheduler from 'aws-cdk-lib/aws-scheduler';
 import { CfnSchedule } from 'aws-cdk-lib/aws-scheduler';
 import { StateMachine } from 'aws-cdk-lib/aws-stepfunctions';
 
-import { STACK_PREFIX } from '../constants';
+import { PREFLIGHT_SCHEDULE_NAME, PREFLIGHT_SCHEDULE_ROLE_NAME } from '../constants';
 import { BuildSchedulesProps, ScheduleObject, scheduleNameList } from './interfaces';
 
 /**
@@ -15,6 +15,10 @@ import { BuildSchedulesProps, ScheduleObject, scheduleNameList } from './interfa
  */
 function buildSchedulerExecutionRole(scope: Construct, stateMachine: StateMachine): iam.Role {
   const role = new iam.Role(scope, 'runPreflightChecksScheduleRole', {
+    // Explicit physical name so the role ARN is deterministic at synth time. This lets the
+    // state machine scope its iam:PassRole statement to the exact role ARN (see
+    // step-functions/index.ts) instead of a truncation-prone name wildcard.
+    roleName: PREFLIGHT_SCHEDULE_ROLE_NAME,
     assumedBy: new iam.ServicePrincipal('scheduler.amazonaws.com'),
     description: 'Execution role for the weekly preflight-checks schedule',
   });
@@ -40,7 +44,7 @@ function buildPreflightSchedule(scope: Construct, stateMachine: StateMachine): C
   const schedulerRole = buildSchedulerExecutionRole(scope, stateMachine);
 
   return new scheduler.CfnSchedule(scope, 'runPreflightChecksSchedule', {
-    name: `${STACK_PREFIX}-run-preflight-checks-schedule`,
+    name: PREFLIGHT_SCHEDULE_NAME,
     // Friday 15:00
     scheduleExpression: 'cron(0 15 ? * FRI *)',
     // Melbourne local time, DST-aware
