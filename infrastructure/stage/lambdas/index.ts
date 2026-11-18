@@ -78,10 +78,16 @@ function buildLambda(scope: Construct, props: BuildLambdaProps): LambdaObject | 
     memorySize: lambdaRequirements.needsMoreMemory ? 2048 : 512,
   });
 
+  // AwsSolutions-L1 - Python 3.14 is not the latest runtime but is our target runtime
   // AwsSolutions-IAM4 - We need to add this for the lambda to work
   NagSuppressions.addResourceSuppressions(
     lambdaFunction,
     [
+      {
+        id: 'AwsSolutions-L1',
+        reason:
+          'Python 3.14 is not the latest runtime in the cdk-nag approved list (Python 3.15 is available) but is our target runtime for ARM64 Lambda functions',
+      },
       {
         id: 'AwsSolutions-IAM4',
         reason: 'We use the basic execution role for lambda functions',
