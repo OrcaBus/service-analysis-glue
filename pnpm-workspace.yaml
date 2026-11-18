@@ -3,6 +3,10 @@ allowBuilds:
   unrs-resolver: true
 auditConfig:
   ignoreGhsas:
+    # picomatch <=4.0.7 ReDoS through single-branch patterns (dev-only, via jest/eslint).
+    # No patched version is published (latest is 4.0.7). Remove this exception once
+    # a fixed release ships and add an override for it.
+    - GHSA-fc5q-39xc-vjpf
     - GHSA-gcqx-w48m-w2h4
 minimumReleaseAgeExclude:
   - '@aws-cdk/cloud-assembly-schema@53.25.0'
